@@ -197,6 +197,8 @@ fn entry_round_trip_with_tags() {
 
     assert_eq!(catalog::count_entries_for_project(c, p.id).unwrap(), 1);
     assert_eq!(catalog::count_entries_for_task(c, t.id).unwrap(), 1);
+    assert_eq!(catalog::count_entries_for_tag(c, g1.id).unwrap(), 1);
+    assert_eq!(catalog::count_entries_for_tag(c, g2.id).unwrap(), 0);
 
     // deleting a tag cascades to the link table
     catalog::delete_tag(c, g1.id).unwrap();

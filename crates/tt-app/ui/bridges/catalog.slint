@@ -1,0 +1,150 @@
+// Projects, project page (tasks), clients and tags. Implemented by `controllers::catalog`.
+// Errors of actions are shown as toasts by the controller; the dialogs' `save-*` return
+// the message to show inline.
+
+import { ProjectOption } from "pickers.slint";
+
+// One project in the list (and the header of the project page).
+export struct ProjectRowView {
+    id: string,
+    name: string,
+    color: color,
+    // Empty = no client.
+    client: string,
+    // Tracked time in the user's duration format.
+    spent: string,
+    // Estimated time; empty = no estimate.
+    estimate: string,
+    // Real percentage of the estimate ("150 %"); empty = no estimate.
+    percent: string,
+    // Bar fill 0..1 (capped at 1); -1 = no estimate.
+    progress: float,
+    // Spent more than the estimate.
+    over: bool,
+    // "$50.00/h" or "—".
+    billable-rate: string,
+    archived: bool,
+}
+
+export struct TaskRowView {
+    id: string,
+    name: string,
+    spent: string,
+    estimate: string,
+    percent: string,
+    progress: float,
+    over: bool,
+    done: bool,
+}
+
+export struct ClientRowView {
+    id: string,
+    name: string,
+    // Number of its projects.
+    projects: int,
+    archived: bool,
+}
+
+export struct TagRowView {
+    id: string,
+    name: string,
+    // Number of time entries that carry it.
+    entries: int,
+}
+
+// Fields of the project dialog; `id` is empty for a new project. `color` is "#rrggbb" as
+// typed; `rate` and `estimate` are the typed texts (empty = none).
+export struct ProjectDialogData {
+    id: string,
+    name: string,
+    color: string,
+    client-id: string,
+    client-label: string,
+    billable: bool,
+    rate: string,
+    estimate: string,
+}
+
+// Fields of the task dialog (edit only).
+export struct TaskDialogData {
+    id: string,
+    name: string,
+    estimate: string,
+}
+
+// What a delete confirmation is about (`id` is empty while nothing is asked).
+export enum CatalogKind { project, task, client, tag }
+
+export struct DeleteRequest {
+    kind: CatalogKind,
+    id: string,
+    name: string,
+    // Tags: how many time entries carry it.
+    count: int,
+}
+
+export global CatalogBridge {
+    // Projects matching `search` / `show-archived`, sorted by name (archived last).
+    in property <[ProjectRowView]> projects;
+    // Number of projects of any kind (to tell "none yet" from "nothing matches").
+    in property <int> project-total;
+    in property <[ClientRowView]> clients;
+    in property <int> client-total;
+    in property <[TagRowView]> tags;
+    // Non-archived clients as picker options (id = client id).
+    in property <[ProjectOption]> client-options;
+    // The fixed project colors, "#rrggbb".
+    in property <[string]> palette;
+    // The open project page: header and tasks (open ones by name, then done ones).
+    in property <ProjectRowView> project;
+    in property <[TaskRowView]> tasks;
+
+    // Filters of the Projects and Clients lists; call `filter-changed` after changing them.
+    in-out property <string> search;
+    in-out property <bool> show-archived;
+    in-out property <bool> show-archived-clients;
+
+    in-out property <bool> project-dialog-open;
+    in property <ProjectDialogData> project-dialog;
+    in-out property <bool> task-dialog-open;
+    in property <TaskDialogData> task-dialog;
+
+    // Reloads everything shown (called when a screen appears).
+    callback refresh();
+    callback filter-changed();
+
+    // Projects
+    callback open-project(id: string);
+    callback new-project();
+    callback edit-project(id: string);
+    // Saves the dialog; returns "" or the error text to show in the dialog.
+    callback save-project(data: ProjectDialogData) -> string;
+    callback set-project-archived(id: string, archived: bool);
+    // Called after the user confirmed.
+    callback delete-project(id: string);
+
+    // Tasks (of the open project)
+    // Returns the new id, or "" on error (already reported).
+    callback create-task(name: string) -> string;
+    callback edit-task(id: string);
+    callback save-task(data: TaskDialogData) -> string;
+    callback toggle-task-done(id: string);
+    // Starts the timer with the task (and its project).
+    callback start-task(id: string);
+    callback delete-task(id: string);
+
+    // Clients
+    callback create-client(name: string) -> string;
+    // Rename returns whether it succeeded.
+    callback rename-client(id: string, name: string) -> bool;
+    callback set-client-archived(id: string, archived: bool);
+    callback delete-client(id: string);
+
+    // Tags
+    callback create-tag(name: string) -> string;
+    callback rename-tag(id: string, name: string) -> bool;
+    callback delete-tag(id: string);
+
+    // `#rrggbb` as a color; transparent for anything else.
+    pure callback hex-color(text: string) -> color;
+}

@@ -1,0 +1,209 @@
+import { Theme } from "../theme.slint";
+import { Input } from "input.slint";
+import { Button, ButtonVariant } from "button.slint";
+import { BillableToggle } from "billable_toggle.slint";
+import { ComboBox } from "combobox.slint";
+import { ColorPicker } from "color_picker.slint";
+import { DurationInput } from "duration_input.slint";
+import { Dialog, DialogActions } from "dialog.slint";
+import { Pickers } from "../bridges/pickers.slint";
+import { CatalogBridge, ProjectDialogData, TaskDialogData } from "../bridges/catalog.slint";
+
+component FieldLabel inherits Text {
+    color: Theme.muted;
+    font-size: Theme.font-sm;
+}
+
+// New / edit project: name, color, client (with inline create), billable, hourly rate and
+// estimate. Saving goes through `CatalogBridge.save-project`; its error text (empty name,
+// bad color, bad amount or duration) is shown inside the dialog.
+export component ProjectDialog inherits Dialog {
+    in property <ProjectDialogData> data;
+    callback closed();
+
+    private property <ProjectDialogData> form: root.data;
+    private property <string> hex: root.data.color;
+    private property <string> save-error;
+
+    function save() {
+        root.form.name = name-field.text;
+        root.form.color = root.hex;
+        root.form.rate = rate-field.text;
+        root.form.estimate = estimate-field.text;
+        root.save-error = CatalogBridge.save-project(root.form);
+        if root.save-error == "" {
+            root.closed();
+        }
+    }
+
+    title: root.data.id == "" ? @tr("New project") : @tr("Edit project");
+    card-width: 480px;
+    dismissed => { root.closed(); }
+
+    VerticalLayout {
+        spacing: 4px;
+
+        FieldLabel { text: @tr("Name"); }
+        name-field := Input {
+            text: root.data.name;
+            placeholder: @tr("Project name");
+            accessible-label: @tr("Name");
+            accepted => { root.save(); }
+        }
+    }
+
+    VerticalLayout {
+        spacing: 4px;
+
+        FieldLabel { text: @tr("Color"); }
+        ColorPicker {
+            color <=> root.hex;
+        }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.gap-3;
+
+        VerticalLayout {
+            spacing: 4px;
+            alignment: start;
+
+            FieldLabel { text: @tr("Client"); }
+            ComboBox {
+                dots: false;
+                items: CatalogBridge.client-options;
+                current-id: root.form.client-id;
+                text: root.form.client-label;
+                placeholder: @tr("No client");
+                none-text: @tr("No client");
+                create-texts: [@tr("Create client \"{}\"", self.query)];
+                selected(option) => {
+                    root.form.client-id = option.id;
+                    root.form.client-label = option.label;
+                }
+                cleared => {
+                    root.form.client-id = "";
+                    root.form.client-label = "";
+                }
+                create(index, name) => {
+                    let id = CatalogBridge.create-client(name);
+                    if id != "" {
+                        let i = Pickers.option-index(CatalogBridge.client-options, id);
+                        root.form.client-id = id;
+                        root.form.client-label = CatalogBridge.client-options[i].label;
+                    }
+                }
+            }
+        }
+        VerticalLayout {
+            spacing: 4px;
+            alignment: start;
+
+            FieldLabel { text: @tr("Billable"); }
+            BillableToggle {
+                checked: root.form.billable;
+                toggled => { root.form.billable = !root.form.billable; }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.gap-3;
+
+        rate-field := DurationInput {
+            label: @tr("Hourly rate");
+            text: root.data.rate;
+            placeholder: "50.00";
+        }
+        estimate-field := DurationInput {
+            label: @tr("Estimate");
+            text: root.data.estimate;
+            placeholder: "40:00";
+        }
+    }
+
+    if root.save-error != "": Text {
+        text: root.save-error;
+        color: Theme.danger;
+        font-size: Theme.font-md;
+        wrap: word-wrap;
+    }
+
+    DialogActions {
+        Button {
+            text: @tr("Cancel");
+            variant: ButtonVariant.ghost;
+            clicked => { root.closed(); }
+        }
+        Button {
+            text: @tr("Save");
+            variant: ButtonVariant.primary;
+            clicked => { root.save(); }
+        }
+    }
+}
+
+// Edit a task: name and estimate.
+export component TaskDialog inherits Dialog {
+    in property <TaskDialogData> data;
+    callback closed();
+
+    private property <string> save-error;
+
+    function save() {
+        root.save-error = CatalogBridge.save-task({
+            id: root.data.id,
+            name: name-field.text,
+            estimate: estimate-field.text,
+        });
+        if root.save-error == "" {
+            root.closed();
+        }
+    }
+
+    title: @tr("Edit task");
+    card-width: 420px;
+    dismissed => { root.closed(); }
+
+    VerticalLayout {
+        spacing: 4px;
+
+        FieldLabel { text: @tr("Name"); }
+        name-field := Input {
+            text: root.data.name;
+            placeholder: @tr("Task name");
+            accessible-label: @tr("Name");
+            accepted => { root.save(); }
+        }
+    }
+    HorizontalLayout {
+        alignment: start;
+
+        estimate-field := DurationInput {
+            max-width: 160px;
+            label: @tr("Estimate");
+            text: root.data.estimate;
+            placeholder: "8:00";
+        }
+    }
+
+    if root.save-error != "": Text {
+        text: root.save-error;
+        color: Theme.danger;
+        font-size: Theme.font-md;
+        wrap: word-wrap;
+    }
+
+    DialogActions {
+        Button {
+            text: @tr("Cancel");
+            variant: ButtonVariant.ghost;
+            clicked => { root.closed(); }
+        }
+        Button {
+            text: @tr("Save");
+            variant: ButtonVariant.primary;
+            clicked => { root.save(); }
+        }
+    }
+}

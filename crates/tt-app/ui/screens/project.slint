@@ -1,0 +1,273 @@
+import { ListView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Button, ButtonVariant } from "../components/button.slint";
+import { ColorDot } from "../components/color_dot.slint";
+import { CheckBox } from "../components/check_box.slint";
+import { EstimateCell } from "../components/progress.slint";
+import { InlineCreate } from "../components/inline_edit.slint";
+import { CatalogBridge, CatalogKind, DeleteRequest, TaskRowView } from "../bridges/catalog.slint";
+
+// One task: done checkbox, name, tracked time, estimate with a progress bar, and the
+// start / edit / delete buttons. Done tasks are dimmed and can't be started.
+component TaskRow inherits Rectangle {
+    in property <TaskRowView> task;
+    callback toggle-done();
+    callback start();
+    callback edit();
+    callback delete();
+
+    height: 48px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    background: Theme.card;
+    opacity: root.task.done ? 0.55 : 1;
+
+    accessible-role: list-item;
+    accessible-label: root.task.name;
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        VerticalLayout {
+            alignment: center;
+
+            CheckBox {
+                width: 16px;
+                checked: root.task.done;
+                accessible-label: @tr("Done");
+                toggled => { root.toggle-done(); }
+            }
+        }
+        Text {
+            horizontal-stretch: 1;
+            min-width: 80px;
+            text: root.task.name;
+            color: root.task.done ? Theme.muted : Theme.text;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        Text {
+            min-width: 64px;
+            text: root.task.spent;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+            accessible-role: none;
+        }
+        EstimateCell {
+            width: 150px;
+            estimate: root.task.estimate;
+            percent: root.task.percent;
+            progress: root.task.progress;
+            over: root.task.over;
+        }
+        HorizontalLayout {
+            spacing: 2px;
+
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.play;
+                    icon-color: Theme.success;
+                    enabled: !root.task.done;
+                    accessible-label: @tr("Start");
+                    clicked => { root.start(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.edit;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Edit");
+                    clicked => { root.edit(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.trash;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Delete");
+                    clicked => { root.delete(); }
+                }
+            }
+        }
+    }
+}
+
+component Stat inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value;
+
+    spacing: 2px;
+    alignment: center;
+
+    Text {
+        text: root.label;
+        color: Theme.muted;
+        font-size: Theme.font-sm;
+    }
+    Text {
+        text: root.value;
+        color: Theme.text;
+        font-size: Theme.font-lg;
+        font-weight: 600;
+    }
+}
+
+// Project page: header with the project's numbers, then its tasks with an "add" row. Back
+// goes to the projects list; deleting a task asks first via `request-delete`.
+export component ProjectScreen inherits VerticalLayout {
+    callback back();
+    callback request-delete(request: DeleteRequest);
+
+    init => { CatalogBridge.refresh(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-3;
+
+    HorizontalLayout {
+        alignment: start;
+
+        Button {
+            text: @tr("Projects");
+            icon: Icons.chevron-left;
+            variant: ButtonVariant.ghost;
+            accessible-label: @tr("Back to projects");
+            clicked => { root.back(); }
+        }
+    }
+
+    Rectangle {
+        height: 84px;
+        background: Theme.card;
+        border-radius: Theme.radius-lg;
+        border-width: 1px;
+        border-color: Theme.line;
+
+        HorizontalLayout {
+            padding: Theme.gap-4;
+            spacing: Theme.gap-5;
+
+            ColorDot {
+                dot-color: CatalogBridge.project.color;
+                size: 14px;
+            }
+            VerticalLayout {
+                horizontal-stretch: 1;
+                min-width: 120px;
+                spacing: 2px;
+                alignment: center;
+
+                Text {
+                    text: CatalogBridge.project.name;
+                    color: Theme.text;
+                    font-size: Theme.font-xl;
+                    font-weight: 600;
+                    overflow: elide;
+                }
+                Text {
+                    text: CatalogBridge.project.client != "" ? CatalogBridge.project.client : @tr("No client");
+                    color: Theme.muted;
+                    font-size: Theme.font-md;
+                    overflow: elide;
+                }
+            }
+            Stat {
+                label: @tr("Spent");
+                value: CatalogBridge.project.spent;
+            }
+            VerticalLayout {
+                width: 190px;
+                spacing: 2px;
+                alignment: center;
+
+                Text {
+                    text: @tr("Estimate");
+                    color: Theme.muted;
+                    font-size: Theme.font-sm;
+                }
+                EstimateCell {
+                    estimate: CatalogBridge.project.estimate;
+                    percent: CatalogBridge.project.percent;
+                    progress: CatalogBridge.project.progress;
+                    over: CatalogBridge.project.over;
+                }
+            }
+            Stat {
+                label: @tr("Rate");
+                value: CatalogBridge.project.billable-rate;
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    text: @tr("Edit");
+                    icon: Icons.edit;
+                    clicked => { CatalogBridge.edit-project(CatalogBridge.project.id); }
+                }
+            }
+        }
+    }
+
+    Text {
+        text: @tr("Tasks");
+        color: Theme.text;
+        font-size: Theme.font-lg;
+        font-weight: 600;
+    }
+    InlineCreate {
+        placeholder: @tr("Add a task");
+        create(name) => { CatalogBridge.create-task(name) }
+    }
+
+    if CatalogBridge.tasks.length == 0: Text {
+        vertical-stretch: 1;
+        text: @tr("No tasks yet. Add one above.");
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    if CatalogBridge.tasks.length > 0: ListView {
+        vertical-stretch: 1;
+
+        for task in CatalogBridge.tasks: VerticalLayout {
+            padding-right: Theme.gap-3;
+            padding-bottom: 6px;
+
+            TaskRow {
+                task: task;
+                toggle-done => { CatalogBridge.toggle-task-done(task.id); }
+                start => { CatalogBridge.start-task(task.id); }
+                edit => { CatalogBridge.edit-task(task.id); }
+                delete => {
+                    root.request-delete({
+                        kind: CatalogKind.task,
+                        id: task.id,
+                        name: task.name,
+                    });
+                }
+            }
+        }
+    }
+}

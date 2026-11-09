@@ -210,8 +210,8 @@ msgid "Can't delete: it still has tasks. Archive it instead."
 msgstr "Нельзя удалить: есть задачи. Архивируйте вместо удаления."
 
 #: ui/strings.slint
-msgid "Can't delete: it has time entries."
-msgstr "Нельзя удалить: есть записи времени."
+msgid "Can't delete: it has time entries. Archive it instead."
+msgstr "Нельзя удалить: есть записи времени. Архивируйте вместо удаления."
 
 #: ui/strings.slint
 msgid "This time overlaps another entry."
@@ -471,3 +471,188 @@ msgstr "Запись будет удалена безвозвратно."
 #: ui/mini_timer.slint
 msgid "Start the last task"
 msgstr "Запустить последнюю задачу"
+
+#: ui/components/inline_edit.slint
+msgid "Add"
+msgstr "Добавить"
+
+#: ui/screens/project.slint
+msgid "Add a task"
+msgstr "Добавить задачу"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Archive"
+msgstr "В архив"
+
+#: ui/screens/project.slint
+msgid "Back to projects"
+msgstr "Назад к проектам"
+
+#: ui/strings.slint
+msgid "Can't delete: the task has time entries. Mark it as done instead."
+msgstr "Нельзя удалить: у задачи есть записи времени. Отметьте её выполненной."
+
+#: ui/screens/projects.slint
+msgid "Client"
+msgstr "Клиент"
+
+#: ui/components/color_picker.slint ui/components/project_dialog.slint
+msgid "Color"
+msgstr "Цвет"
+
+#: ui/components/project_dialog.slint
+msgid "Create client \"{}\""
+msgstr "Создать клиента «{}»"
+
+#: ui/main.slint
+msgid "Delete \"{}\"?"
+msgstr "Удалить «{}»?"
+
+#: ui/screens/project.slint
+msgid "Done"
+msgstr "Выполнено"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Edit"
+msgstr "Изменить"
+
+#: ui/components/project_dialog.slint
+msgid "Edit project"
+msgstr "Изменить проект"
+
+#: ui/components/project_dialog.slint
+msgid "Edit task"
+msgstr "Изменить задачу"
+
+#: ui/strings.slint
+msgid "Enter a duration like 40 or 1:30 or 1h 30m."
+msgstr "Введите длительность, например 40, 1:30 или 1ч 30м."
+
+#: ui/strings.slint
+msgid "Enter an amount like 50 or 50.50."
+msgstr "Введите сумму, например 50 или 50,50."
+
+#: ui/screens/projects.slint ui/screens/project.slint ui/components/project_dialog.slint
+msgid "Estimate"
+msgstr "Оценка"
+
+#: ui/components/project_dialog.slint
+msgid "Hourly rate"
+msgstr "Ставка в час"
+
+#: ui/components/inline_edit.slint ui/components/project_dialog.slint
+msgid "Name"
+msgstr "Название"
+
+#: ui/screens/clients.slint
+msgid "New client"
+msgstr "Новый клиент"
+
+#: ui/screens/projects.slint ui/components/project_dialog.slint
+msgid "New project"
+msgstr "Новый проект"
+
+#: ui/screens/tags.slint
+msgid "New tag"
+msgstr "Новый тег"
+
+#: ui/screens/project.slint ui/components/project_dialog.slint
+msgid "No client"
+msgstr "Без клиента"
+
+#: ui/screens/clients.slint
+msgid "No clients found."
+msgstr "Клиенты не найдены."
+
+#: ui/screens/clients.slint
+msgid "No clients yet. Add one above."
+msgstr "Клиентов пока нет. Добавьте первого выше."
+
+#: ui/screens/projects.slint
+msgid "No projects found."
+msgstr "Проекты не найдены."
+
+#: ui/screens/projects.slint
+msgid "No projects yet. Create the first one."
+msgstr "Проектов пока нет. Создайте первый."
+
+#: ui/screens/tags.slint
+msgid "No tags yet. Add one above."
+msgstr "Тегов пока нет. Добавьте первый выше."
+
+#: ui/screens/project.slint
+msgid "No tasks yet. Add one above."
+msgstr "Задач пока нет. Добавьте первую выше."
+
+#: ui/components/project_dialog.slint
+msgid "Project name"
+msgstr "Название проекта"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Rate"
+msgstr "Ставка"
+
+#: ui/screens/clients.slint ui/screens/tags.slint
+msgid "Rename"
+msgstr "Переименовать"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Restore"
+msgstr "Вернуть из архива"
+
+#: ui/screens/projects.slint
+msgid "Search projects"
+msgstr "Поиск проектов"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Show archived"
+msgstr "Показать архивные"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Spent"
+msgstr "Потрачено"
+
+#: ui/components/project_dialog.slint
+msgid "Task name"
+msgstr "Название задачи"
+
+#: ui/screens/project.slint
+msgid "Tasks"
+msgstr "Задачи"
+
+#: ui/main.slint
+msgid "The client will be removed permanently."
+msgstr "Клиент будет удалён безвозвратно."
+
+#: ui/main.slint
+msgid "The project will be removed permanently."
+msgstr "Проект будет удалён безвозвратно."
+
+#: ui/main.slint
+msgid "The tag will be removed permanently."
+msgstr "Тег будет удалён безвозвратно."
+
+#: ui/main.slint
+msgid "The task will be removed permanently."
+msgstr "Задача будет удалена безвозвратно."
+
+#: ui/main.slint
+msgid "The tag will be removed from {n} time entry."
+msgid_plural "The tag will be removed from {n} time entries."
+msgstr[0] "Тег будет удалён из {n} записи времени."
+msgstr[1] "Тег будет удалён из {n} записей времени."
+msgstr[2] "Тег будет удалён из {n} записей времени."
+
+#: ui/screens/clients.slint
+msgid "{n} project"
+msgid_plural "{n} projects"
+msgstr[0] "{n} проект"
+msgstr[1] "{n} проекта"
+msgstr[2] "{n} проектов"
+
+#: ui/screens/tags.slint
+msgid "{n} time entry"
+msgid_plural "{n} time entries"
+msgstr[0] "{n} запись"
+msgstr[1] "{n} записи"
+msgstr[2] "{n} записей"

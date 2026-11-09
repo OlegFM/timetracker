@@ -208,7 +208,7 @@ msgid "Can't delete: it still has tasks. Archive it instead."
 msgstr ""
 
 #: ui/strings.slint
-msgid "Can't delete: it has time entries."
+msgid "Can't delete: it has time entries. Archive it instead."
 msgstr ""
 
 #: ui/strings.slint
@@ -469,3 +469,185 @@ msgstr ""
 #: ui/mini_timer.slint
 msgid "Start the last task"
 msgstr ""
+
+#: ui/components/inline_edit.slint
+msgid "Add"
+msgstr ""
+
+#: ui/screens/project.slint
+msgid "Add a task"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Archive"
+msgstr ""
+
+#: ui/screens/project.slint
+msgid "Back to projects"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Can't delete: the task has time entries. Mark it as done instead."
+msgstr ""
+
+#: ui/screens/projects.slint
+msgid "Client"
+msgstr ""
+
+#: ui/components/color_picker.slint ui/components/project_dialog.slint
+msgid "Color"
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Create client \"{}\""
+msgstr ""
+
+#: ui/main.slint
+msgid "Delete \"{}\"?"
+msgstr ""
+
+#: ui/screens/project.slint
+msgid "Done"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Edit"
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Edit project"
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Edit task"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Enter a duration like 40 or 1:30 or 1h 30m."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Enter an amount like 50 or 50.50."
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/project.slint ui/components/project_dialog.slint
+msgid "Estimate"
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Hourly rate"
+msgstr ""
+
+#: ui/components/inline_edit.slint ui/components/project_dialog.slint
+msgid "Name"
+msgstr ""
+
+#: ui/screens/clients.slint
+msgid "New client"
+msgstr ""
+
+#: ui/screens/projects.slint ui/components/project_dialog.slint
+msgid "New project"
+msgstr ""
+
+#: ui/screens/tags.slint
+msgid "New tag"
+msgstr ""
+
+#: ui/screens/project.slint ui/components/project_dialog.slint
+msgid "No client"
+msgstr ""
+
+#: ui/screens/clients.slint
+msgid "No clients found."
+msgstr ""
+
+#: ui/screens/clients.slint
+msgid "No clients yet. Add one above."
+msgstr ""
+
+#: ui/screens/projects.slint
+msgid "No projects found."
+msgstr ""
+
+#: ui/screens/projects.slint
+msgid "No projects yet. Create the first one."
+msgstr ""
+
+#: ui/screens/tags.slint
+msgid "No tags yet. Add one above."
+msgstr ""
+
+#: ui/screens/project.slint
+msgid "No tasks yet. Add one above."
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Project name"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Rate"
+msgstr ""
+
+#: ui/screens/clients.slint ui/screens/tags.slint
+msgid "Rename"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Restore"
+msgstr ""
+
+#: ui/screens/projects.slint
+msgid "Search projects"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Show archived"
+msgstr ""
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Spent"
+msgstr ""
+
+#: ui/components/project_dialog.slint
+msgid "Task name"
+msgstr ""
+
+#: ui/screens/project.slint
+msgid "Tasks"
+msgstr ""
+
+#: ui/main.slint
+msgid "The client will be removed permanently."
+msgstr ""
+
+#: ui/main.slint
+msgid "The project will be removed permanently."
+msgstr ""
+
+#: ui/main.slint
+msgid "The tag will be removed permanently."
+msgstr ""
+
+#: ui/main.slint
+msgid "The task will be removed permanently."
+msgstr ""
+
+#: ui/main.slint
+msgid "The tag will be removed from {n} time entry."
+msgid_plural "The tag will be removed from {n} time entries."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ui/screens/clients.slint
+msgid "{n} project"
+msgid_plural "{n} projects"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ui/screens/tags.slint
+msgid "{n} time entry"
+msgid_plural "{n} time entries"
+msgstr[0] ""
+msgstr[1] ""

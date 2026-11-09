@@ -220,6 +220,8 @@ export component ComboBox inherits Rectangle {
     // Shown value; empty = nothing chosen (placeholder).
     in property <string> text;
     in property <color> dot-color;
+    // Color dots (projects); off for lists without colors (clients).
+    in property <bool> dots: true;
     in property <string> placeholder;
     in property <string> none-text;
     in property <[string]> create-texts;
@@ -274,7 +276,7 @@ export component ComboBox inherits Rectangle {
         width: 100%;
         text: root.text;
         placeholder: root.placeholder;
-        show-dot: root.text != "";
+        show-dot: root.dots && root.text != "";
         dot: root.dot-color;
         open: popup.is-open;
         clicked => { root.open(); }
@@ -336,7 +338,7 @@ export component ComboBox inherits Rectangle {
                         for item[i] in root.shown: PickerRow {
                             text: item.label;
                             indent: item.task-id != "";
-                            show-dot: item.task-id == "";
+                            show-dot: root.dots && item.task-id == "";
                             dot: item.color;
                             checked: item.id == root.current-id;
                             highlighted: root.highlighted == root.none-rows + i;

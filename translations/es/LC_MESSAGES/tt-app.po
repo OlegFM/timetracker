@@ -210,8 +210,8 @@ msgid "Can't delete: it still has tasks. Archive it instead."
 msgstr "No se puede eliminar: todavía tiene tareas. Archívelo en su lugar."
 
 #: ui/strings.slint
-msgid "Can't delete: it has time entries."
-msgstr "No se puede eliminar: tiene registros de tiempo."
+msgid "Can't delete: it has time entries. Archive it instead."
+msgstr "No se puede eliminar: tiene registros de tiempo. Archívelo en su lugar."
 
 #: ui/strings.slint
 msgid "This time overlaps another entry."
@@ -471,3 +471,185 @@ msgstr "El registro se eliminará de forma permanente."
 #: ui/mini_timer.slint
 msgid "Start the last task"
 msgstr "Iniciar la última tarea"
+
+#: ui/components/inline_edit.slint
+msgid "Add"
+msgstr "Añadir"
+
+#: ui/screens/project.slint
+msgid "Add a task"
+msgstr "Añadir una tarea"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Archive"
+msgstr "Archivar"
+
+#: ui/screens/project.slint
+msgid "Back to projects"
+msgstr "Volver a proyectos"
+
+#: ui/strings.slint
+msgid "Can't delete: the task has time entries. Mark it as done instead."
+msgstr "No se puede eliminar: la tarea tiene registros de tiempo. Márquela como hecha."
+
+#: ui/screens/projects.slint
+msgid "Client"
+msgstr "Cliente"
+
+#: ui/components/color_picker.slint ui/components/project_dialog.slint
+msgid "Color"
+msgstr "Color"
+
+#: ui/components/project_dialog.slint
+msgid "Create client \"{}\""
+msgstr "Crear cliente «{}»"
+
+#: ui/main.slint
+msgid "Delete \"{}\"?"
+msgstr "¿Eliminar «{}»?"
+
+#: ui/screens/project.slint
+msgid "Done"
+msgstr "Hecho"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Edit"
+msgstr "Editar"
+
+#: ui/components/project_dialog.slint
+msgid "Edit project"
+msgstr "Editar proyecto"
+
+#: ui/components/project_dialog.slint
+msgid "Edit task"
+msgstr "Editar tarea"
+
+#: ui/strings.slint
+msgid "Enter a duration like 40 or 1:30 or 1h 30m."
+msgstr "Introduzca una duración, p. ej. 40, 1:30 o 1h 30m."
+
+#: ui/strings.slint
+msgid "Enter an amount like 50 or 50.50."
+msgstr "Introduzca un importe, p. ej. 50 o 50,50."
+
+#: ui/screens/projects.slint ui/screens/project.slint ui/components/project_dialog.slint
+msgid "Estimate"
+msgstr "Estimación"
+
+#: ui/components/project_dialog.slint
+msgid "Hourly rate"
+msgstr "Tarifa por hora"
+
+#: ui/components/inline_edit.slint ui/components/project_dialog.slint
+msgid "Name"
+msgstr "Nombre"
+
+#: ui/screens/clients.slint
+msgid "New client"
+msgstr "Nuevo cliente"
+
+#: ui/screens/projects.slint ui/components/project_dialog.slint
+msgid "New project"
+msgstr "Nuevo proyecto"
+
+#: ui/screens/tags.slint
+msgid "New tag"
+msgstr "Nueva etiqueta"
+
+#: ui/screens/project.slint ui/components/project_dialog.slint
+msgid "No client"
+msgstr "Sin cliente"
+
+#: ui/screens/clients.slint
+msgid "No clients found."
+msgstr "No se encontraron clientes."
+
+#: ui/screens/clients.slint
+msgid "No clients yet. Add one above."
+msgstr "Aún no hay clientes. Añada uno arriba."
+
+#: ui/screens/projects.slint
+msgid "No projects found."
+msgstr "No se encontraron proyectos."
+
+#: ui/screens/projects.slint
+msgid "No projects yet. Create the first one."
+msgstr "Aún no hay proyectos. Cree el primero."
+
+#: ui/screens/tags.slint
+msgid "No tags yet. Add one above."
+msgstr "Aún no hay etiquetas. Añada una arriba."
+
+#: ui/screens/project.slint
+msgid "No tasks yet. Add one above."
+msgstr "Aún no hay tareas. Añada una arriba."
+
+#: ui/components/project_dialog.slint
+msgid "Project name"
+msgstr "Nombre del proyecto"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Rate"
+msgstr "Tarifa"
+
+#: ui/screens/clients.slint ui/screens/tags.slint
+msgid "Rename"
+msgstr "Renombrar"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Restore"
+msgstr "Restaurar"
+
+#: ui/screens/projects.slint
+msgid "Search projects"
+msgstr "Buscar proyectos"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Show archived"
+msgstr "Mostrar archivados"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Spent"
+msgstr "Empleado"
+
+#: ui/components/project_dialog.slint
+msgid "Task name"
+msgstr "Nombre de la tarea"
+
+#: ui/screens/project.slint
+msgid "Tasks"
+msgstr "Tareas"
+
+#: ui/main.slint
+msgid "The client will be removed permanently."
+msgstr "El cliente se eliminará permanentemente."
+
+#: ui/main.slint
+msgid "The project will be removed permanently."
+msgstr "El proyecto se eliminará permanentemente."
+
+#: ui/main.slint
+msgid "The tag will be removed permanently."
+msgstr "La etiqueta se eliminará permanentemente."
+
+#: ui/main.slint
+msgid "The task will be removed permanently."
+msgstr "La tarea se eliminará permanentemente."
+
+#: ui/main.slint
+msgid "The tag will be removed from {n} time entry."
+msgid_plural "The tag will be removed from {n} time entries."
+msgstr[0] "La etiqueta se quitará de {n} registro de tiempo."
+msgstr[1] "La etiqueta se quitará de {n} registros de tiempo."
+
+#: ui/screens/clients.slint
+msgid "{n} project"
+msgid_plural "{n} projects"
+msgstr[0] "{n} proyecto"
+msgstr[1] "{n} proyectos"
+
+#: ui/screens/tags.slint
+msgid "{n} time entry"
+msgid_plural "{n} time entries"
+msgstr[0] "{n} registro de tiempo"
+msgstr[1] "{n} registros de tiempo"

@@ -173,6 +173,17 @@ impl TimerHub {
         }
     }
 
+    /// Starts a session with `t` (the project page's task ▶), replacing the active one.
+    pub fn start_with(&self, t: EntryTemplate) {
+        if self
+            .run("start", |c, tz| c.timer.start(&mut c.db, t, tz))
+            .is_some()
+        {
+            self.draft.replace(EntryTemplate::default());
+            self.changed();
+        }
+    }
+
     /// Starts a session with the attributes of the most recent entry (if there is one).
     fn start_recent(&self) {
         let res = self.with_ctx(|c, tz| match last_template(c)? {

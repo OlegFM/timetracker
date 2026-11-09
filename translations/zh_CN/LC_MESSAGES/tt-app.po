@@ -210,8 +210,8 @@ msgid "Can't delete: it still has tasks. Archive it instead."
 msgstr "无法删除：仍有任务。请改为归档。"
 
 #: ui/strings.slint
-msgid "Can't delete: it has time entries."
-msgstr "无法删除：存在时间记录。"
+msgid "Can't delete: it has time entries. Archive it instead."
+msgstr "无法删除：存在时间记录。请改为归档。"
 
 #: ui/strings.slint
 msgid "This time overlaps another entry."
@@ -471,3 +471,182 @@ msgstr "该记录将被永久删除。"
 #: ui/mini_timer.slint
 msgid "Start the last task"
 msgstr "开始最近的任务"
+
+#: ui/components/inline_edit.slint
+msgid "Add"
+msgstr "添加"
+
+#: ui/screens/project.slint
+msgid "Add a task"
+msgstr "添加任务"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Archive"
+msgstr "归档"
+
+#: ui/screens/project.slint
+msgid "Back to projects"
+msgstr "返回项目列表"
+
+#: ui/strings.slint
+msgid "Can't delete: the task has time entries. Mark it as done instead."
+msgstr "无法删除：该任务有时间记录。请改为标记为已完成。"
+
+#: ui/screens/projects.slint
+msgid "Client"
+msgstr "客户"
+
+#: ui/components/color_picker.slint ui/components/project_dialog.slint
+msgid "Color"
+msgstr "颜色"
+
+#: ui/components/project_dialog.slint
+msgid "Create client \"{}\""
+msgstr "创建客户“{}”"
+
+#: ui/main.slint
+msgid "Delete \"{}\"?"
+msgstr "删除“{}”？"
+
+#: ui/screens/project.slint
+msgid "Done"
+msgstr "已完成"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Edit"
+msgstr "编辑"
+
+#: ui/components/project_dialog.slint
+msgid "Edit project"
+msgstr "编辑项目"
+
+#: ui/components/project_dialog.slint
+msgid "Edit task"
+msgstr "编辑任务"
+
+#: ui/strings.slint
+msgid "Enter a duration like 40 or 1:30 or 1h 30m."
+msgstr "请输入时长，例如 40、1:30 或 1h 30m。"
+
+#: ui/strings.slint
+msgid "Enter an amount like 50 or 50.50."
+msgstr "请输入金额，例如 50 或 50.50。"
+
+#: ui/screens/projects.slint ui/screens/project.slint ui/components/project_dialog.slint
+msgid "Estimate"
+msgstr "预估"
+
+#: ui/components/project_dialog.slint
+msgid "Hourly rate"
+msgstr "每小时费率"
+
+#: ui/components/inline_edit.slint ui/components/project_dialog.slint
+msgid "Name"
+msgstr "名称"
+
+#: ui/screens/clients.slint
+msgid "New client"
+msgstr "新客户"
+
+#: ui/screens/projects.slint ui/components/project_dialog.slint
+msgid "New project"
+msgstr "新建项目"
+
+#: ui/screens/tags.slint
+msgid "New tag"
+msgstr "新标签"
+
+#: ui/screens/project.slint ui/components/project_dialog.slint
+msgid "No client"
+msgstr "无客户"
+
+#: ui/screens/clients.slint
+msgid "No clients found."
+msgstr "未找到客户。"
+
+#: ui/screens/clients.slint
+msgid "No clients yet. Add one above."
+msgstr "还没有客户。请在上方添加。"
+
+#: ui/screens/projects.slint
+msgid "No projects found."
+msgstr "未找到项目。"
+
+#: ui/screens/projects.slint
+msgid "No projects yet. Create the first one."
+msgstr "还没有项目。创建第一个吧。"
+
+#: ui/screens/tags.slint
+msgid "No tags yet. Add one above."
+msgstr "还没有标签。请在上方添加。"
+
+#: ui/screens/project.slint
+msgid "No tasks yet. Add one above."
+msgstr "还没有任务。请在上方添加。"
+
+#: ui/components/project_dialog.slint
+msgid "Project name"
+msgstr "项目名称"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Rate"
+msgstr "费率"
+
+#: ui/screens/clients.slint ui/screens/tags.slint
+msgid "Rename"
+msgstr "重命名"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Restore"
+msgstr "恢复"
+
+#: ui/screens/projects.slint
+msgid "Search projects"
+msgstr "搜索项目"
+
+#: ui/screens/projects.slint ui/screens/clients.slint
+msgid "Show archived"
+msgstr "显示已归档"
+
+#: ui/screens/projects.slint ui/screens/project.slint
+msgid "Spent"
+msgstr "已用时间"
+
+#: ui/components/project_dialog.slint
+msgid "Task name"
+msgstr "任务名称"
+
+#: ui/screens/project.slint
+msgid "Tasks"
+msgstr "任务"
+
+#: ui/main.slint
+msgid "The client will be removed permanently."
+msgstr "该客户将被永久删除。"
+
+#: ui/main.slint
+msgid "The project will be removed permanently."
+msgstr "该项目将被永久删除。"
+
+#: ui/main.slint
+msgid "The tag will be removed permanently."
+msgstr "该标签将被永久删除。"
+
+#: ui/main.slint
+msgid "The task will be removed permanently."
+msgstr "该任务将被永久删除。"
+
+#: ui/main.slint
+msgid "The tag will be removed from {n} time entry."
+msgid_plural "The tag will be removed from {n} time entries."
+msgstr[0] "该标签将从 {n} 条时间记录中移除。"
+
+#: ui/screens/clients.slint
+msgid "{n} project"
+msgid_plural "{n} projects"
+msgstr[0] "{n} 个项目"
+
+#: ui/screens/tags.slint
+msgid "{n} time entry"
+msgid_plural "{n} time entries"
+msgstr[0] "{n} 条时间记录"

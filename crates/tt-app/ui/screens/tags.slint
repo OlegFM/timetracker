@@ -1,0 +1,144 @@
+import { ListView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Button, ButtonVariant } from "../components/button.slint";
+import { InlineCreate, RenameField } from "../components/inline_edit.slint";
+import { CatalogBridge, CatalogKind, DeleteRequest, TagRowView } from "../bridges/catalog.slint";
+
+// One tag: name (renamed in place), number of time entries and the rename / delete buttons.
+component TagRow inherits Rectangle {
+    in property <TagRowView> tag;
+    callback delete();
+
+    private property <bool> editing;
+
+    height: 48px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    background: Theme.card;
+
+    accessible-role: list-item;
+    accessible-label: root.tag.name;
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        if !root.editing: Text {
+            horizontal-stretch: 1;
+            min-width: 80px;
+            text: root.tag.name;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        if root.editing: VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+
+            RenameField {
+                text: root.tag.name;
+                commit(name) => {
+                    if name == root.tag.name || CatalogBridge.rename-tag(root.tag.id, name) {
+                        root.editing = false;
+                    }
+                }
+                cancel => { root.editing = false; }
+            }
+        }
+        Text {
+            text: @tr("{n} time entry" | "{n} time entries" % root.tag.entries);
+            color: Theme.muted;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+        HorizontalLayout {
+            spacing: 2px;
+
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.edit;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Rename");
+                    clicked => { root.editing = true; }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.trash;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Delete");
+                    clicked => { root.delete(); }
+                }
+            }
+        }
+    }
+}
+
+// "Tags" page: add row and the list. Deleting asks first via `request-delete` (the
+// confirmation says how many entries lose the tag).
+export component TagsScreen inherits VerticalLayout {
+    callback request-delete(request: DeleteRequest);
+
+    init => { CatalogBridge.refresh(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-3;
+
+    Text {
+        text: @tr("Tags");
+        color: Theme.text;
+        font-size: Theme.font-xl;
+        font-weight: 600;
+    }
+
+    InlineCreate {
+        placeholder: @tr("New tag");
+        create(name) => { CatalogBridge.create-tag(name) }
+    }
+
+    if CatalogBridge.tags.length == 0: Text {
+        vertical-stretch: 1;
+        text: @tr("No tags yet. Add one above.");
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    if CatalogBridge.tags.length > 0: ListView {
+        vertical-stretch: 1;
+
+        for tag in CatalogBridge.tags: VerticalLayout {
+            padding-right: Theme.gap-3;
+            padding-bottom: 6px;
+
+            TagRow {
+                tag: tag;
+                delete => {
+                    root.request-delete({
+                        kind: CatalogKind.tag,
+                        id: tag.id,
+                        name: tag.name,
+                        count: tag.entries,
+                    });
+                }
+            }
+        }
+    }
+}

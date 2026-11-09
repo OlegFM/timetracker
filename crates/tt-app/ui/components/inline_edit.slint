@@ -1,0 +1,67 @@
+import { Theme } from "../theme.slint";
+import { Input } from "input.slint";
+import { Button, ButtonVariant } from "button.slint";
+import { Icons } from "icon.slint";
+
+// "Add" row of a list: a text field and a button. `create` returns the new id or "" when
+// it failed (the field is kept); Enter does the same as the button.
+export component InlineCreate inherits HorizontalLayout {
+    in property <string> placeholder;
+    callback create(name: string) -> string;
+
+    function submit() {
+        if field.text.replace-all(" ", "") != "" && root.create(field.text) != "" {
+            field.text = "";
+        }
+    }
+
+    spacing: Theme.gap-2;
+
+    field := Input {
+        horizontal-stretch: 1;
+        placeholder: root.placeholder;
+        accessible-label: root.placeholder;
+        accepted => { root.submit(); }
+    }
+    Button {
+        text: @tr("Add");
+        icon: Icons.plus;
+        enabled: field.text.replace-all(" ", "") != "";
+        clicked => { root.submit(); }
+    }
+}
+
+// Text field that takes the focus when it appears: Enter calls `commit`, Esc or losing
+// the focus calls `cancel`. Show it with `if editing: RenameField { … }` in place of a name.
+export component RenameField inherits FocusScope {
+    in property <string> text;
+    callback commit(name: string);
+    callback cancel();
+
+    focus-on-click: false;
+    focus-on-tab-navigation: false;
+
+    capture-key-pressed(event) => {
+        if event.text == Key.Escape {
+            root.cancel();
+            return accept;
+        }
+        reject
+    }
+
+    init => {
+        field.focus();
+        field.select-all();
+    }
+
+    field := Input {
+        text: root.text;
+        accessible-label: @tr("Name");
+        accepted(text) => { root.commit(text); }
+        changed has-focus => {
+            if !self.has-focus {
+                root.cancel();
+            }
+        }
+    }
+}

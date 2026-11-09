@@ -14,6 +14,7 @@
 //! is pushed to each of them by the same helper.
 
 pub mod calendar;
+pub mod catalog;
 pub mod entries;
 pub mod mini;
 pub mod pickers;

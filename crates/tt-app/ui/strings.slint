@@ -45,10 +45,13 @@ export global Tr {
     // Service errors (tt_services::ServiceError)
     out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");
     out property <string> err-in-use-tasks: @tr("Can't delete: it still has tasks. Archive it instead.");
-    out property <string> err-in-use-entries: @tr("Can't delete: it has time entries.");
+    out property <string> err-in-use-entries: @tr("Can't delete: it has time entries. Archive it instead.");
+    out property <string> err-in-use-task-entries: @tr("Can't delete: the task has time entries. Mark it as done instead.");
     out property <string> err-overlap: @tr("This time overlaps another entry.");
     out property <string> err-invalid-name: @tr("Enter a name (up to 255 characters).");
     out property <string> err-invalid-color: @tr("Choose a valid color.");
+    out property <string> err-invalid-rate: @tr("Enter an amount like 50 or 50.50.");
+    out property <string> err-invalid-estimate: @tr("Enter a duration like 40 or 1:30 or 1h 30m.");
     out property <string> err-invalid-range: @tr("The end must be after the start.");
     out property <string> err-backup: @tr("This file is not a valid TimeTracker backup.");
     out property <string> err-start-future: @tr("The start can't be in the future.");

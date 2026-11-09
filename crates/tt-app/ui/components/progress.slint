@@ -1,0 +1,66 @@
+import { Theme } from "../theme.slint";
+
+// Thin bar for tracked time against an estimate. `value` is 0..1 (the bar is capped at
+// full); `over` (more than the estimate) uses the warning color.
+export component ProgressBar inherits Rectangle {
+    in property <float> value;
+    in property <bool> over;
+    // Read by assistive technology, e.g. "150 %".
+    in property <string> label;
+
+    height: 6px;
+    border-radius: 3px;
+    background: Theme.line;
+
+    accessible-role: progress-indicator;
+    accessible-value: root.label;
+
+    Rectangle {
+        x: 0;
+        y: 0;
+        width: parent.width * max(0, min(1, root.value));
+        height: 100%;
+        border-radius: 3px;
+        background: root.over ? Theme.warning : Theme.accent;
+    }
+}
+
+// Estimate and percentage over a bar; a muted dash when there is no estimate
+// (`progress` < 0).
+export component EstimateCell inherits VerticalLayout {
+    in property <string> estimate;
+    in property <string> percent;
+    in property <float> progress;
+    in property <bool> over;
+
+    spacing: 4px;
+    alignment: center;
+
+    if root.progress < 0: Text {
+        text: "—";
+        color: Theme.muted;
+        font-size: Theme.font-md;
+    }
+    if root.progress >= 0: HorizontalLayout {
+        spacing: Theme.gap-2;
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.estimate;
+            color: Theme.muted;
+            font-size: Theme.font-sm;
+            overflow: elide;
+        }
+        Text {
+            text: root.percent;
+            color: root.over ? Theme.warning : Theme.text-secondary;
+            font-size: Theme.font-sm;
+            font-weight: 600;
+        }
+    }
+    if root.progress >= 0: ProgressBar {
+        value: root.progress;
+        over: root.over;
+        label: root.percent;
+    }
+}

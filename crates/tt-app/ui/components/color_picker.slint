@@ -1,0 +1,86 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+import { Input } from "input.slint";
+import { Activator, FocusRing } from "button.slint";
+import { CatalogBridge } from "../bridges/catalog.slint";
+
+component Swatch inherits Rectangle {
+    in property <string> hex;
+    in property <bool> selected;
+    callback clicked();
+
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background: CatalogBridge.hex-color(root.hex);
+    border-width: 2px;
+    border-color: root.selected ? Theme.text : touch.has-hover ? Theme.muted : transparent;
+    forward-focus: keys;
+
+    accessible-role: radio-button;
+    accessible-label: root.hex;
+    accessible-checked: root.selected;
+    accessible-action-default => { root.clicked(); }
+
+    if root.selected: Icon {
+        width: 12px;
+        height: 12px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        size: 12px;
+        source: Icons.check;
+        color: Theme.text-on-accent;
+    }
+
+    keys := Activator {
+        activated => { root.clicked(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.clicked(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: 12px;
+    }
+}
+
+// Project color: the 12 fixed swatches (`CatalogBridge.palette`) and a hex field
+// ("#rrggbb"). An invalid hex shows an empty preview; the save reports it.
+export component ColorPicker inherits VerticalLayout {
+    in-out property <string> color;
+
+    spacing: Theme.gap-2;
+
+    HorizontalLayout {
+        spacing: 6px;
+        alignment: start;
+
+        for hex in CatalogBridge.palette: Swatch {
+            hex: hex;
+            selected: root.color.to-lowercase() == hex;
+            clicked => { root.color = hex; }
+        }
+    }
+    HorizontalLayout {
+        spacing: Theme.gap-2;
+        alignment: start;
+
+        Rectangle {
+            width: 24px;
+            height: 24px;
+            y: (parent.height - self.height) / 2;
+            border-radius: 12px;
+            background: CatalogBridge.hex-color(root.color);
+            border-width: self.background.alpha == 0 ? 1px : 0;
+            border-color: Theme.danger;
+        }
+        Input {
+            width: 130px;
+            text <=> root.color;
+            placeholder: "#rrggbb";
+            accessible-label: @tr("Color");
+        }
+    }
+}

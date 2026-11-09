@@ -1,0 +1,66 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+import { Activator, FocusRing } from "button.slint";
+
+// Checkbox with an optional label.
+export component CheckBox inherits Rectangle {
+    in property <bool> checked;
+    in property <string> text;
+    callback toggled();
+
+    height: 24px;
+    preferred-width: row.preferred-width;
+    horizontal-stretch: 0;
+    forward-focus: keys;
+
+    accessible-role: checkbox;
+    accessible-label: root.text;
+    accessible-checked: root.checked;
+    accessible-action-default => { root.toggled(); }
+
+    row := HorizontalLayout {
+        spacing: Theme.gap-2;
+
+        Rectangle {
+            width: 16px;
+
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                width: 16px;
+                height: 16px;
+                border-radius: 4px;
+                border-width: root.checked ? 0 : 1px;
+                border-color: touch.has-hover ? Theme.accent : Theme.muted;
+                background: root.checked ? Theme.accent : transparent;
+
+                if root.checked: Icon {
+                    x: 2px;
+                    width: 12px;
+                    size: 12px;
+                    source: Icons.check;
+                    color: Theme.text-on-accent;
+                }
+            }
+        }
+        if root.text != "": Text {
+            text: root.text;
+            color: Theme.text-secondary;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+    }
+
+    keys := Activator {
+        activated => { root.toggled(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.toggled(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: 4px;
+    }
+}

@@ -1,0 +1,172 @@
+import { ListView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Button, ButtonVariant } from "../components/button.slint";
+import { CheckBox } from "../components/check_box.slint";
+import { InlineCreate, RenameField } from "../components/inline_edit.slint";
+import { CatalogBridge, CatalogKind, ClientRowView, DeleteRequest } from "../bridges/catalog.slint";
+
+// One client: name (renamed in place), project count and the rename / archive / delete
+// buttons. Archived clients are dimmed.
+component ClientRow inherits Rectangle {
+    in property <ClientRowView> client;
+    callback archive();
+    callback delete();
+
+    private property <bool> editing;
+
+    height: 48px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    background: Theme.card;
+    opacity: root.client.archived ? 0.6 : 1;
+
+    accessible-role: list-item;
+    accessible-label: root.client.name;
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        if !root.editing: Text {
+            horizontal-stretch: 1;
+            min-width: 80px;
+            text: root.client.name;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        if root.editing: VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+
+            RenameField {
+                text: root.client.name;
+                commit(name) => {
+                    if name == root.client.name || CatalogBridge.rename-client(root.client.id, name) {
+                        root.editing = false;
+                    }
+                }
+                cancel => { root.editing = false; }
+            }
+        }
+        Text {
+            text: @tr("{n} project" | "{n} projects" % root.client.projects);
+            color: Theme.muted;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+        HorizontalLayout {
+            spacing: 2px;
+
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.edit;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Rename");
+                    clicked => { root.editing = true; }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: root.client.archived ? Icons.restore : Icons.archive;
+                    icon-color: Theme.muted;
+                    accessible-label: root.client.archived ? @tr("Restore") : @tr("Archive");
+                    clicked => { root.archive(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.trash;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Delete");
+                    clicked => { root.delete(); }
+                }
+            }
+        }
+    }
+}
+
+// "Clients" page: add row, "show archived" and the list.
+export component ClientsScreen inherits VerticalLayout {
+    callback request-delete(request: DeleteRequest);
+
+    init => { CatalogBridge.refresh(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-3;
+
+    HorizontalLayout {
+        spacing: Theme.gap-3;
+
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Clients");
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+        CheckBox {
+            text: @tr("Show archived");
+            checked: CatalogBridge.show-archived-clients;
+            toggled => {
+                CatalogBridge.show-archived-clients = !CatalogBridge.show-archived-clients;
+                CatalogBridge.filter-changed();
+            }
+        }
+    }
+
+    InlineCreate {
+        placeholder: @tr("New client");
+        create(name) => { CatalogBridge.create-client(name) }
+    }
+
+    if CatalogBridge.clients.length == 0: Text {
+        vertical-stretch: 1;
+        text: CatalogBridge.client-total == 0 ? @tr("No clients yet. Add one above.") : @tr("No clients found.");
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    if CatalogBridge.clients.length > 0: ListView {
+        vertical-stretch: 1;
+
+        for client in CatalogBridge.clients: VerticalLayout {
+            padding-right: Theme.gap-3;
+            padding-bottom: 6px;
+
+            ClientRow {
+                client: client;
+                archive => { CatalogBridge.set-client-archived(client.id, !client.archived); }
+                delete => {
+                    root.request-delete({
+                        kind: CatalogKind.client,
+                        id: client.id,
+                        name: client.name,
+                    });
+                }
+            }
+        }
+    }
+}

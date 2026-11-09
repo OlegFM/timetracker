@@ -292,6 +292,15 @@ pub fn count_entries_for_task(conn: &Connection, id: Id) -> Result<i64> {
     )
 }
 
+/// Time entries that carry the tag.
+pub fn count_entries_for_tag(conn: &Connection, id: Id) -> Result<i64> {
+    count(
+        conn,
+        "SELECT COUNT(*) FROM time_entry_tags WHERE tag_id = ?1",
+        id,
+    )
+}
+
 pub fn count_projects_for_client(conn: &Connection, id: Id) -> Result<i64> {
     count(
         conn,

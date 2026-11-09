@@ -1,0 +1,272 @@
+import { ListView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Activator, Button, ButtonVariant, FocusRing } from "../components/button.slint";
+import { ColorDot } from "../components/color_dot.slint";
+import { CheckBox } from "../components/check_box.slint";
+import { EstimateCell } from "../components/progress.slint";
+import { Input } from "../components/input.slint";
+import { CatalogBridge, CatalogKind, DeleteRequest, ProjectRowView } from "../bridges/catalog.slint";
+
+// Column widths shared by the header and the rows.
+global Cols {
+    out property <length> client: 130px;
+    out property <length> spent: 64px;
+    out property <length> estimate: 150px;
+    out property <length> rate: 84px;
+    out property <length> actions: 100px;
+}
+
+// One project: color, name, client, tracked time, estimate with a progress bar, hourly
+// rate and the edit / archive / delete buttons. Clicking (or Enter on) the row opens it.
+// Archived projects are dimmed.
+component ProjectRow inherits Rectangle {
+    in property <ProjectRowView> project;
+    callback open();
+    callback edit();
+    callback archive();
+    callback delete();
+
+    height: 56px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    background: touch.has-hover ? Theme.surface-hover : Theme.card;
+    opacity: root.project.archived ? 0.6 : 1;
+    forward-focus: keys;
+
+    accessible-role: list-item;
+    accessible-label: root.project.name;
+    accessible-description: root.project.client;
+    accessible-action-default => { root.open(); }
+
+    keys := Activator {
+        activated => { root.open(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.open(); }
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        ColorDot {
+            dot-color: root.project.color;
+            size: 10px;
+        }
+        Text {
+            horizontal-stretch: 1;
+            min-width: 80px;
+            text: root.project.name;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        Text {
+            width: Cols.client;
+            text: root.project.client != "" ? root.project.client : "—";
+            color: Theme.text-secondary;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        Text {
+            width: Cols.spent;
+            text: root.project.spent;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+            accessible-role: none;
+        }
+        EstimateCell {
+            width: Cols.estimate;
+            estimate: root.project.estimate;
+            percent: root.project.percent;
+            progress: root.project.progress;
+            over: root.project.over;
+        }
+        Text {
+            width: Cols.rate;
+            text: root.project.billable-rate;
+            color: Theme.text-secondary;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+            accessible-role: none;
+        }
+        HorizontalLayout {
+            width: Cols.actions;
+            alignment: end;
+            spacing: 2px;
+
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.edit;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Edit");
+                    clicked => { root.edit(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: root.project.archived ? Icons.restore : Icons.archive;
+                    icon-color: Theme.muted;
+                    accessible-label: root.project.archived ? @tr("Restore") : @tr("Archive");
+                    clicked => { root.archive(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.trash;
+                    icon-color: Theme.muted;
+                    accessible-label: @tr("Delete");
+                    clicked => { root.delete(); }
+                }
+            }
+        }
+    }
+
+    if keys.focus-visible: FocusRing { }
+}
+
+component HeaderText inherits Text {
+    color: Theme.muted;
+    font-size: Theme.font-sm;
+    font-weight: 600;
+    vertical-alignment: center;
+}
+
+// "Projects" page: search, "show archived", "New project", and the list. A row click calls
+// `open`; deleting asks first via `request-delete` (the window shows the confirmation).
+export component ProjectsScreen inherits VerticalLayout {
+    callback open(id: string);
+    callback request-delete(request: DeleteRequest);
+
+    init => { CatalogBridge.refresh(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-2;
+
+    HorizontalLayout {
+        spacing: Theme.gap-3;
+
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Projects");
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+        Input {
+            width: 220px;
+            text <=> CatalogBridge.search;
+            placeholder: @tr("Search projects");
+            accessible-label: @tr("Search projects");
+            edited => { CatalogBridge.filter-changed(); }
+        }
+        CheckBox {
+            text: @tr("Show archived");
+            checked: CatalogBridge.show-archived;
+            toggled => {
+                CatalogBridge.show-archived = !CatalogBridge.show-archived;
+                CatalogBridge.filter-changed();
+            }
+        }
+        Button {
+            text: @tr("New project");
+            icon: Icons.plus;
+            variant: ButtonVariant.primary;
+            clicked => { CatalogBridge.new-project(); }
+        }
+    }
+
+    if CatalogBridge.projects.length > 0: HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-3 + Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        Rectangle { width: 10px; }
+        HeaderText {
+            horizontal-stretch: 1;
+            text: @tr("Project");
+        }
+        HeaderText {
+            width: Cols.client;
+            text: @tr("Client");
+        }
+        HeaderText {
+            width: Cols.spent;
+            text: @tr("Spent");
+            horizontal-alignment: right;
+        }
+        HeaderText {
+            width: Cols.estimate;
+            text: @tr("Estimate");
+        }
+        HeaderText {
+            width: Cols.rate;
+            text: @tr("Rate");
+            horizontal-alignment: right;
+        }
+        Rectangle { width: Cols.actions; }
+    }
+
+    if CatalogBridge.projects.length == 0: Text {
+        vertical-stretch: 1;
+        text: CatalogBridge.project-total == 0
+            ? @tr("No projects yet. Create the first one.")
+            : @tr("No projects found.");
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        wrap: word-wrap;
+    }
+
+    if CatalogBridge.projects.length > 0: ListView {
+        vertical-stretch: 1;
+
+        for project in CatalogBridge.projects: VerticalLayout {
+            // Room for the list's scrollbar and between the rows.
+            padding-right: Theme.gap-3;
+            padding-bottom: 6px;
+
+            ProjectRow {
+                project: project;
+                open => { root.open(project.id); }
+                edit => { CatalogBridge.edit-project(project.id); }
+                archive => { CatalogBridge.set-project-archived(project.id, !project.archived); }
+                delete => {
+                    root.request-delete({
+                        kind: CatalogKind.project,
+                        id: project.id,
+                        name: project.name,
+                    });
+                }
+            }
+        }
+    }
+}
