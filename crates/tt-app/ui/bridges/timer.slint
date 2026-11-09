@@ -1,0 +1,45 @@
+// Timer state and actions shared by the timer bar and the mini timer. Each window has its
+// own instance of this global; `controllers::timer::TimerHub` updates all of them.
+
+import { ProjectOption, TagOption } from "pickers.slint";
+
+export struct TimerView {
+    // 0 stopped, 1 running, 2 paused.
+    state: int,
+    description: string,
+    // "Project › Task", "Project" or empty.
+    project-label: string,
+    project-color: color,
+    // Ids of the selection (empty = none); used to mark it in the picker.
+    project-id: string,
+    task-id: string,
+    // Tag names joined with ", "; empty = no tags.
+    tags-label: string,
+    billable: bool,
+    // Session time "H:MM:SS".
+    clock: string,
+    // Time tracked today in this session; empty if the session started today.
+    today: string,
+}
+
+export global TimerBridge {
+    in property <TimerView> view: { state: 0, clock: "0:00:00" };
+    // Pickable non-archived projects and their open tasks.
+    in property <[ProjectOption]> projects;
+    // All tags; `selected` follows the current entry (or the draft when stopped).
+    in property <[TagOption]> tags;
+
+    callback start();
+    callback pause();
+    callback resume();
+    callback stop();
+    callback set-description(text: string);
+    // Empty ids clear the project / task.
+    callback set-project(project-id: string, task-id: string);
+    callback set-tags(tag-ids: [string]);
+    callback set-billable(billable: bool);
+    // Create returns the new id, or "" on error (already reported).
+    callback create-project(name: string) -> string;
+    callback create-task(project-id: string, name: string) -> string;
+    callback create-tag(name: string) -> string;
+}

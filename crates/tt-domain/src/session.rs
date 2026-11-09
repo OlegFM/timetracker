@@ -7,7 +7,7 @@ use crate::ids::{Id, Millis};
 use crate::model::TimeEntry;
 
 /// Fields copied from an entry when starting the next one in a session.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntryTemplate {
     pub description: String,
     pub project_id: Option<Id>,

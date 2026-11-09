@@ -1,0 +1,234 @@
+import { Theme } from "../theme.slint";
+import { Icons } from "icon.slint";
+import { Input } from "input.slint";
+import { Activator, Button, ButtonVariant, FocusRing } from "button.slint";
+import { ComboBox } from "combobox.slint";
+import { TagSelect } from "tag_select.slint";
+import { TimerBridge, TimerView } from "../bridges/timer.slint";
+
+// Round "$" toggle for the billable flag.
+component BillableToggle inherits Rectangle {
+    in property <bool> checked;
+    callback toggled();
+
+    width: 30px;
+    height: 30px;
+    border-radius: self.height / 2;
+    border-width: 1px;
+    border-color: root.checked ? Theme.accent : Theme.line;
+    background: root.checked ? Theme.accent.with-alpha(0.15)
+        : touch.has-hover ? Theme.surface-hover : transparent;
+    forward-focus: keys;
+
+    accessible-role: checkbox;
+    accessible-label: @tr("Billable");
+    accessible-checked: root.checked;
+    accessible-action-default => { root.toggled(); }
+
+    Text {
+        text: "$";
+        color: root.checked ? Theme.accent : Theme.muted;
+        font-size: Theme.font-md;
+        font-weight: 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        accessible-role: none;
+    }
+
+    keys := Activator {
+        activated => { root.toggled(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.toggled(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: root.height / 2;
+    }
+}
+
+// Top bar of the main window: description, project/task, tags, billable, session clock
+// and Start / Pause·Resume / Stop. State and actions come from `TimerBridge`.
+export component TimerBar inherits Rectangle {
+    private property <TimerView> view: TimerBridge.view;
+    // The field follows the stored description; typing is committed on Enter or focus loss.
+    private property <string> stored-description: TimerBridge.view.description;
+
+    function commit-description() {
+        TimerBridge.set-description(desc.text);
+    }
+
+    changed stored-description => {
+        desc.text = self.stored-description;
+    }
+    init => {
+        desc.text = TimerBridge.view.description;
+    }
+
+    height: 60px;
+    background: Theme.panel;
+
+    HorizontalLayout {
+        padding-left: 18px;
+        padding-right: 18px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        spacing: 10px;
+
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 1;
+
+            desc := Input {
+                height: 36px;
+                flat: true;
+                font-size: Theme.font-lg;
+                placeholder: @tr("What are you working on?");
+                accepted => {
+                    root.commit-description();
+                    if root.view.state == 0 {
+                        TimerBridge.start();
+                    }
+                }
+                changed has-focus => {
+                    if !self.has-focus {
+                        root.commit-description();
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 0;
+
+            ComboBox {
+                items: TimerBridge.projects;
+                current-id: root.view.task-id != "" ? root.view.task-id : root.view.project-id;
+                text: root.view.project-label;
+                dot-color: root.view.project-color;
+                placeholder: @tr("Project");
+                none-text: @tr("No project");
+                create-texts: root.view.project-id != ""
+                    ? [@tr("Create project \"{}\"", self.query), @tr("Create task \"{}\"", self.query)]
+                    : [@tr("Create project \"{}\"", self.query)];
+                selected(option) => {
+                    TimerBridge.set-project(option.project-id, option.task-id);
+                }
+                cleared => {
+                    TimerBridge.set-project("", "");
+                }
+                create(index, name) => {
+                    if index == 0 {
+                        let id = TimerBridge.create-project(name);
+                        if id != "" {
+                            TimerBridge.set-project(id, "");
+                        }
+                    } else {
+                        let project = root.view.project-id;
+                        let id = TimerBridge.create-task(project, name);
+                        if id != "" {
+                            TimerBridge.set-project(project, id);
+                        }
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            horizontal-stretch: 0;
+
+            TagSelect {
+                items: TimerBridge.tags;
+                text: root.view.tags-label;
+                selection-changed(ids) => {
+                    TimerBridge.set-tags(ids);
+                }
+                create(name) => {
+                    TimerBridge.create-tag(name)
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            BillableToggle {
+                checked: root.view.billable;
+                toggled => {
+                    TimerBridge.set-billable(!root.view.billable);
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            min-width: 96px;
+
+            Text {
+                text: root.view.clock;
+                color: root.view.state == 0 ? Theme.muted : Theme.text;
+                font-size: Theme.font-xl;
+                font-weight: 600;
+                horizontal-alignment: right;
+                accessible-label: @tr("Session time");
+            }
+            if root.view.today != "": Text {
+                text: @tr("Today {}", root.view.today);
+                color: Theme.muted;
+                font-size: 11px;
+                horizontal-alignment: right;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            Button {
+                height: 36px;
+                round: true;
+                variant: root.view.state == 1 ? ButtonVariant.warning : ButtonVariant.primary;
+                icon: root.view.state == 1 ? Icons.pause : Icons.play;
+                text: root.view.state == 0 ? @tr("Start")
+                    : root.view.state == 1 ? @tr("Pause") : @tr("Resume");
+                clicked => {
+                    root.commit-description();
+                    if root.view.state == 0 {
+                        TimerBridge.start();
+                    } else if root.view.state == 1 {
+                        TimerBridge.pause();
+                    } else {
+                        TimerBridge.resume();
+                    }
+                }
+            }
+        }
+
+        if root.view.state != 0: VerticalLayout {
+            alignment: center;
+
+            Button {
+                width: 36px;
+                height: 36px;
+                round: true;
+                variant: ButtonVariant.danger;
+                icon: Icons.stop;
+                accessible-label: @tr("Stop");
+                clicked => {
+                    root.commit-description();
+                    TimerBridge.stop();
+                }
+            }
+        }
+    }
+
+    // Bottom border
+    Rectangle {
+        y: parent.height - self.height;
+        height: 1px;
+        background: Theme.line;
+    }
+}

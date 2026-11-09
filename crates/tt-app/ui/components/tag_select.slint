@@ -1,0 +1,133 @@
+import { Theme } from "../theme.slint";
+import { Icons } from "icon.slint";
+import { Input } from "input.slint";
+import { PickerChip, PickerList, PickerPanel, PickerRow } from "combobox.slint";
+import { Pickers, TagOption } from "../bridges/pickers.slint";
+
+// Multiple choice of tags with case-insensitive search and a "Create tag" row while the
+// query has no exact match. Keys: ↑ ↓ move, Enter toggles / creates, Esc closes.
+export component TagSelect inherits Rectangle {
+    in property <[TagOption]> items;
+    // Shown value; empty = no tags (placeholder).
+    in property <string> text;
+    in property <string> placeholder: @tr("Tags");
+    in property <length> popup-width: 260px;
+    out property <string> query;
+    // The new set of selected tag ids.
+    callback selection-changed(ids: [string]);
+    // Creates a tag named `name`; returns its id, or "" on error.
+    callback create(name: string) -> string;
+
+    private property <[TagOption]> shown: Pickers.filter-tags(root.items, root.query);
+    private property <int> create-rows: Pickers.tag-creatable(root.items, root.query) ? 1 : 0;
+    private property <int> row-count: root.shown.length + root.create-rows;
+    private property <int> highlighted;
+
+    function open() {
+        root.query = "";
+        root.highlighted = 0;
+        popup.show();
+    }
+
+    function activate(i: int) {
+        if i < 0 || i >= root.row-count {
+            return;
+        }
+        if i < root.shown.length {
+            root.selection-changed(Pickers.toggle-tag(root.items, root.shown[i].id));
+            return;
+        }
+        let id = root.create(root.query);
+        if id != "" {
+            root.selection-changed(Pickers.toggle-tag(root.items, id));
+            root.query = "";
+            root.highlighted = 0;
+        }
+    }
+
+    height: chip.height;
+    min-width: chip.min-width;
+    preferred-width: chip.preferred-width;
+    max-width: chip.max-width;
+    forward-focus: chip;
+
+    accessible-role: combobox;
+    accessible-label: root.placeholder;
+    accessible-value: root.text;
+    accessible-expanded: popup.is-open;
+    accessible-action-default => { root.open(); }
+
+    chip := PickerChip {
+        width: 100%;
+        text: root.text;
+        placeholder: root.placeholder;
+        icon: Icons.tag;
+        open: popup.is-open;
+        clicked => { root.open(); }
+    }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: root.popup-width;
+        close-policy: close-on-click-outside;
+        forward-focus: search;
+
+        PickerPanel {
+            FocusScope {
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                capture-key-pressed(event) => {
+                    if event.text == Key.UpArrow {
+                        root.highlighted = max(0, root.highlighted - 1);
+                        return accept;
+                    }
+                    if event.text == Key.DownArrow {
+                        root.highlighted = min(root.row-count - 1, root.highlighted + 1);
+                        return accept;
+                    }
+                    if event.text == Key.Return {
+                        root.activate(root.highlighted);
+                        return accept;
+                    }
+                    if event.text == Key.Escape {
+                        popup.close();
+                        return accept;
+                    }
+                    reject
+                }
+
+                VerticalLayout {
+                    padding: 6px;
+                    spacing: 6px;
+
+                    search := Input {
+                        text <=> root.query;
+                        placeholder: @tr("Search");
+                        edited => { root.highlighted = 0; }
+                    }
+                    PickerList {
+                        row-count: root.row-count;
+                        highlighted: root.highlighted;
+
+                        for tag[i] in root.shown: PickerRow {
+                            text: tag.name;
+                            checkbox: true;
+                            checked: tag.selected;
+                            highlighted: root.highlighted == i;
+                            hovered => { root.highlighted = i; }
+                            clicked => { root.activate(i); }
+                        }
+                        if root.create-rows == 1: PickerRow {
+                            text: @tr("Create tag \"{}\"", root.query);
+                            icon: Icons.plus;
+                            highlighted: root.highlighted == root.shown.length;
+                            hovered => { root.highlighted = root.shown.length; }
+                            clicked => { root.activate(root.shown.length); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

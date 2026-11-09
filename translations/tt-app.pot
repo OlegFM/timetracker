@@ -27,7 +27,7 @@ msgstr ""
 msgid "Clients"
 msgstr ""
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/components/tag_select.slint ui/main.slint
 msgid "Tags"
 msgstr ""
 
@@ -43,7 +43,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: ui/main.slint
+#: ui/components/timer_bar.slint ui/main.slint
 msgid "Project"
 msgstr ""
 
@@ -59,15 +59,15 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Pause"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Resume"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Stop"
 msgstr ""
 
@@ -229,4 +229,52 @@ msgstr ""
 
 #: ui/strings.slint
 msgid "This file is not a valid TimeTracker backup."
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "What are you working on?"
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "No project"
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Create project \"{}\""
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Create task \"{}\""
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Billable"
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Session time"
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Today {}"
+msgstr ""
+
+#: ui/components/timer_bar.slint
+msgid "Start"
+msgstr ""
+
+#: ui/components/combobox.slint ui/components/tag_select.slint
+msgid "Search"
+msgstr ""
+
+#: ui/components/combobox.slint
+msgid "Nothing found"
+msgstr ""
+
+#: ui/components/tag_select.slint
+msgid "Create tag \"{}\""
+msgstr ""
+
+#: ui/strings.slint
+msgid "Something went wrong. Please try again."
 msgstr ""

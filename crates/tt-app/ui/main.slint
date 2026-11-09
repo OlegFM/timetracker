@@ -3,12 +3,14 @@ import { Tr } from "strings.slint";
 import { Sidebar } from "components/sidebar.slint";
 import { Toast, ToastKind } from "components/toast.slint";
 import { PlaceholderScreen } from "screens/placeholder.slint";
-// Not used by the shell yet; imported so the compiler checks them until screens use them.
-import { Input } from "components/input.slint";
+import { TimerBar } from "components/timer_bar.slint";
+import { TimerBridge, TimerView } from "bridges/timer.slint";
+import { Pickers, ProjectOption, TagOption } from "bridges/pickers.slint";
+// Not used by the shell yet; imported so the compiler checks it until screens use it.
 import { ConfirmDialog } from "components/dialog.slint";
 
 // Globals and enums used from Rust must be exported from the main file.
-export { Theme, Tr, ToastKind }
+export { Theme, Tr, ToastKind, TimerBridge, TimerView, Pickers, ProjectOption, TagOption }
 
 export component MainWindow inherits Window {
     // Page index: 0 Dashboard, 1 Time, 2 Projects, 3 Project, 4 Clients, 5 Tags,
@@ -33,17 +35,7 @@ export component MainWindow inherits Window {
         }
 
         VerticalLayout {
-            // Timer bar slot (Task 11).
-            Rectangle {
-                height: 60px;
-                background: Theme.panel;
-
-                Rectangle {
-                    y: parent.height - self.height;
-                    height: 1px;
-                    background: Theme.line;
-                }
-            }
+            TimerBar { }
 
             VerticalLayout {
                 if root.page == 0: PlaceholderScreen {

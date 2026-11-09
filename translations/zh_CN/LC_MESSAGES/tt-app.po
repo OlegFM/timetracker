@@ -29,7 +29,7 @@ msgstr "项目"
 msgid "Clients"
 msgstr "客户"
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/components/tag_select.slint ui/main.slint
 msgid "Tags"
 msgstr "标签"
 
@@ -45,7 +45,7 @@ msgstr "报表"
 msgid "Settings"
 msgstr "设置"
 
-#: ui/main.slint
+#: ui/components/timer_bar.slint ui/main.slint
 msgid "Project"
 msgstr "项目"
 
@@ -61,15 +61,15 @@ msgstr "取消"
 msgid "Close"
 msgstr "关闭"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Pause"
 msgstr "暂停"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Resume"
 msgstr "继续"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Stop"
 msgstr "停止"
 
@@ -232,3 +232,51 @@ msgstr "结束时间必须晚于开始时间。"
 #: ui/strings.slint
 msgid "This file is not a valid TimeTracker backup."
 msgstr "此文件不是有效的 TimeTracker 备份。"
+
+#: ui/components/timer_bar.slint
+msgid "What are you working on?"
+msgstr "你在做什么？"
+
+#: ui/components/timer_bar.slint
+msgid "No project"
+msgstr "无项目"
+
+#: ui/components/timer_bar.slint
+msgid "Create project \"{}\""
+msgstr "创建项目“{}”"
+
+#: ui/components/timer_bar.slint
+msgid "Create task \"{}\""
+msgstr "创建任务“{}”"
+
+#: ui/components/timer_bar.slint
+msgid "Billable"
+msgstr "计费"
+
+#: ui/components/timer_bar.slint
+msgid "Session time"
+msgstr "会话时长"
+
+#: ui/components/timer_bar.slint
+msgid "Today {}"
+msgstr "今天 {}"
+
+#: ui/components/timer_bar.slint
+msgid "Start"
+msgstr "开始"
+
+#: ui/components/combobox.slint ui/components/tag_select.slint
+msgid "Search"
+msgstr "搜索"
+
+#: ui/components/combobox.slint
+msgid "Nothing found"
+msgstr "未找到"
+
+#: ui/components/tag_select.slint
+msgid "Create tag \"{}\""
+msgstr "创建标签“{}”"
+
+#: ui/strings.slint
+msgid "Something went wrong. Please try again."
+msgstr "出了点问题，请重试。"

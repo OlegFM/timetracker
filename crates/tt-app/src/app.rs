@@ -7,7 +7,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use directories::BaseDirs;
 use slint::ComponentHandle;
-use tt_services::{Settings, SettingsService, SystemClock, TimerService};
+use tt_services::{CatalogService, Settings, SettingsService, SystemClock, TimerService};
 use tt_storage::Db;
 
 use crate::vm::lang;
@@ -19,8 +19,32 @@ const APP_DIR: &str = "TimeTracker";
 pub struct AppContext {
     pub db: Db,
     pub timer: TimerService<SystemClock>,
+    pub catalog: CatalogService<SystemClock>,
     pub settings: Settings,
     pub db_path: PathBuf,
+    pub events: Rc<AppEvents>,
+}
+
+/// Notifications between controllers (UI thread). Clone the `Rc` out of the context
+/// before emitting so that listeners can borrow the context.
+#[derive(Default)]
+pub struct AppEvents {
+    entries_changed: RefCell<Vec<Rc<dyn Fn()>>>,
+}
+
+impl AppEvents {
+    /// `f` runs after time entries changed (timer actions, midnight rollover, edits).
+    pub fn on_entries_changed(&self, f: impl Fn() + 'static) {
+        self.entries_changed.borrow_mut().push(Rc::new(f));
+    }
+
+    /// Calls the listeners registered so far; they may subscribe or emit again.
+    pub fn emit_entries_changed(&self) {
+        let listeners = self.entries_changed.borrow().clone();
+        for f in listeners {
+            f();
+        }
+    }
 }
 
 /// Shared handle used by controllers (UI thread only).
@@ -43,8 +67,10 @@ impl AppContext {
         Ok(AppContext {
             db,
             timer: TimerService::new(SystemClock),
+            catalog: CatalogService::new(SystemClock),
             settings,
             db_path,
+            events: Rc::default(),
         })
     }
 
@@ -94,6 +120,26 @@ mod tests {
         assert!(path.exists());
         assert_eq!(ctx.db_path, path);
         assert_eq!(ctx.settings, Settings::default());
+    }
+
+    #[test]
+    fn entries_changed_reaches_all_listeners_and_allows_reentry() {
+        use std::cell::Cell;
+
+        let events = Rc::new(AppEvents::default());
+        let calls = Rc::new(Cell::new(0));
+        for _ in 0..2 {
+            let calls = calls.clone();
+            events.on_entries_changed(move || calls.set(calls.get() + 1));
+        }
+        // A listener that subscribes another one while being called.
+        let ev = events.clone();
+        events.on_entries_changed(move || ev.on_entries_changed(|| {}));
+
+        events.emit_entries_changed();
+        assert_eq!(calls.get(), 2);
+        events.emit_entries_changed();
+        assert_eq!(calls.get(), 4);
     }
 
     #[test]

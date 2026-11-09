@@ -1,10 +1,13 @@
 import { Theme } from "../theme.slint";
 
 // Single-line text field in the app style (IME and clipboard come from TextInput).
+// `flat`: no background and no border until focused.
 export component Input inherits Rectangle {
     in-out property <string> text <=> input.text;
     in property <string> placeholder;
     in property <bool> enabled <=> input.enabled;
+    in property <bool> flat;
+    in property <length> font-size: Theme.font-md;
     out property <bool> has-focus: input.has-focus;
     callback edited(string);
     callback accepted(string);
@@ -17,8 +20,8 @@ export component Input inherits Rectangle {
     min-width: 120px;
     border-radius: Theme.radius-md;
     border-width: 1px;
-    border-color: input.has-focus ? Theme.accent : Theme.line;
-    background: Theme.card;
+    border-color: input.has-focus ? Theme.accent : root.flat ? transparent : Theme.line;
+    background: root.flat ? transparent : Theme.card;
     opacity: root.enabled ? 1 : 0.5;
     forward-focus: input;
 
@@ -26,6 +29,13 @@ export component Input inherits Rectangle {
     accessible-value: root.text;
     accessible-placeholder-text: root.placeholder;
     accessible-enabled: root.enabled;
+
+    // Clicks on the padding put the cursor into the text.
+    TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.text;
+        clicked => { input.focus(); }
+    }
 
     Rectangle {
         x: Theme.gap-3;
@@ -52,7 +62,7 @@ export component Input inherits Rectangle {
             vertical-alignment: center;
             single-line: true;
             color: Theme.text;
-            font-size: Theme.font-md;
+            font-size: root.font-size;
             selection-background-color: Theme.accent.with-alpha(0.4);
             selection-foreground-color: Theme.text;
             accessible-role: none;

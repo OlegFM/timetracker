@@ -1,5 +1,6 @@
 import { Theme } from "../theme.slint";
 import { Icon, Icons } from "icon.slint";
+import { Activator, FocusRing } from "button.slint";
 
 component NavItem inherits Rectangle {
     in property <string> text;
@@ -17,6 +18,7 @@ component NavItem inherits Rectangle {
     accessible-label: root.text;
     accessible-item-selected: root.active;
     accessible-action-default => { root.clicked(); }
+    forward-focus: keys;
 
     HorizontalLayout {
         padding-left: Theme.gap-2;
@@ -37,9 +39,17 @@ component NavItem inherits Rectangle {
         }
     }
 
-    touch := TouchArea {
-        mouse-cursor: pointer;
-        clicked => { root.clicked(); }
+    keys := Activator {
+        activated => { root.clicked(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.clicked(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: Theme.radius-sm;
     }
 }
 

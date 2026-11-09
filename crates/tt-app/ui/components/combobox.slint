@@ -1,0 +1,348 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+import { Input } from "input.slint";
+import { ColorDot } from "color_dot.slint";
+import { Activator, FocusRing } from "button.slint";
+import { Pickers, ProjectOption } from "../bridges/pickers.slint";
+
+// Pill that opens a picker: optional color dot or icon, the value (or a muted
+// placeholder) and a chevron.
+export component PickerChip inherits Rectangle {
+    in property <string> text;
+    in property <string> placeholder;
+    in property <bool> show-dot;
+    in property <color> dot;
+    in property <image> icon;
+    in property <bool> open;
+    callback clicked();
+
+    height: 30px;
+    min-width: 80px;
+    max-width: 260px;
+    border-radius: self.height / 2;
+    border-width: 1px;
+    border-color: root.open ? Theme.accent : Theme.line;
+    background: touch.has-hover ? Theme.surface-hover : transparent;
+    forward-focus: keys;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 8px;
+        spacing: 6px;
+
+        if root.show-dot: ColorDot {
+            dot-color: root.dot;
+        }
+        if root.icon.width > 0: Icon {
+            source: root.icon;
+            size: 14px;
+            color: Theme.muted;
+        }
+        Text {
+            horizontal-stretch: 1;
+            text: root.text != "" ? root.text : root.placeholder;
+            color: root.text != "" ? Theme.text-secondary : Theme.muted;
+            font-size: Theme.font-sm;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        Icon {
+            source: Icons.chevron-down;
+            size: 14px;
+            color: Theme.muted;
+        }
+    }
+
+    keys := Activator {
+        activated => { root.clicked(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.clicked(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: root.height / 2;
+    }
+}
+
+// One row of a picker list.
+export component PickerRow inherits Rectangle {
+    in property <string> text;
+    in property <bool> highlighted;
+    // Current value: an accent check at the end.
+    in property <bool> checked;
+    // Multi-select row: a checkbox in front.
+    in property <bool> checkbox;
+    in property <bool> show-dot;
+    in property <color> dot;
+    in property <image> icon;
+    in property <bool> indent;
+    in property <bool> muted;
+    callback clicked();
+    callback hovered();
+
+    height: 30px;
+    border-radius: Theme.radius-sm;
+    background: root.highlighted ? Theme.surface-hover : transparent;
+
+    accessible-role: list-item;
+    accessible-label: root.text;
+    accessible-item-selected: root.checked;
+    accessible-action-default => { root.clicked(); }
+
+    HorizontalLayout {
+        padding-left: root.indent ? 26px : Theme.gap-2;
+        padding-right: Theme.gap-2;
+        spacing: Theme.gap-2;
+
+        if root.checkbox: Rectangle {
+            width: 14px;
+
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                width: 14px;
+                height: 14px;
+                border-radius: 3px;
+                border-width: root.checked ? 0 : 1px;
+                border-color: Theme.muted;
+                background: root.checked ? Theme.accent : transparent;
+
+                if root.checked: Icon {
+                    x: 1px;
+                    width: 12px;
+                    size: 12px;
+                    source: Icons.check;
+                    color: Theme.text-on-accent;
+                }
+            }
+        }
+        if root.show-dot: ColorDot {
+            dot-color: root.dot;
+        }
+        if root.icon.width > 0: Icon {
+            source: root.icon;
+            size: 14px;
+            color: Theme.accent;
+        }
+        Text {
+            horizontal-stretch: 1;
+            text: root.text;
+            color: root.muted ? Theme.muted : root.indent ? Theme.text-secondary : Theme.text;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        if root.checked && !root.checkbox: Icon {
+            source: Icons.check;
+            size: 14px;
+            color: Theme.accent;
+        }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+        changed has-hover => {
+            if self.has-hover {
+                root.hovered();
+            }
+        }
+    }
+}
+
+// Popup card of a picker: search field on top, then the rows.
+export component PickerPanel inherits Rectangle {
+    background: Theme.card;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    drop-shadow-blur: 20px;
+    drop-shadow-offset-y: 6px;
+    drop-shadow-color: #00000066;
+}
+
+// Scrollable list area showing up to `visible-rows` rows of 30px; keeps `highlighted`
+// in view and shows `empty-text` when there are no rows.
+export component PickerList inherits Rectangle {
+    in property <int> row-count;
+    in property <int> highlighted;
+    in property <int> visible-rows: 8;
+    in property <string> empty-text: @tr("Nothing found");
+
+    height: max(1, min(root.row-count, root.visible-rows)) * 30px;
+
+    changed highlighted => {
+        let top = root.highlighted * 30px;
+        if top + list.content-y < 0 {
+            list.content-y = -top;
+        } else if top + 30px + list.content-y > root.height {
+            list.content-y = root.height - top - 30px;
+        }
+    }
+
+    list := Flickable {
+        content-height: root.row-count * 30px;
+
+        VerticalLayout {
+            alignment: start;
+
+            @children
+        }
+    }
+
+    if root.row-count == 0: Text {
+        x: Theme.gap-2;
+        text: root.empty-text;
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        vertical-alignment: center;
+    }
+}
+
+// Single choice from `items` with case-insensitive search. Rows: an optional `none-text`
+// row (clears the choice), the matching items, then `create-texts` while the query has no
+// exact match. Keys: ↑ ↓ move, Enter picks, Esc closes.
+export component ComboBox inherits Rectangle {
+    in property <[ProjectOption]> items;
+    // Id of the current option (marked with a check).
+    in property <string> current-id;
+    // Shown value; empty = nothing chosen (placeholder).
+    in property <string> text;
+    in property <color> dot-color;
+    in property <string> placeholder;
+    in property <string> none-text;
+    in property <[string]> create-texts;
+    in property <length> popup-width: 340px;
+    out property <string> query;
+    callback selected(option: ProjectOption);
+    callback cleared();
+    // `index` into `create-texts`; `name` is the query.
+    callback create(index: int, name: string);
+
+    private property <[ProjectOption]> shown: Pickers.filter-options(root.items, root.query);
+    private property <int> none-rows: root.none-text != "" && root.query == "" ? 1 : 0;
+    private property <[string]> creates: Pickers.option-creatable(root.items, root.query) ? root.create-texts : [];
+    private property <int> row-count: root.none-rows + root.shown.length + root.creates.length;
+    private property <int> highlighted;
+
+    function open() {
+        root.query = "";
+        root.highlighted = 0;
+        popup.show();
+    }
+
+    function activate(i: int) {
+        if i < 0 || i >= root.row-count {
+            return;
+        }
+        popup.close();
+        if i < root.none-rows {
+            root.cleared();
+        } else if i < root.none-rows + root.shown.length {
+            root.selected(root.shown[i - root.none-rows]);
+        } else {
+            root.create(i - root.none-rows - root.shown.length, root.query);
+        }
+    }
+
+    height: chip.height;
+    min-width: chip.min-width;
+    preferred-width: chip.preferred-width;
+    max-width: chip.max-width;
+    forward-focus: chip;
+
+    accessible-role: combobox;
+    accessible-label: root.placeholder;
+    accessible-value: root.text;
+    accessible-expanded: popup.is-open;
+    accessible-action-default => { root.open(); }
+
+    chip := PickerChip {
+        width: 100%;
+        text: root.text;
+        placeholder: root.placeholder;
+        show-dot: root.text != "";
+        dot: root.dot-color;
+        open: popup.is-open;
+        clicked => { root.open(); }
+    }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: root.popup-width;
+        close-policy: close-on-click-outside;
+        forward-focus: search;
+
+        PickerPanel {
+            FocusScope {
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                capture-key-pressed(event) => {
+                    if event.text == Key.UpArrow {
+                        root.highlighted = max(0, root.highlighted - 1);
+                        return accept;
+                    }
+                    if event.text == Key.DownArrow {
+                        root.highlighted = min(root.row-count - 1, root.highlighted + 1);
+                        return accept;
+                    }
+                    if event.text == Key.Return {
+                        root.activate(root.highlighted);
+                        return accept;
+                    }
+                    if event.text == Key.Escape {
+                        popup.close();
+                        return accept;
+                    }
+                    reject
+                }
+
+                VerticalLayout {
+                    padding: 6px;
+                    spacing: 6px;
+
+                    search := Input {
+                        text <=> root.query;
+                        placeholder: @tr("Search");
+                        edited => { root.highlighted = 0; }
+                    }
+                    PickerList {
+                        row-count: root.row-count;
+                        highlighted: root.highlighted;
+
+                        if root.none-rows == 1: PickerRow {
+                            text: root.none-text;
+                            muted: true;
+                            checked: root.current-id == "";
+                            highlighted: root.highlighted == 0;
+                            hovered => { root.highlighted = 0; }
+                            clicked => { root.activate(0); }
+                        }
+                        for item[i] in root.shown: PickerRow {
+                            text: item.label;
+                            indent: item.task-id != "";
+                            show-dot: item.task-id == "";
+                            dot: item.color;
+                            checked: item.id == root.current-id;
+                            highlighted: root.highlighted == root.none-rows + i;
+                            hovered => { root.highlighted = root.none-rows + i; }
+                            clicked => { root.activate(root.none-rows + i); }
+                        }
+                        for label[j] in root.creates: PickerRow {
+                            text: label;
+                            icon: Icons.plus;
+                            highlighted: root.highlighted == root.none-rows + root.shown.length + j;
+                            hovered => { root.highlighted = root.none-rows + root.shown.length + j; }
+                            clicked => { root.activate(root.none-rows + root.shown.length + j); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

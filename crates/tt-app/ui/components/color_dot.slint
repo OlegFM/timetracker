@@ -1,0 +1,22 @@
+import { Theme } from "../theme.slint";
+
+// Round color marker of a project, vertically centered in its row; a muted outline when
+// `color` is transparent (no project).
+export component ColorDot inherits Rectangle {
+    in property <color> dot-color;
+    in property <length> size: 8px;
+
+    width: root.size;
+    min-height: root.size;
+    accessible-role: none;
+
+    Rectangle {
+        y: (parent.height - self.height) / 2;
+        width: root.size;
+        height: root.size;
+        border-radius: root.size / 2;
+        background: root.dot-color;
+        border-width: root.dot-color.alpha == 0 ? 1px : 0;
+        border-color: Theme.muted;
+    }
+}

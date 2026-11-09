@@ -1,36 +1,82 @@
 import { Theme } from "../theme.slint";
 import { Icon } from "icon.slint";
 
-export enum ButtonVariant { primary, secondary, ghost, danger }
+export enum ButtonVariant { primary, secondary, ghost, danger, warning }
 
-// Text and/or icon button. Icon-only buttons are square; give them an `accessible-label`.
+// Accent outline just outside the parent (fills it like any unsized child); used for a
+// control focused through keyboard navigation.
+export component FocusRing inherits Rectangle {
+    in property <length> radius: Theme.radius-md;
+
+    Rectangle {
+        x: -2px;
+        y: -2px;
+        width: parent.width + 4px;
+        height: parent.height + 4px;
+        border-radius: root.radius + 2px;
+        border-width: 2px;
+        border-color: Theme.accent;
+    }
+}
+
+// Keyboard support for clickable controls: focusable (also by Tab), Enter / Space call
+// `activated`. `focus-visible` is true while focused through keyboard navigation.
+export component Activator inherits FocusScope {
+    out property <bool> focus-visible;
+    callback activated();
+
+    focus-gained(reason) => {
+        self.focus-visible = reason == FocusReason.tab-navigation;
+    }
+    focus-lost => {
+        self.focus-visible = false;
+    }
+    key-pressed(event) => {
+        if event.text == Key.Return || event.text == " " {
+            root.activated();
+            return accept;
+        }
+        reject
+    }
+}
+
+// Text and/or icon button. Icon-only buttons are square; `round` makes them a circle or pill
+// (set a square size for a circle). Give icon-only buttons an `accessible-label`.
 export component Button inherits Rectangle {
     in property <string> text;
     in property <image> icon;
     in property <ButtonVariant> variant: ButtonVariant.secondary;
     in property <bool> enabled: true;
+    in property <bool> round;
     callback clicked();
 
-    private property <bool> filled: root.variant == ButtonVariant.primary || root.variant == ButtonVariant.danger;
+    private property <bool> filled: root.variant == ButtonVariant.primary || root.variant == ButtonVariant.danger || root.variant == ButtonVariant.warning;
     private property <color> fill: root.variant == ButtonVariant.primary ? Theme.accent
         : root.variant == ButtonVariant.danger ? Theme.danger
+        : root.variant == ButtonVariant.warning ? Theme.warning
         : root.variant == ButtonVariant.secondary ? Theme.card : transparent;
     private property <color> hover-fill: root.filled ? root.fill.brighter(10%) : Theme.surface-hover;
     private property <color> fg: root.filled ? Theme.text-on-accent : Theme.text;
+    private property <length> radius: root.round ? root.height / 2 : Theme.radius-md;
 
     height: 32px;
-    border-radius: Theme.radius-md;
+    border-radius: root.radius;
     border-width: root.variant == ButtonVariant.secondary ? 1px : 0;
     border-color: Theme.line;
     background: !root.enabled ? root.fill
         : touch.pressed ? root.hover-fill.darker(10%)
         : touch.has-hover ? root.hover-fill : root.fill;
     opacity: root.enabled ? 1 : 0.5;
+    forward-focus: keys;
 
     accessible-role: button;
     accessible-label: root.text;
     accessible-enabled: root.enabled;
-    accessible-action-default => { root.clicked(); }
+    accessible-action-default => {
+        if root.enabled {
+            root.clicked();
+        }
+    }
 
     HorizontalLayout {
         padding-left: root.text == "" ? Theme.gap-2 : Theme.gap-3;
@@ -51,9 +97,18 @@ export component Button inherits Rectangle {
         }
     }
 
-    touch := TouchArea {
+    keys := Activator {
         enabled: root.enabled;
-        mouse-cursor: pointer;
-        clicked => { root.clicked(); }
+        activated => { root.clicked(); }
+
+        touch := TouchArea {
+            enabled: root.enabled;
+            mouse-cursor: pointer;
+            clicked => { root.clicked(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing {
+        radius: root.radius;
     }
 }

@@ -161,6 +161,65 @@ fn parse_po(text: &str) -> Vec<PoEntry> {
     entries
 }
 
+/// `nplurals` from the `Plural-Forms` header (1 if absent, as in the template).
+fn nplurals(text: &str) -> usize {
+    text.split("nplurals=")
+        .nth(1)
+        .map(|rest| {
+            let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+            digits.parse().expect("nplurals value")
+        })
+        .unwrap_or(1)
+}
+
+/// Format placeholders (`{}`, `{0}`, `{n}`), sorted, with repeats.
+fn placeholders(s: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = s;
+    while let Some(start) = rest.find('{') {
+        let after = &rest[start + 1..];
+        match after.find('}') {
+            Some(end)
+                if after[..end]
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_') =>
+            {
+                out.push(format!("{{{}}}", &after[..end]));
+                rest = &after[end + 1..];
+            }
+            _ => rest = after,
+        }
+    }
+    out.sort();
+    out
+}
+
+/// Wrong number of msgstr forms, or placeholders that differ from the msgid's
+/// (from msgid_plural for plural entries). Untranslated (empty) forms are skipped.
+fn form_problems(e: &PoEntry, nplurals: usize) -> Vec<String> {
+    let mut problems = Vec::new();
+    let forms = if e.msg.plural.is_empty() { 1 } else { nplurals };
+    if e.strs.len() != forms {
+        problems.push(format!(
+            "{:?}: {} msgstr, want {forms}",
+            e.msg,
+            e.strs.len()
+        ));
+    }
+    let source = if e.msg.plural.is_empty() {
+        &e.msg.id
+    } else {
+        &e.msg.plural
+    };
+    let want = placeholders(source);
+    for (i, s) in e.strs.iter().enumerate().filter(|(_, s)| !s.is_empty()) {
+        if placeholders(s) != want {
+            problems.push(format!("{:?}: msgstr[{i}] placeholders differ", e.msg));
+        }
+    }
+    problems
+}
+
 fn catalog(path: &Path) -> Vec<PoEntry> {
     let text = fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
     parse_po(&text)
@@ -198,6 +257,63 @@ fn every_tr_string_is_translated() {
         }
     }
     assert!(problems.is_empty(), "\n{}", problems.join("\n"));
+}
+
+#[test]
+fn plural_forms_and_placeholders_match() {
+    let mut problems = Vec::new();
+    for lang in LANGS {
+        let path = po_path(lang);
+        let text = fs::read_to_string(&path).unwrap();
+        let n = nplurals(&text);
+        for e in parse_po(&text) {
+            problems.extend(
+                form_problems(&e, n)
+                    .into_iter()
+                    .map(|p| format!("{lang}: {p}")),
+            );
+        }
+    }
+    assert!(
+        problems.is_empty(),
+        "
+{}",
+        problems.join(
+            "
+"
+        )
+    );
+}
+
+#[test]
+fn form_checks_catch_bad_entries() {
+    assert_eq!(nplurals("\"Plural-Forms: nplurals=3; plural=0;\n\""), 3);
+    assert_eq!(nplurals(""), 1);
+    assert_eq!(
+        placeholders("Create \"{}\" in {} ({n}, {0}) {not a placeholder"),
+        ["{0}", "{n}", "{}", "{}"]
+    );
+
+    let po = parse_po(concat!(
+        "msgid \"Create \\\"{}\\\"\"
+msgstr \"Создать\"
+
+",
+        "msgid \"Fine {}\"
+msgstr \"Хорошо {}\"
+
+",
+        "msgid \"{n} hour\"
+msgid_plural \"{n} hours\"
+msgstr[0] \"{n} час\"
+msgstr[1] \"{n} часа\"
+",
+    ));
+    assert_eq!(po.len(), 3);
+    assert_eq!(form_problems(&po[0], 3).len(), 1, "missing placeholder");
+    assert!(form_problems(&po[1], 3).is_empty());
+    assert_eq!(form_problems(&po[2], 3).len(), 1, "2 of 3 plural forms");
+    assert!(form_problems(&po[2], 2).is_empty());
 }
 
 #[test]

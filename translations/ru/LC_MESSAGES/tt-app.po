@@ -29,7 +29,7 @@ msgstr "Проекты"
 msgid "Clients"
 msgstr "Клиенты"
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/components/tag_select.slint ui/main.slint
 msgid "Tags"
 msgstr "Теги"
 
@@ -45,7 +45,7 @@ msgstr "Отчёты"
 msgid "Settings"
 msgstr "Настройки"
 
-#: ui/main.slint
+#: ui/components/timer_bar.slint ui/main.slint
 msgid "Project"
 msgstr "Проект"
 
@@ -61,15 +61,15 @@ msgstr "Отмена"
 msgid "Close"
 msgstr "Закрыть"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Pause"
 msgstr "Пауза"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Resume"
 msgstr "Продолжить"
 
-#: ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint
 msgid "Stop"
 msgstr "Стоп"
 
@@ -232,3 +232,51 @@ msgstr "Конец должен быть позже начала."
 #: ui/strings.slint
 msgid "This file is not a valid TimeTracker backup."
 msgstr "Файл не является корректной резервной копией TimeTracker."
+
+#: ui/components/timer_bar.slint
+msgid "What are you working on?"
+msgstr "Над чем вы работаете?"
+
+#: ui/components/timer_bar.slint
+msgid "No project"
+msgstr "Без проекта"
+
+#: ui/components/timer_bar.slint
+msgid "Create project \"{}\""
+msgstr "Создать проект «{}»"
+
+#: ui/components/timer_bar.slint
+msgid "Create task \"{}\""
+msgstr "Создать задачу «{}»"
+
+#: ui/components/timer_bar.slint
+msgid "Billable"
+msgstr "Оплачиваемая"
+
+#: ui/components/timer_bar.slint
+msgid "Session time"
+msgstr "Время сессии"
+
+#: ui/components/timer_bar.slint
+msgid "Today {}"
+msgstr "Сегодня {}"
+
+#: ui/components/timer_bar.slint
+msgid "Start"
+msgstr "Старт"
+
+#: ui/components/combobox.slint ui/components/tag_select.slint
+msgid "Search"
+msgstr "Поиск"
+
+#: ui/components/combobox.slint
+msgid "Nothing found"
+msgstr "Ничего не найдено"
+
+#: ui/components/tag_select.slint
+msgid "Create tag \"{}\""
+msgstr "Создать тег «{}»"
+
+#: ui/strings.slint
+msgid "Something went wrong. Please try again."
+msgstr "Что-то пошло не так. Попробуйте ещё раз."

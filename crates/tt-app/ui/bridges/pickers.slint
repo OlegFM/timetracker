@@ -1,0 +1,33 @@
+// Option rows for the project/task and tag pickers, and helpers the pickers call.
+// The helpers are pure functions implemented in Rust (`controllers::pickers`); register
+// them in every window that shows a picker (globals are per window).
+
+// A project ("Project") or one of its tasks ("Project › Task").
+export struct ProjectOption {
+    // Task id for a task row, else the project id.
+    id: string,
+    label: string,
+    color: color,
+    project-id: string,
+    // Empty for a project row.
+    task-id: string,
+}
+
+export struct TagOption {
+    id: string,
+    name: string,
+    selected: bool,
+}
+
+export global Pickers {
+    // Options whose label contains `query` (case-insensitive); exact matches first.
+    pure callback filter-options(items: [ProjectOption], query: string) -> [ProjectOption];
+    // `query` (trimmed) is not empty and no option label equals it (case-insensitive).
+    pure callback option-creatable(items: [ProjectOption], query: string) -> bool;
+    // Tags whose name contains `query` (case-insensitive); exact matches first.
+    pure callback filter-tags(items: [TagOption], query: string) -> [TagOption];
+    // `query` (trimmed) is not empty and no tag name equals it (case-insensitive).
+    pure callback tag-creatable(items: [TagOption], query: string) -> bool;
+    // Ids of the selected tags with `id` added or removed.
+    pure callback toggle-tag(items: [TagOption], id: string) -> [string];
+}
