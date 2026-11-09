@@ -511,6 +511,11 @@ dependencies = [
 name = "tt-services"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "iana-time-zone",
+ "rusqlite",
+ "tempfile",
+ "thiserror",
  "tt-domain",
  "tt-storage",
 ]
