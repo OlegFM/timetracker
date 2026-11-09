@@ -1,0 +1,75 @@
+import { Theme } from "../theme.slint";
+
+// Single-line text field in the app style (IME and clipboard come from TextInput).
+export component Input inherits Rectangle {
+    in-out property <string> text <=> input.text;
+    in property <string> placeholder;
+    in property <bool> enabled <=> input.enabled;
+    out property <bool> has-focus: input.has-focus;
+    callback edited(string);
+    callback accepted(string);
+
+    public function select-all() {
+        input.select-all();
+    }
+
+    height: 32px;
+    min-width: 120px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: input.has-focus ? Theme.accent : Theme.line;
+    background: Theme.card;
+    opacity: root.enabled ? 1 : 0.5;
+    forward-focus: input;
+
+    accessible-role: text-input;
+    accessible-value: root.text;
+    accessible-placeholder-text: root.placeholder;
+    accessible-enabled: root.enabled;
+
+    Rectangle {
+        x: Theme.gap-3;
+        width: parent.width - 2 * Theme.gap-3;
+        clip: true;
+
+        Text {
+            width: 100%;
+            height: 100%;
+            vertical-alignment: center;
+            text: input.text == "" && input.preedit-text == "" ? root.placeholder : "";
+            color: Theme.muted;
+            font-size: input.font-size;
+            accessible-role: none;
+        }
+
+        input := TextInput {
+            // Horizontal scroll offset that keeps the cursor visible.
+            property <length> scroll-x;
+
+            x: min(0px, max(parent.width - self.width, self.scroll-x));
+            width: max(parent.width, self.preferred-width + self.text-cursor-width);
+            height: 100%;
+            vertical-alignment: center;
+            single-line: true;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            selection-background-color: Theme.accent.with-alpha(0.4);
+            selection-foreground-color: Theme.text;
+            accessible-role: none;
+
+            cursor-position-changed(pos) => {
+                if pos.x + self.scroll-x < 0 {
+                    self.scroll-x = -pos.x;
+                } else if pos.x + self.scroll-x > parent.width - self.text-cursor-width {
+                    self.scroll-x = parent.width - self.text-cursor-width - pos.x;
+                }
+            }
+            edited => {
+                root.edited(self.text);
+            }
+            accepted => {
+                root.accepted(self.text);
+            }
+        }
+    }
+}

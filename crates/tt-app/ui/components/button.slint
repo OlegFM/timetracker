@@ -1,0 +1,59 @@
+import { Theme } from "../theme.slint";
+import { Icon } from "icon.slint";
+
+export enum ButtonVariant { primary, secondary, ghost, danger }
+
+// Text and/or icon button. Icon-only buttons are square; give them an `accessible-label`.
+export component Button inherits Rectangle {
+    in property <string> text;
+    in property <image> icon;
+    in property <ButtonVariant> variant: ButtonVariant.secondary;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    private property <bool> filled: root.variant == ButtonVariant.primary || root.variant == ButtonVariant.danger;
+    private property <color> fill: root.variant == ButtonVariant.primary ? Theme.accent
+        : root.variant == ButtonVariant.danger ? Theme.danger
+        : root.variant == ButtonVariant.secondary ? Theme.card : transparent;
+    private property <color> hover-fill: root.filled ? root.fill.brighter(10%) : Theme.surface-hover;
+    private property <color> fg: root.filled ? Theme.text-on-accent : Theme.text;
+
+    height: 32px;
+    border-radius: Theme.radius-md;
+    border-width: root.variant == ButtonVariant.secondary ? 1px : 0;
+    border-color: Theme.line;
+    background: !root.enabled ? root.fill
+        : touch.pressed ? root.hover-fill.darker(10%)
+        : touch.has-hover ? root.hover-fill : root.fill;
+    opacity: root.enabled ? 1 : 0.5;
+
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.clicked(); }
+
+    HorizontalLayout {
+        padding-left: root.text == "" ? Theme.gap-2 : Theme.gap-3;
+        padding-right: self.padding-left;
+        spacing: Theme.gap-2;
+        alignment: center;
+
+        if root.icon.width > 0: Icon {
+            source: root.icon;
+            color: root.fg;
+        }
+        if root.text != "": Text {
+            text: root.text;
+            color: root.fg;
+            font-size: Theme.font-md;
+            font-weight: 500;
+            vertical-alignment: center;
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

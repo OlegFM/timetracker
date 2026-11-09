@@ -1,0 +1,232 @@
+# TimeTracker UI strings (gettext domain "tt-app").
+# See docs/translating.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: TimeTracker\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Dashboard"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Time"
+msgstr ""
+
+#: ui/components/sidebar.slint
+msgid "Manage"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Projects"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Clients"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Tags"
+msgstr ""
+
+#: ui/components/sidebar.slint
+msgid "Analyze"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Reports"
+msgstr ""
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Settings"
+msgstr ""
+
+#: ui/main.slint
+msgid "Project"
+msgstr ""
+
+#: ui/components/dialog.slint
+msgid "Confirm"
+msgstr ""
+
+#: ui/components/dialog.slint
+msgid "Cancel"
+msgstr ""
+
+#: ui/components/toast.slint
+msgid "Close"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Pause"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Resume"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Stop"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Show mini timer"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Hide mini timer"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Open window"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Quit"
+msgstr ""
+
+#: ui/strings.slint
+msgid "No active task"
+msgstr ""
+
+#: ui/strings.slint
+msgid "h"
+msgstr ""
+
+#: ui/strings.slint
+msgid "min"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Group"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Subgroup"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Duration"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Cost"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Total"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No project"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No task"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No client"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No tag"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Yes"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Description"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Project"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Task"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Client"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Tags"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Billable"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Start"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "End"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Date"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Can't delete: it still has projects. Archive it instead."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Can't delete: it still has tasks. Archive it instead."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Can't delete: it has time entries."
+msgstr ""
+
+#: ui/strings.slint
+msgid "This time overlaps another entry."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Enter a name (up to 255 characters)."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Choose a valid color."
+msgstr ""
+
+#: ui/strings.slint
+msgid "The end must be after the start."
+msgstr ""
+
+#: ui/strings.slint
+msgid "This file is not a valid TimeTracker backup."
+msgstr ""

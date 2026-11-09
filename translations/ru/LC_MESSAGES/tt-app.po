@@ -1,0 +1,234 @@
+# TimeTracker UI strings (gettext domain "tt-app").
+# See docs/translating.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: TimeTracker\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Dashboard"
+msgstr "Обзор"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Time"
+msgstr "Время"
+
+#: ui/components/sidebar.slint
+msgid "Manage"
+msgstr "Управление"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Projects"
+msgstr "Проекты"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Clients"
+msgstr "Клиенты"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Tags"
+msgstr "Теги"
+
+#: ui/components/sidebar.slint
+msgid "Analyze"
+msgstr "Анализ"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Reports"
+msgstr "Отчёты"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Settings"
+msgstr "Настройки"
+
+#: ui/main.slint
+msgid "Project"
+msgstr "Проект"
+
+#: ui/components/dialog.slint
+msgid "Confirm"
+msgstr "Подтвердить"
+
+#: ui/components/dialog.slint
+msgid "Cancel"
+msgstr "Отмена"
+
+#: ui/components/toast.slint
+msgid "Close"
+msgstr "Закрыть"
+
+#: ui/strings.slint
+msgid "Pause"
+msgstr "Пауза"
+
+#: ui/strings.slint
+msgid "Resume"
+msgstr "Продолжить"
+
+#: ui/strings.slint
+msgid "Stop"
+msgstr "Стоп"
+
+#: ui/strings.slint
+msgid "Show mini timer"
+msgstr "Показать мини-таймер"
+
+#: ui/strings.slint
+msgid "Hide mini timer"
+msgstr "Скрыть мини-таймер"
+
+#: ui/strings.slint
+msgid "Open window"
+msgstr "Открыть окно"
+
+#: ui/strings.slint
+msgid "Quit"
+msgstr "Выход"
+
+#: ui/strings.slint
+msgid "No active task"
+msgstr "Нет активной задачи"
+
+#: ui/strings.slint
+msgid "h"
+msgstr "ч"
+
+#: ui/strings.slint
+msgid "min"
+msgstr "мин"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Group"
+msgstr "Группа"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Subgroup"
+msgstr "Подгруппа"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Duration"
+msgstr "Длительность"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Cost"
+msgstr "Стоимость"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Total"
+msgstr "Итого"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No project"
+msgstr "Без проекта"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No task"
+msgstr "Без задачи"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No client"
+msgstr "Без клиента"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No tag"
+msgstr "Без тега"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Yes"
+msgstr "Да"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No"
+msgstr "Нет"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Description"
+msgstr "Описание"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Project"
+msgstr "Проект"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Task"
+msgstr "Задача"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Client"
+msgstr "Клиент"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Tags"
+msgstr "Теги"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Billable"
+msgstr "Оплачиваемая"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Start"
+msgstr "Начало"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "End"
+msgstr "Конец"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Date"
+msgstr "Дата"
+
+#: ui/strings.slint
+msgid "Can't delete: it still has projects. Archive it instead."
+msgstr "Нельзя удалить: есть проекты. Архивируйте вместо удаления."
+
+#: ui/strings.slint
+msgid "Can't delete: it still has tasks. Archive it instead."
+msgstr "Нельзя удалить: есть задачи. Архивируйте вместо удаления."
+
+#: ui/strings.slint
+msgid "Can't delete: it has time entries."
+msgstr "Нельзя удалить: есть записи времени."
+
+#: ui/strings.slint
+msgid "This time overlaps another entry."
+msgstr "Это время пересекается с другой записью."
+
+#: ui/strings.slint
+msgid "Enter a name (up to 255 characters)."
+msgstr "Введите название (до 255 символов)."
+
+#: ui/strings.slint
+msgid "Choose a valid color."
+msgstr "Выберите корректный цвет."
+
+#: ui/strings.slint
+msgid "The end must be after the start."
+msgstr "Конец должен быть позже начала."
+
+#: ui/strings.slint
+msgid "This file is not a valid TimeTracker backup."
+msgstr "Файл не является корректной резервной копией TimeTracker."

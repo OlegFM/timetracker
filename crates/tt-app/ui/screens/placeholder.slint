@@ -1,0 +1,29 @@
+import { Theme } from "../theme.slint";
+
+// Stand-in page with just its title; replaced by the real screens in later tasks.
+export component PlaceholderScreen inherits VerticalLayout {
+    in property <string> title;
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-4;
+    padding-left: 18px;
+    padding-right: 18px;
+    alignment: start;
+
+    Rectangle {
+        height: 120px;
+        background: Theme.card;
+        border-radius: Theme.radius-md;
+        border-width: 1px;
+        border-color: Theme.line;
+
+        Text {
+            x: Theme.gap-5;
+            text: root.title;
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}

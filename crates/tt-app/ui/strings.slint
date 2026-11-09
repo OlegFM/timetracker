@@ -1,0 +1,50 @@
+// Translated strings needed by Rust code (tray, export headers, error messages).
+// Read from Rust via `ui.global::<Tr>().get_…()`; values follow the selected language.
+
+export global Tr {
+    // Tray menu
+    out property <string> tray-pause: @tr("Pause");
+    out property <string> tray-resume: @tr("Resume");
+    out property <string> tray-stop: @tr("Stop");
+    out property <string> tray-show-mini: @tr("Show mini timer");
+    out property <string> tray-hide-mini: @tr("Hide mini timer");
+    out property <string> tray-open: @tr("Open window");
+    out property <string> tray-quit: @tr("Quit");
+    out property <string> no-active-task: @tr("No active task");
+
+    // Duration suffixes (FormatPrefs)
+    out property <string> hour-suffix: @tr("h");
+    out property <string> minute-suffix: @tr("min");
+
+    // Export headers and placeholders (tt_services::ExportLabels)
+    out property <string> export-group: @tr("export" => "Group");
+    out property <string> export-subgroup: @tr("export" => "Subgroup");
+    out property <string> export-duration: @tr("export" => "Duration");
+    out property <string> export-cost: @tr("export" => "Cost");
+    out property <string> export-total: @tr("export" => "Total");
+    out property <string> export-no-project: @tr("export" => "No project");
+    out property <string> export-no-task: @tr("export" => "No task");
+    out property <string> export-no-client: @tr("export" => "No client");
+    out property <string> export-no-tag: @tr("export" => "No tag");
+    out property <string> export-yes: @tr("export" => "Yes");
+    out property <string> export-no: @tr("export" => "No");
+    out property <string> export-description: @tr("export" => "Description");
+    out property <string> export-project: @tr("export" => "Project");
+    out property <string> export-task: @tr("export" => "Task");
+    out property <string> export-client: @tr("export" => "Client");
+    out property <string> export-tags: @tr("export" => "Tags");
+    out property <string> export-billable: @tr("export" => "Billable");
+    out property <string> export-start: @tr("export" => "Start");
+    out property <string> export-end: @tr("export" => "End");
+    out property <string> export-date: @tr("export" => "Date");
+
+    // Service errors (tt_services::ServiceError)
+    out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");
+    out property <string> err-in-use-tasks: @tr("Can't delete: it still has tasks. Archive it instead.");
+    out property <string> err-in-use-entries: @tr("Can't delete: it has time entries.");
+    out property <string> err-overlap: @tr("This time overlaps another entry.");
+    out property <string> err-invalid-name: @tr("Enter a name (up to 255 characters).");
+    out property <string> err-invalid-color: @tr("Choose a valid color.");
+    out property <string> err-invalid-range: @tr("The end must be after the start.");
+    out property <string> err-backup: @tr("This file is not a valid TimeTracker backup.");
+}

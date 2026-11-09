@@ -1,0 +1,70 @@
+import { Theme } from "../theme.slint";
+import { Button, ButtonVariant } from "button.slint";
+import { Icons } from "icon.slint";
+
+export enum ToastKind { info, success, error }
+
+// Short notification; hidden while `text` is empty, clears itself after `timeout`.
+export component Toast inherits Rectangle {
+    in-out property <string> text;
+    in-out property <ToastKind> kind;
+    in property <duration> timeout: 5s;
+
+    public function show(text: string, kind: ToastKind) {
+        root.text = text;
+        root.kind = kind;
+        timer.restart();
+    }
+
+    visible: root.text != "";
+    width: min(420px, layout.preferred-width);
+    height: layout.preferred-height;
+    background: Theme.card;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: Theme.line;
+    drop-shadow-blur: 20px;
+    drop-shadow-offset-y: 6px;
+    drop-shadow-color: #00000055;
+
+    accessible-role: AccessibleRole.text;
+    accessible-label: root.text;
+
+    // Swallows clicks so they do not reach the page below.
+    TouchArea { }
+
+    layout := HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        padding-top: Theme.gap-1;
+        padding-bottom: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        Rectangle {
+            width: 4px;
+            height: 20px;
+            border-radius: 2px;
+            background: root.kind == ToastKind.error ? Theme.danger
+                : root.kind == ToastKind.success ? Theme.success : Theme.accent;
+        }
+        Text {
+            text: root.text;
+            color: Theme.text;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            wrap: word-wrap;
+        }
+        Button {
+            icon: Icons.x;
+            variant: ButtonVariant.ghost;
+            accessible-label: @tr("Close");
+            clicked => { root.text = ""; }
+        }
+    }
+
+    timer := Timer {
+        interval: root.timeout;
+        running: root.text != "";
+        triggered => { root.text = ""; }
+    }
+}

@@ -12,3 +12,15 @@ workspace = true
 tt-domain.workspace = true
 tt-storage.workspace = true
 tt-services.workspace = true
+slint.workspace = true
+sys-locale.workspace = true
+directories.workspace = true
+log.workspace = true
+simplelog.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+slint-build.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

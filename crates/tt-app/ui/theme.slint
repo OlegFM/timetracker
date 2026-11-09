@@ -1,0 +1,40 @@
+// Design tokens. Components take colors, radii, spacing and font sizes only from here.
+
+export global Theme {
+    in-out property <bool> dark: true;
+
+    // Colors
+    out property <color> bg: dark ? #0e0f11 : #f7f7f8;
+    out property <color> panel: dark ? #16181c : #ffffff;
+    out property <color> card: dark ? #1c1f24 : #ffffff;
+    out property <color> line: dark ? #2a2e35 : #e4e4e7;
+    out property <color> muted: dark ? #8b919c : #6b7280;
+    out property <color> text: dark ? #e8eaed : #18181b;
+    out property <color> accent: dark ? #3b82f6 : #2563eb;
+    out property <color> success: dark ? #22c55e : #16a34a;
+    out property <color> warning: dark ? #f59e0b : #d97706;
+    out property <color> danger: dark ? #ef4444 : #dc2626;
+    // Secondary text, hovered/selected surfaces, text on accent-colored fills.
+    out property <color> text-secondary: dark ? #c4c8cf : #3f3f46;
+    out property <color> surface-hover: dark ? #23272e : #ececef;
+    out property <color> text-on-accent: #ffffff;
+
+    // Radii
+    out property <length> radius-sm: 6px;
+    out property <length> radius-md: 8px;
+    out property <length> radius-lg: 12px;
+
+    // Spacing
+    out property <length> gap-1: 4px;
+    out property <length> gap-2: 8px;
+    out property <length> gap-3: 12px;
+    out property <length> gap-4: 16px;
+    out property <length> gap-5: 20px;
+    out property <length> gap-6: 24px;
+
+    // Font sizes
+    out property <length> font-sm: 12px;
+    out property <length> font-md: 13px;
+    out property <length> font-lg: 15px;
+    out property <length> font-xl: 20px;
+}

@@ -1,0 +1,160 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+
+component NavItem inherits Rectangle {
+    in property <string> text;
+    in property <image> icon;
+    in property <bool> active;
+    callback clicked();
+
+    private property <color> fg: root.active ? Theme.text : Theme.text-secondary;
+
+    height: 32px;
+    border-radius: Theme.radius-sm;
+    background: root.active || touch.has-hover ? Theme.surface-hover : transparent;
+
+    accessible-role: tab;
+    accessible-label: root.text;
+    accessible-item-selected: root.active;
+    accessible-action-default => { root.clicked(); }
+
+    HorizontalLayout {
+        padding-left: Theme.gap-2;
+        padding-right: Theme.gap-2;
+        spacing: Theme.gap-2;
+
+        Icon {
+            source: root.icon;
+            color: root.fg;
+            opacity: root.active ? 1 : 0.8;
+        }
+        Text {
+            text: root.text;
+            color: root.fg;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component GroupLabel inherits HorizontalLayout {
+    in property <string> text;
+
+    padding-left: Theme.gap-2;
+    padding-top: Theme.gap-3;
+    padding-bottom: 6px;
+
+    Text {
+        text: root.text.to-uppercase();
+        color: Theme.muted;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.8px;
+        accessible-role: none;
+    }
+}
+
+// Main navigation. `current` is the MainWindow page index; page 3 (project details)
+// is reached from Projects and highlights it.
+export component Sidebar inherits Rectangle {
+    in-out property <int> current;
+
+    width: 200px;
+    background: Theme.panel;
+
+    VerticalLayout {
+        padding-top: 14px;
+        padding-bottom: 14px;
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 2px;
+        alignment: start;
+
+        HorizontalLayout {
+            padding-left: Theme.gap-2;
+            padding-top: Theme.gap-1;
+            padding-bottom: 14px;
+            spacing: Theme.gap-2;
+
+            Rectangle {
+                width: 18px;
+                height: 18px;
+                border-radius: 5px;
+                background: @linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            }
+            Text {
+                text: "TimeTracker";
+                color: Theme.text;
+                font-size: Theme.font-lg;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+        }
+
+        NavItem {
+            text: @tr("Dashboard");
+            icon: Icons.home;
+            active: root.current == 0;
+            clicked => { root.current = 0; }
+        }
+        NavItem {
+            text: @tr("Time");
+            icon: Icons.clock;
+            active: root.current == 1;
+            clicked => { root.current = 1; }
+        }
+
+        GroupLabel {
+            text: @tr("Manage");
+        }
+        NavItem {
+            text: @tr("Projects");
+            icon: Icons.folder;
+            active: root.current == 2 || root.current == 3;
+            clicked => { root.current = 2; }
+        }
+        NavItem {
+            text: @tr("Clients");
+            icon: Icons.users;
+            active: root.current == 4;
+            clicked => { root.current = 4; }
+        }
+        NavItem {
+            text: @tr("Tags");
+            icon: Icons.tag;
+            active: root.current == 5;
+            clicked => { root.current = 5; }
+        }
+
+        GroupLabel {
+            text: @tr("Analyze");
+        }
+        NavItem {
+            text: @tr("Reports");
+            icon: Icons.chart;
+            active: root.current == 6;
+            clicked => { root.current = 6; }
+        }
+
+        GroupLabel { }
+        NavItem {
+            text: @tr("Settings");
+            icon: Icons.settings;
+            active: root.current == 7;
+            clicked => { root.current = 7; }
+        }
+    }
+
+    // Right border
+    Rectangle {
+        x: parent.width - self.width;
+        width: 1px;
+        background: Theme.line;
+    }
+}

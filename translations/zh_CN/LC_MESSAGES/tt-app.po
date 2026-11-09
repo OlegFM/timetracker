@@ -1,0 +1,234 @@
+# TimeTracker UI strings (gettext domain "tt-app").
+# See docs/translating.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: TimeTracker\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Dashboard"
+msgstr "概览"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Time"
+msgstr "时间"
+
+#: ui/components/sidebar.slint
+msgid "Manage"
+msgstr "管理"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Projects"
+msgstr "项目"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Clients"
+msgstr "客户"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Tags"
+msgstr "标签"
+
+#: ui/components/sidebar.slint
+msgid "Analyze"
+msgstr "分析"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Reports"
+msgstr "报表"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Settings"
+msgstr "设置"
+
+#: ui/main.slint
+msgid "Project"
+msgstr "项目"
+
+#: ui/components/dialog.slint
+msgid "Confirm"
+msgstr "确认"
+
+#: ui/components/dialog.slint
+msgid "Cancel"
+msgstr "取消"
+
+#: ui/components/toast.slint
+msgid "Close"
+msgstr "关闭"
+
+#: ui/strings.slint
+msgid "Pause"
+msgstr "暂停"
+
+#: ui/strings.slint
+msgid "Resume"
+msgstr "继续"
+
+#: ui/strings.slint
+msgid "Stop"
+msgstr "停止"
+
+#: ui/strings.slint
+msgid "Show mini timer"
+msgstr "显示迷你计时器"
+
+#: ui/strings.slint
+msgid "Hide mini timer"
+msgstr "隐藏迷你计时器"
+
+#: ui/strings.slint
+msgid "Open window"
+msgstr "打开窗口"
+
+#: ui/strings.slint
+msgid "Quit"
+msgstr "退出"
+
+#: ui/strings.slint
+msgid "No active task"
+msgstr "没有进行中的任务"
+
+#: ui/strings.slint
+msgid "h"
+msgstr "小时"
+
+#: ui/strings.slint
+msgid "min"
+msgstr "分钟"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Group"
+msgstr "分组"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Subgroup"
+msgstr "子分组"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Duration"
+msgstr "时长"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Cost"
+msgstr "费用"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Total"
+msgstr "合计"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No project"
+msgstr "无项目"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No task"
+msgstr "无任务"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No client"
+msgstr "无客户"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No tag"
+msgstr "无标签"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Yes"
+msgstr "是"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No"
+msgstr "否"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Description"
+msgstr "描述"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Project"
+msgstr "项目"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Task"
+msgstr "任务"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Client"
+msgstr "客户"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Tags"
+msgstr "标签"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Billable"
+msgstr "计费"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Start"
+msgstr "开始"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "End"
+msgstr "结束"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Date"
+msgstr "日期"
+
+#: ui/strings.slint
+msgid "Can't delete: it still has projects. Archive it instead."
+msgstr "无法删除：仍有项目。请改为归档。"
+
+#: ui/strings.slint
+msgid "Can't delete: it still has tasks. Archive it instead."
+msgstr "无法删除：仍有任务。请改为归档。"
+
+#: ui/strings.slint
+msgid "Can't delete: it has time entries."
+msgstr "无法删除：存在时间记录。"
+
+#: ui/strings.slint
+msgid "This time overlaps another entry."
+msgstr "该时间与另一条记录重叠。"
+
+#: ui/strings.slint
+msgid "Enter a name (up to 255 characters)."
+msgstr "请输入名称（最多 255 个字符）。"
+
+#: ui/strings.slint
+msgid "Choose a valid color."
+msgstr "请选择有效的颜色。"
+
+#: ui/strings.slint
+msgid "The end must be after the start."
+msgstr "结束时间必须晚于开始时间。"
+
+#: ui/strings.slint
+msgid "This file is not a valid TimeTracker backup."
+msgstr "此文件不是有效的 TimeTracker 备份。"

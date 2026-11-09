@@ -1,0 +1,99 @@
+import { Theme } from "../theme.slint";
+import { Button, ButtonVariant } from "button.slint";
+
+// Modal overlay: dims the window, blocks clicks behind it and shows a centered card with
+// a title and the children (content and an action row). Esc calls `dismissed`.
+// Show it with `if cond: Dialog { … }` as the last child of the window.
+export component Dialog inherits Rectangle {
+    in property <string> title;
+    in property <length> card-width: 420px;
+    callback dismissed();
+
+    width: 100%;
+    height: 100%;
+    background: #00000099;
+
+    // Swallows clicks on the backdrop.
+    TouchArea { }
+
+    keys := FocusScope {
+        init => { self.focus(); }
+        key-pressed(event) => {
+            if event.text == Key.Escape {
+                root.dismissed();
+                return accept;
+            }
+            reject
+        }
+
+        Rectangle {
+            width: root.card-width;
+            height: card.preferred-height;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            background: Theme.card;
+            border-radius: Theme.radius-lg;
+            border-width: 1px;
+            border-color: Theme.line;
+            drop-shadow-blur: 30px;
+            drop-shadow-offset-y: 10px;
+            drop-shadow-color: #00000066;
+
+            accessible-role: groupbox;
+            accessible-label: root.title;
+
+            card := VerticalLayout {
+                padding: Theme.gap-5;
+                spacing: Theme.gap-4;
+
+                Text {
+                    text: root.title;
+                    color: Theme.text;
+                    font-size: Theme.font-lg;
+                    font-weight: 600;
+                    wrap: word-wrap;
+                }
+                @children
+            }
+        }
+    }
+}
+
+// Right-aligned action row for dialogs.
+export component DialogActions inherits HorizontalLayout {
+    alignment: end;
+    spacing: Theme.gap-2;
+    padding-top: Theme.gap-1;
+}
+
+// Generic yes/no confirmation (e.g. before deleting).
+export component ConfirmDialog inherits Dialog {
+    in property <string> message;
+    in property <string> confirm-text: @tr("Confirm");
+    in property <string> cancel-text: @tr("Cancel");
+    // Destructive confirmations use the danger button.
+    in property <bool> danger: true;
+    callback confirmed();
+    callback cancelled();
+
+    dismissed => { root.cancelled(); }
+
+    Text {
+        text: root.message;
+        color: Theme.text-secondary;
+        font-size: Theme.font-md;
+        wrap: word-wrap;
+    }
+    DialogActions {
+        Button {
+            text: root.cancel-text;
+            variant: ButtonVariant.ghost;
+            clicked => { root.cancelled(); }
+        }
+        Button {
+            text: root.confirm-text;
+            variant: root.danger ? ButtonVariant.danger : ButtonVariant.primary;
+            clicked => { root.confirmed(); }
+        }
+    }
+}

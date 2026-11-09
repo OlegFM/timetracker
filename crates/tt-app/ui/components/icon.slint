@@ -1,0 +1,33 @@
+// Icon set (own 24×24 stroke SVGs in assets/icons) and a tinted icon element.
+
+import { Theme } from "../theme.slint";
+
+export global Icons {
+    out property <image> home: @image-url("../../assets/icons/home.svg");
+    out property <image> clock: @image-url("../../assets/icons/clock.svg");
+    out property <image> folder: @image-url("../../assets/icons/folder.svg");
+    out property <image> users: @image-url("../../assets/icons/users.svg");
+    out property <image> tag: @image-url("../../assets/icons/tag.svg");
+    out property <image> chart: @image-url("../../assets/icons/chart.svg");
+    out property <image> settings: @image-url("../../assets/icons/settings.svg");
+    out property <image> play: @image-url("../../assets/icons/play.svg");
+    out property <image> pause: @image-url("../../assets/icons/pause.svg");
+    out property <image> stop: @image-url("../../assets/icons/stop.svg");
+    out property <image> plus: @image-url("../../assets/icons/plus.svg");
+    out property <image> x: @image-url("../../assets/icons/x.svg");
+    out property <image> chevron-down: @image-url("../../assets/icons/chevron-down.svg");
+    out property <image> chevron-right: @image-url("../../assets/icons/chevron-right.svg");
+}
+
+export component Icon inherits Image {
+    in property <length> size: 16px;
+    in property <color> color: Theme.text;
+
+    // Stretches vertically in layouts; the image stays `size` and centered.
+    width: root.size;
+    min-height: root.size;
+    preferred-height: root.size;
+    colorize: root.color;
+    image-fit: contain;
+    accessible-role: none;
+}

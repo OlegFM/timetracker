@@ -1,0 +1,234 @@
+# TimeTracker UI strings (gettext domain "tt-app").
+# See docs/translating.md.
+msgid ""
+msgstr ""
+"Project-Id-Version: TimeTracker\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Dashboard"
+msgstr "Resumen"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Time"
+msgstr "Tiempo"
+
+#: ui/components/sidebar.slint
+msgid "Manage"
+msgstr "Gestión"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Projects"
+msgstr "Proyectos"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Clients"
+msgstr "Clientes"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: ui/components/sidebar.slint
+msgid "Analyze"
+msgstr "Análisis"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Reports"
+msgstr "Informes"
+
+#: ui/components/sidebar.slint ui/main.slint
+msgid "Settings"
+msgstr "Ajustes"
+
+#: ui/main.slint
+msgid "Project"
+msgstr "Proyecto"
+
+#: ui/components/dialog.slint
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: ui/components/dialog.slint
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ui/components/toast.slint
+msgid "Close"
+msgstr "Cerrar"
+
+#: ui/strings.slint
+msgid "Pause"
+msgstr "Pausar"
+
+#: ui/strings.slint
+msgid "Resume"
+msgstr "Reanudar"
+
+#: ui/strings.slint
+msgid "Stop"
+msgstr "Detener"
+
+#: ui/strings.slint
+msgid "Show mini timer"
+msgstr "Mostrar minitemporizador"
+
+#: ui/strings.slint
+msgid "Hide mini timer"
+msgstr "Ocultar minitemporizador"
+
+#: ui/strings.slint
+msgid "Open window"
+msgstr "Abrir ventana"
+
+#: ui/strings.slint
+msgid "Quit"
+msgstr "Salir"
+
+#: ui/strings.slint
+msgid "No active task"
+msgstr "Ninguna tarea activa"
+
+#: ui/strings.slint
+msgid "h"
+msgstr "h"
+
+#: ui/strings.slint
+msgid "min"
+msgstr "min"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Group"
+msgstr "Grupo"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Subgroup"
+msgstr "Subgrupo"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Duration"
+msgstr "Duración"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Cost"
+msgstr "Coste"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Total"
+msgstr "Total"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No project"
+msgstr "Sin proyecto"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No task"
+msgstr "Sin tarea"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No client"
+msgstr "Sin cliente"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No tag"
+msgstr "Sin etiqueta"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Yes"
+msgstr "Sí"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "No"
+msgstr "No"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Description"
+msgstr "Descripción"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Project"
+msgstr "Proyecto"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Task"
+msgstr "Tarea"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Client"
+msgstr "Cliente"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Billable"
+msgstr "Facturable"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Start"
+msgstr "Inicio"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "End"
+msgstr "Fin"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Date"
+msgstr "Fecha"
+
+#: ui/strings.slint
+msgid "Can't delete: it still has projects. Archive it instead."
+msgstr "No se puede eliminar: todavía tiene proyectos. Archívelo en su lugar."
+
+#: ui/strings.slint
+msgid "Can't delete: it still has tasks. Archive it instead."
+msgstr "No se puede eliminar: todavía tiene tareas. Archívelo en su lugar."
+
+#: ui/strings.slint
+msgid "Can't delete: it has time entries."
+msgstr "No se puede eliminar: tiene registros de tiempo."
+
+#: ui/strings.slint
+msgid "This time overlaps another entry."
+msgstr "Este intervalo se solapa con otro registro."
+
+#: ui/strings.slint
+msgid "Enter a name (up to 255 characters)."
+msgstr "Introduzca un nombre (hasta 255 caracteres)."
+
+#: ui/strings.slint
+msgid "Choose a valid color."
+msgstr "Elija un color válido."
+
+#: ui/strings.slint
+msgid "The end must be after the start."
+msgstr "El fin debe ser posterior al inicio."
+
+#: ui/strings.slint
+msgid "This file is not a valid TimeTracker backup."
+msgstr "Este archivo no es una copia de seguridad válida de TimeTracker."
