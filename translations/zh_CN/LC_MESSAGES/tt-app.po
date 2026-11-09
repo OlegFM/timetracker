@@ -13,7 +13,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr "概览"
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/screens/time.slint
 msgid "Time"
 msgstr "时间"
 
@@ -249,7 +249,7 @@ msgstr "创建项目“{}”"
 msgid "Create task \"{}\""
 msgstr "创建任务“{}”"
 
-#: ui/components/timer_bar.slint
+#: ui/components/billable_toggle.slint
 msgid "Billable"
 msgstr "计费"
 
@@ -280,3 +280,190 @@ msgstr "创建标签“{}”"
 #: ui/strings.slint
 msgid "Something went wrong. Please try again."
 msgstr "出了点问题，请重试。"
+
+#: ui/strings.slint
+msgid "Today"
+msgstr "今天"
+
+#: ui/strings.slint
+msgid "Yesterday"
+msgstr "昨天"
+
+#: ui/strings.slint
+msgid "The start can't be in the future."
+msgstr "开始时间不能晚于现在。"
+
+#: ui/screens/time.slint
+msgid "Add time entry"
+msgstr "添加时间记录"
+
+#: ui/screens/time.slint
+msgid "No time entries yet. Start the timer or add an entry manually."
+msgstr "还没有时间记录。启动计时器或手动添加记录。"
+
+#: ui/components/entry_row.slint
+msgid "(no description)"
+msgstr "（无描述）"
+
+#: ui/components/entry_row.slint
+msgid "Continue"
+msgstr "继续此任务"
+
+#: ui/components/entry_row.slint
+msgid "Duplicate"
+msgstr "复制"
+
+#: ui/components/entry_row.slint ui/main.slint
+msgid "Delete"
+msgstr "删除"
+
+#: ui/components/entry_row.slint
+msgid "Total {}"
+msgstr "合计 {}"
+
+#: ui/components/entry_dialog.slint
+msgid "Edit time entry"
+msgstr "编辑时间记录"
+
+#: ui/components/entry_dialog.slint
+msgid "What did you work on?"
+msgstr "你做了什么？"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Description"
+msgstr "描述"
+
+#: ui/components/entry_dialog.slint ui/components/date_picker.slint
+msgid "Date"
+msgstr "日期"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Start"
+msgstr "开始"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "End"
+msgstr "结束"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Duration"
+msgstr "时长"
+
+#: ui/components/entry_dialog.slint
+msgid "Running"
+msgstr "进行中"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a time like 9:30"
+msgstr "请输入时间，例如 9:30"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a duration like 1:30 or 1h 30m (under 24 h)"
+msgstr "请输入时长，例如 1:30 或 1h 30m（少于 24 小时）"
+
+#: ui/components/entry_dialog.slint
+msgid "Save"
+msgstr "保存"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Mo"
+msgstr "一"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Tu"
+msgstr "二"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "We"
+msgstr "三"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Th"
+msgstr "四"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Fr"
+msgstr "五"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Sa"
+msgstr "六"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Su"
+msgstr "日"
+
+#: ui/components/date_picker.slint
+msgid "January"
+msgstr "一月"
+
+#: ui/components/date_picker.slint
+msgid "February"
+msgstr "二月"
+
+#: ui/components/date_picker.slint
+msgid "March"
+msgstr "三月"
+
+#: ui/components/date_picker.slint
+msgid "April"
+msgstr "四月"
+
+#: ui/components/date_picker.slint
+msgid "May"
+msgstr "五月"
+
+#: ui/components/date_picker.slint
+msgid "June"
+msgstr "六月"
+
+#: ui/components/date_picker.slint
+msgid "July"
+msgstr "七月"
+
+#: ui/components/date_picker.slint
+msgid "August"
+msgstr "八月"
+
+#: ui/components/date_picker.slint
+msgid "September"
+msgstr "九月"
+
+#: ui/components/date_picker.slint
+msgid "October"
+msgstr "十月"
+
+#: ui/components/date_picker.slint
+msgid "November"
+msgstr "十一月"
+
+#: ui/components/date_picker.slint
+msgid "December"
+msgstr "十二月"
+
+#: ui/components/date_picker.slint
+msgid "Previous month"
+msgstr "上个月"
+
+#: ui/components/date_picker.slint
+msgid "Next month"
+msgstr "下个月"
+
+#: ui/main.slint
+msgid "Delete this time entry?"
+msgstr "删除此时间记录？"
+
+#: ui/main.slint
+msgid "The entry will be removed permanently."
+msgstr "该记录将被永久删除。"

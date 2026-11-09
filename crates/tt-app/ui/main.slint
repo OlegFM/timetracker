@@ -3,19 +3,26 @@ import { Tr } from "strings.slint";
 import { Sidebar } from "components/sidebar.slint";
 import { Toast, ToastKind } from "components/toast.slint";
 import { PlaceholderScreen } from "screens/placeholder.slint";
+import { TimeScreen } from "screens/time.slint";
+import { EntryDialog } from "components/entry_dialog.slint";
 import { TimerBar } from "components/timer_bar.slint";
 import { TimerBridge, TimerView } from "bridges/timer.slint";
 import { Pickers, ProjectOption, TagOption } from "bridges/pickers.slint";
-// Not used by the shell yet; imported so the compiler checks it until screens use it.
+import { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView } from "bridges/entries.slint";
+import { Calendar, CalendarDay, CalendarMonth } from "bridges/calendar.slint";
 import { ConfirmDialog } from "components/dialog.slint";
 
 // Globals and enums used from Rust must be exported from the main file.
 export { Theme, Tr, ToastKind, TimerBridge, TimerView, Pickers, ProjectOption, TagOption }
+export { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView }
+export { Calendar, CalendarDay, CalendarMonth }
 
 export component MainWindow inherits Window {
     // Page index: 0 Dashboard, 1 Time, 2 Projects, 3 Project, 4 Clients, 5 Tags,
     // 6 Reports, 7 Settings.
     in-out property <int> page: 0;
+    // Entry waiting for the delete confirmation; empty = none.
+    property <string> delete-id;
 
     public function show-toast(text: string, kind: ToastKind) {
         toast.show(text, kind);
@@ -41,8 +48,8 @@ export component MainWindow inherits Window {
                 if root.page == 0: PlaceholderScreen {
                     title: @tr("Dashboard");
                 }
-                if root.page == 1: PlaceholderScreen {
-                    title: @tr("Time");
+                if root.page == 1: TimeScreen {
+                    request-delete(id) => { root.delete-id = id; }
                 }
                 if root.page == 2: PlaceholderScreen {
                     title: @tr("Projects");
@@ -64,6 +71,22 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+
+    if EntriesBridge.dialog-open: EntryDialog {
+        view: EntriesBridge.dialog;
+        closed => { EntriesBridge.dialog-open = false; }
+    }
+
+    if root.delete-id != "": ConfirmDialog {
+        title: @tr("Delete this time entry?");
+        message: @tr("The entry will be removed permanently.");
+        confirm-text: @tr("Delete");
+        confirmed => {
+            EntriesBridge.delete(root.delete-id);
+            root.delete-id = "";
+        }
+        cancelled => { root.delete-id = ""; }
     }
 
     toast := Toast {

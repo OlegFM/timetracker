@@ -13,6 +13,8 @@
 //! Globals are per window instance, so state shared with other windows (the mini timer)
 //! is pushed to each of them by the same helper.
 
+pub mod calendar;
+pub mod entries;
 pub mod pickers;
 pub mod timer;
 

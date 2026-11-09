@@ -48,6 +48,8 @@ export component Button inherits Rectangle {
     in property <ButtonVariant> variant: ButtonVariant.secondary;
     in property <bool> enabled: true;
     in property <bool> round;
+    // Icon tint; transparent = the text color of the variant.
+    in property <color> icon-color: transparent;
     callback clicked();
 
     private property <bool> filled: root.variant == ButtonVariant.primary || root.variant == ButtonVariant.danger || root.variant == ButtonVariant.warning;
@@ -86,7 +88,7 @@ export component Button inherits Rectangle {
 
         if root.icon.width > 0: Icon {
             source: root.icon;
-            color: root.fg;
+            color: root.icon-color.alpha == 0 ? root.fg : root.icon-color;
         }
         if root.text != "": Text {
             text: root.text;

@@ -13,7 +13,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr "Обзор"
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/screens/time.slint
 msgid "Time"
 msgstr "Время"
 
@@ -249,7 +249,7 @@ msgstr "Создать проект «{}»"
 msgid "Create task \"{}\""
 msgstr "Создать задачу «{}»"
 
-#: ui/components/timer_bar.slint
+#: ui/components/billable_toggle.slint
 msgid "Billable"
 msgstr "Оплачиваемая"
 
@@ -280,3 +280,190 @@ msgstr "Создать тег «{}»"
 #: ui/strings.slint
 msgid "Something went wrong. Please try again."
 msgstr "Что-то пошло не так. Попробуйте ещё раз."
+
+#: ui/strings.slint
+msgid "Today"
+msgstr "Сегодня"
+
+#: ui/strings.slint
+msgid "Yesterday"
+msgstr "Вчера"
+
+#: ui/strings.slint
+msgid "The start can't be in the future."
+msgstr "Начало не может быть в будущем."
+
+#: ui/screens/time.slint
+msgid "Add time entry"
+msgstr "Добавить запись"
+
+#: ui/screens/time.slint
+msgid "No time entries yet. Start the timer or add an entry manually."
+msgstr "Записей пока нет. Запустите таймер или добавьте запись вручную."
+
+#: ui/components/entry_row.slint
+msgid "(no description)"
+msgstr "(без описания)"
+
+#: ui/components/entry_row.slint
+msgid "Continue"
+msgstr "Продолжить задачу"
+
+#: ui/components/entry_row.slint
+msgid "Duplicate"
+msgstr "Дублировать"
+
+#: ui/components/entry_row.slint ui/main.slint
+msgid "Delete"
+msgstr "Удалить"
+
+#: ui/components/entry_row.slint
+msgid "Total {}"
+msgstr "Итого {}"
+
+#: ui/components/entry_dialog.slint
+msgid "Edit time entry"
+msgstr "Изменить запись"
+
+#: ui/components/entry_dialog.slint
+msgid "What did you work on?"
+msgstr "Над чем вы работали?"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Description"
+msgstr "Описание"
+
+#: ui/components/entry_dialog.slint ui/components/date_picker.slint
+msgid "Date"
+msgstr "Дата"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Start"
+msgstr "Начало"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "End"
+msgstr "Конец"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Duration"
+msgstr "Длительность"
+
+#: ui/components/entry_dialog.slint
+msgid "Running"
+msgstr "Идёт"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a time like 9:30"
+msgstr "Введите время, например 9:30"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a duration like 1:30 or 1h 30m (under 24 h)"
+msgstr "Введите длительность, например 1:30 или 1ч 30м (меньше 24 ч)"
+
+#: ui/components/entry_dialog.slint
+msgid "Save"
+msgstr "Сохранить"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Mo"
+msgstr "Пн"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Tu"
+msgstr "Вт"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "We"
+msgstr "Ср"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Th"
+msgstr "Чт"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Fr"
+msgstr "Пт"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Sa"
+msgstr "Сб"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Su"
+msgstr "Вс"
+
+#: ui/components/date_picker.slint
+msgid "January"
+msgstr "Январь"
+
+#: ui/components/date_picker.slint
+msgid "February"
+msgstr "Февраль"
+
+#: ui/components/date_picker.slint
+msgid "March"
+msgstr "Март"
+
+#: ui/components/date_picker.slint
+msgid "April"
+msgstr "Апрель"
+
+#: ui/components/date_picker.slint
+msgid "May"
+msgstr "Май"
+
+#: ui/components/date_picker.slint
+msgid "June"
+msgstr "Июнь"
+
+#: ui/components/date_picker.slint
+msgid "July"
+msgstr "Июль"
+
+#: ui/components/date_picker.slint
+msgid "August"
+msgstr "Август"
+
+#: ui/components/date_picker.slint
+msgid "September"
+msgstr "Сентябрь"
+
+#: ui/components/date_picker.slint
+msgid "October"
+msgstr "Октябрь"
+
+#: ui/components/date_picker.slint
+msgid "November"
+msgstr "Ноябрь"
+
+#: ui/components/date_picker.slint
+msgid "December"
+msgstr "Декабрь"
+
+#: ui/components/date_picker.slint
+msgid "Previous month"
+msgstr "Предыдущий месяц"
+
+#: ui/components/date_picker.slint
+msgid "Next month"
+msgstr "Следующий месяц"
+
+#: ui/main.slint
+msgid "Delete this time entry?"
+msgstr "Удалить эту запись?"
+
+#: ui/main.slint
+msgid "The entry will be removed permanently."
+msgstr "Запись будет удалена безвозвратно."

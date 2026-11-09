@@ -1,0 +1,204 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+import { Activator, Button, ButtonVariant, FocusRing } from "button.slint";
+import { ColorDot } from "color_dot.slint";
+import { DayView, EntryRowView } from "../bridges/entries.slint";
+
+// One time entry: description, project, tags, billable mark, range, duration and the
+// continue / duplicate / delete buttons. Clicking (or Enter on) the row opens it.
+// Continue, duplicate and delete are disabled for the running entry.
+export component EntryRow inherits Rectangle {
+    in property <EntryRowView> entry;
+    callback open();
+    callback continue();
+    callback duplicate();
+    callback delete();
+
+    height: 44px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: root.entry.running ? Theme.accent.with-alpha(0.6) : Theme.line;
+    background: touch.has-hover ? Theme.surface-hover : Theme.card;
+    forward-focus: keys;
+
+    accessible-role: list-item;
+    accessible-label: root.entry.description != "" ? root.entry.description : @tr("(no description)");
+    accessible-description: root.entry.range + " " + root.entry.duration;
+    accessible-action-default => { root.open(); }
+
+    keys := Activator {
+        activated => { root.open(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.open(); }
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-1;
+        spacing: Theme.gap-3;
+
+        Text {
+            horizontal-stretch: 1;
+            min-width: 80px;
+            text: root.entry.description != "" ? root.entry.description : @tr("(no description)");
+            color: root.entry.description != "" ? Theme.text : Theme.muted;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        if root.entry.project-label != "": HorizontalLayout {
+            spacing: 6px;
+            max-width: 240px;
+            horizontal-stretch: 0;
+
+            ColorDot {
+                dot-color: root.entry.project-color;
+            }
+            Text {
+                text: root.entry.project-label;
+                color: Theme.text-secondary;
+                font-size: Theme.font-sm;
+                vertical-alignment: center;
+                overflow: elide;
+                accessible-role: none;
+            }
+        }
+        if root.entry.tags != "": HorizontalLayout {
+            spacing: 4px;
+            max-width: 160px;
+            horizontal-stretch: 0;
+
+            Icon {
+                source: Icons.tag;
+                size: 12px;
+                color: Theme.muted;
+            }
+            Text {
+                text: root.entry.tags;
+                color: Theme.muted;
+                font-size: Theme.font-sm;
+                vertical-alignment: center;
+                overflow: elide;
+                accessible-role: none;
+            }
+        }
+        Text {
+            width: 10px;
+            text: root.entry.billable ? "$" : "";
+            color: Theme.accent;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+            accessible-role: none;
+        }
+        Text {
+            min-width: 110px;
+            text: root.entry.range;
+            color: Theme.text-secondary;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+            accessible-role: none;
+        }
+        Text {
+            min-width: 56px;
+            text: root.entry.duration;
+            color: root.entry.running ? Theme.accent : Theme.text;
+            font-size: Theme.font-md;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: right;
+            accessible-role: none;
+        }
+        HorizontalLayout {
+            alignment: center;
+            spacing: 2px;
+
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.play;
+                    icon-color: Theme.success;
+                    enabled: !root.entry.running;
+                    accessible-label: @tr("Continue");
+                    clicked => { root.continue(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.copy;
+                    icon-color: Theme.muted;
+                    enabled: !root.entry.running;
+                    accessible-label: @tr("Duplicate");
+                    clicked => { root.duplicate(); }
+                }
+            }
+            VerticalLayout {
+                alignment: center;
+
+                Button {
+                    variant: ButtonVariant.ghost;
+                    icon: Icons.trash;
+                    icon-color: Theme.muted;
+                    enabled: !root.entry.running;
+                    accessible-label: @tr("Delete");
+                    clicked => { root.delete(); }
+                }
+            }
+        }
+    }
+
+    if keys.focus-visible: FocusRing { }
+}
+
+// A day: title and total, then its entries.
+export component DayGroup inherits VerticalLayout {
+    in property <DayView> day;
+    callback open(id: string);
+    callback continue(id: string);
+    callback duplicate(id: string);
+    callback delete(id: string);
+
+    spacing: 6px;
+    padding-bottom: Theme.gap-3;
+    // Room for the list's scrollbar.
+    padding-right: Theme.gap-3;
+
+    HorizontalLayout {
+        padding-left: Theme.gap-1;
+        padding-right: Theme.gap-1;
+        padding-top: Theme.gap-2;
+
+        Text {
+            horizontal-stretch: 1;
+            text: root.day.title;
+            color: Theme.muted;
+            font-size: Theme.font-sm;
+            font-weight: 600;
+        }
+        Text {
+            text: root.day.total;
+            color: Theme.muted;
+            font-size: Theme.font-sm;
+            font-weight: 600;
+            accessible-label: @tr("Total {}", root.day.total);
+        }
+    }
+    for row in root.day.rows: EntryRow {
+        entry: row;
+        open => { root.open(row.id); }
+        continue => { root.continue(row.id); }
+        duplicate => { root.duplicate(row.id); }
+        delete => { root.delete(row.id); }
+    }
+}

@@ -1,0 +1,30 @@
+// Month grids for date pickers (user's week start and today). Implemented by
+// `controllers::calendar`; register it in every window that shows a date picker.
+
+export struct CalendarDay {
+    // ISO "YYYY-MM-DD".
+    date: string,
+    // Day of month.
+    day: int,
+    // 0 = Monday … 6 = Sunday.
+    weekday: int,
+    in-month: bool,
+    is-today: bool,
+}
+
+// Six weeks of seven days, starting on the user's first day of the week.
+export struct CalendarMonth {
+    year: int,
+    // 1 … 12
+    month: int,
+    // ISO date of the 1st of the month.
+    first: string,
+    days: [CalendarDay],
+}
+
+export global Calendar {
+    // The month containing `date` (ISO; empty or invalid = today), moved by `delta` months.
+    callback month(date: string, delta: int) -> CalendarMonth;
+    // `date` (ISO) in the user's date format; "" if invalid.
+    pure callback format(date: string) -> string;
+}

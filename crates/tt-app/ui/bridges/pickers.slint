@@ -30,6 +30,10 @@ export global Pickers {
     pure callback filter-tags(items: [TagOption], query: string) -> [TagOption];
     // `query` (trimmed) is not empty and no tag name equals it (case-insensitive).
     pure callback tag-creatable(items: [TagOption], query: string) -> bool;
+    // `items` with `selected` set exactly for `ids`.
+    pure callback select-tags(items: [TagOption], ids: [string]) -> [TagOption];
+    // Names of the tags in `ids` (in the order of `items`) joined with ", ".
+    pure callback selected-names(items: [TagOption], ids: [string]) -> string;
     // Ids of the selected tags with `id` added or removed.
     pure callback toggle-tag(items: [TagOption], id: string) -> [string];
 }

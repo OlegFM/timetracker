@@ -1,0 +1,47 @@
+import { Theme } from "../theme.slint";
+import { Input } from "input.slint";
+
+// Labeled short field for a time of day or a duration, with an inline error under it.
+// `committed` fires on Enter and when the field loses focus (e.g. to normalize the text).
+export component DurationInput inherits VerticalLayout {
+    in property <string> label;
+    in-out property <string> text <=> field.text;
+    in property <string> placeholder;
+    // Shown under the field (in the danger color) when not empty.
+    in property <string> error;
+    in property <bool> enabled <=> field.enabled;
+    callback edited(string);
+    callback committed(string);
+
+    spacing: 4px;
+    alignment: start;
+    min-width: 96px;
+    horizontal-stretch: 1;
+
+    Text {
+        text: root.label;
+        color: Theme.muted;
+        font-size: Theme.font-sm;
+    }
+    field := Input {
+        placeholder: root.placeholder;
+        accessible-label: root.label;
+        accessible-description: root.error;
+        edited(text) => { root.edited(text); }
+        accepted(text) => { root.committed(text); }
+        changed has-focus => {
+            if !self.has-focus {
+                root.committed(self.text);
+            }
+        }
+    }
+    Text {
+        // Wraps within the field width instead of widening the column.
+        preferred-width: 0;
+        min-height: 14px;
+        text: root.error;
+        color: Theme.danger;
+        font-size: 11px;
+        wrap: word-wrap;
+    }
+}

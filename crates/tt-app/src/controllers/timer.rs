@@ -148,6 +148,16 @@ impl TimerHub {
         self.push_all();
     }
 
+    /// Shows the stored timer state again (after entries were changed elsewhere).
+    pub fn refresh(&self) {
+        self.push_all();
+    }
+
+    /// Runs `f` with the loaded projects, tasks and tags.
+    pub fn with_catalog<R>(&self, f: impl FnOnce(&Catalog) -> R) -> R {
+        f(&self.catalog.borrow())
+    }
+
     fn start(&self) {
         let draft = self.draft.borrow().clone();
         if self

@@ -1,0 +1,201 @@
+import { Theme } from "../theme.slint";
+import { Input } from "input.slint";
+import { Button, ButtonVariant } from "button.slint";
+import { BillableToggle } from "billable_toggle.slint";
+import { ComboBox } from "combobox.slint";
+import { TagSelect } from "tag_select.slint";
+import { DatePicker } from "date_picker.slint";
+import { DurationInput } from "duration_input.slint";
+import { Dialog, DialogActions } from "dialog.slint";
+import { Pickers } from "../bridges/pickers.slint";
+import { TimerBridge } from "../bridges/timer.slint";
+import { EntriesBridge, EntryDialogData, EntryDialogView } from "../bridges/entries.slint";
+
+// Edit / manual add of a time entry. Typing a duration moves the end, editing the start or
+// the end updates the duration; an end not after the start is on the next day. For the
+// running entry end and duration are read-only. Project and tag options (and creating
+// them) come from `TimerBridge`; saving goes through `EntriesBridge.save`.
+export component EntryDialog inherits Dialog {
+    in property <EntryDialogView> view;
+    callback closed();
+
+    private property <EntryDialogData> data: root.view.data;
+    private property <string> project-label: root.view.project-label;
+    private property <color> project-color: root.view.project-color;
+    private property <string> save-error;
+
+    private property <bool> start-ok: EntriesBridge.normalize-time(start-field.text) != "";
+    private property <bool> end-ok: root.view.running || EntriesBridge.normalize-time(end-field.text) != "";
+    private property <bool> duration-ok: root.view.running || EntriesBridge.normalize-duration(duration-field.text) != "";
+    private property <bool> can-save: root.start-ok && root.end-ok && root.duration-ok;
+
+    function set-project(project-id: string, task-id: string, label: string, color: color) {
+        if project-id != root.data.project-id {
+            root.data.billable = EntriesBridge.project-billable(project-id);
+        }
+        root.data.project-id = project-id;
+        root.data.task-id = task-id;
+        root.project-label = label;
+        root.project-color = color;
+    }
+
+    function save() {
+        if !root.can-save {
+            return;
+        }
+        root.data.description = description-field.text;
+        root.data.start = start-field.text;
+        root.data.end = root.view.running ? "" : end-field.text;
+        root.save-error = EntriesBridge.save(root.data);
+        if root.save-error == "" {
+            root.closed();
+        }
+    }
+
+    title: root.view.data.id == "" ? @tr("Add time entry") : @tr("Edit time entry");
+    card-width: 620px;
+    dismissed => { root.closed(); }
+
+    description-field := Input {
+        text: root.view.data.description;
+        placeholder: @tr("What did you work on?");
+        accessible-label: @tr("entry" => "Description");
+        accepted => { root.save(); }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.gap-2;
+        alignment: start;
+
+        ComboBox {
+            items: TimerBridge.projects;
+            current-id: root.data.task-id != "" ? root.data.task-id : root.data.project-id;
+            text: root.project-label;
+            dot-color: root.project-color;
+            placeholder: @tr("Project");
+            none-text: @tr("No project");
+            create-texts: root.data.project-id != ""
+                ? [@tr("Create project \"{}\"", self.query), @tr("Create task \"{}\"", self.query)]
+                : [@tr("Create project \"{}\"", self.query)];
+            selected(option) => {
+                root.set-project(option.project-id, option.task-id, option.label, option.color);
+            }
+            cleared => {
+                root.set-project("", "", "", transparent);
+            }
+            create(index, name) => {
+                let project = index == 0 ? "" : root.data.project-id;
+                let id = index == 0 ? TimerBridge.create-project(name) : TimerBridge.create-task(project, name);
+                if id != "" {
+                    let option = TimerBridge.projects[Pickers.option-index(TimerBridge.projects, id)];
+                    root.set-project(option.project-id, option.task-id, option.label, option.color);
+                }
+            }
+        }
+        TagSelect {
+            items: Pickers.select-tags(TimerBridge.tags, root.data.tag-ids);
+            text: Pickers.selected-names(TimerBridge.tags, root.data.tag-ids);
+            selection-changed(ids) => {
+                root.data.tag-ids = ids;
+            }
+            create(name) => {
+                TimerBridge.create-tag(name)
+            }
+        }
+        BillableToggle {
+            checked: root.data.billable;
+            toggled => {
+                root.data.billable = !root.data.billable;
+            }
+        }
+    }
+
+    HorizontalLayout {
+        spacing: Theme.gap-3;
+
+        VerticalLayout {
+            spacing: 4px;
+            alignment: start;
+
+            Text {
+                text: @tr("Date");
+                color: Theme.muted;
+                font-size: Theme.font-sm;
+            }
+            DatePicker {
+                date: root.view.data.date;
+                picked(date) => {
+                    root.data.date = date;
+                }
+            }
+        }
+        start-field := DurationInput {
+            label: @tr("entry" => "Start");
+            text: root.view.data.start;
+            error: root.start-ok ? "" : @tr("Enter a time like 9:30");
+            edited(text) => {
+                if !root.view.running && root.start-ok && root.end-ok {
+                    duration-field.text = EntriesBridge.duration-between(text, end-field.text);
+                }
+            }
+            committed(text) => {
+                if root.start-ok {
+                    self.text = EntriesBridge.normalize-time(text);
+                }
+            }
+        }
+        end-field := DurationInput {
+            label: @tr("entry" => "End");
+            text: root.view.running ? @tr("Running") : root.view.data.end;
+            enabled: !root.view.running;
+            error: root.end-ok ? "" : @tr("Enter a time like 9:30");
+            edited(text) => {
+                if root.start-ok && root.end-ok {
+                    duration-field.text = EntriesBridge.duration-between(start-field.text, text);
+                }
+            }
+            committed(text) => {
+                if !root.view.running && root.end-ok {
+                    self.text = EntriesBridge.normalize-time(text);
+                }
+            }
+        }
+        duration-field := DurationInput {
+            label: @tr("entry" => "Duration");
+            text: root.view.duration;
+            enabled: !root.view.running;
+            error: root.duration-ok ? "" : @tr("Enter a duration like 1:30 or 1h 30m (under 24 h)");
+            edited(text) => {
+                if root.start-ok && root.duration-ok {
+                    end-field.text = EntriesBridge.end-after(start-field.text, text);
+                }
+            }
+            committed(text) => {
+                if !root.view.running && root.duration-ok {
+                    self.text = EntriesBridge.normalize-duration(text);
+                }
+            }
+        }
+    }
+
+    if root.save-error != "": Text {
+        text: root.save-error;
+        color: Theme.danger;
+        font-size: Theme.font-md;
+        wrap: word-wrap;
+    }
+
+    DialogActions {
+        Button {
+            text: @tr("Cancel");
+            variant: ButtonVariant.ghost;
+            clicked => { root.closed(); }
+        }
+        Button {
+            text: @tr("Save");
+            variant: ButtonVariant.primary;
+            enabled: root.can-save;
+            clicked => { root.save(); }
+        }
+    }
+}

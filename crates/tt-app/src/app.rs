@@ -7,7 +7,9 @@ use std::rc::Rc;
 use anyhow::Context;
 use directories::BaseDirs;
 use slint::ComponentHandle;
-use tt_services::{CatalogService, Settings, SettingsService, SystemClock, TimerService};
+use tt_services::{
+    CatalogService, EntryService, Settings, SettingsService, SystemClock, TimerService,
+};
 use tt_storage::Db;
 
 use crate::vm::lang;
@@ -20,6 +22,7 @@ pub struct AppContext {
     pub db: Db,
     pub timer: TimerService<SystemClock>,
     pub catalog: CatalogService<SystemClock>,
+    pub entries: EntryService<SystemClock>,
     pub settings: Settings,
     pub db_path: PathBuf,
     pub events: Rc<AppEvents>,
@@ -68,6 +71,7 @@ impl AppContext {
             db,
             timer: TimerService::new(SystemClock),
             catalog: CatalogService::new(SystemClock),
+            entries: EntryService::new(SystemClock),
             settings,
             db_path,
             events: Rc::default(),

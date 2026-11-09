@@ -12,6 +12,7 @@ workspace = true
 tt-domain.workspace = true
 tt-storage.workspace = true
 tt-services.workspace = true
+chrono.workspace = true
 slint.workspace = true
 sys-locale.workspace = true
 directories.workspace = true

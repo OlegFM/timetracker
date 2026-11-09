@@ -7,7 +7,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use slint::ComponentHandle;
 use tt_app::app::{self, AppContext, Ctx};
-use tt_app::controllers::{pickers, timer};
+use tt_app::controllers::{calendar, entries, pickers, timer};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
@@ -31,8 +31,10 @@ fn run() -> anyhow::Result<()> {
     app::apply_theme(&ui, ctx.borrow().settings.theme);
 
     pickers::install(&ui);
+    calendar::install(&ui, &ctx);
     // Kept for the mini timer (Task 13), which attaches its window to the same hub.
-    let _timer = timer::install(&ui, &ctx);
+    let timer = timer::install(&ui, &ctx);
+    let _entries = entries::install(&ui, &ctx, &timer);
 
     // Until close-to-tray exists (Task 14), closing the window quits.
     ui.window().on_close_requested(|| {

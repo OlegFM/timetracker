@@ -19,6 +19,8 @@ where
     p.on_filter_tags(|items, query| model(vm::filter_tags(&rows(&items), &query)));
     p.on_tag_creatable(|items, query| vm::tag_creatable(&rows(&items), &query));
     p.on_toggle_tag(|items, id| model(vm::toggle_tag(&rows(&items), &id)));
+    p.on_select_tags(|items, ids| model(vm::select_tags(&rows(&items), &rows(&ids))));
+    p.on_selected_names(|items, ids| vm::selected_names(&rows(&items), &rows(&ids)).into());
 }
 
 fn rows<T: Clone + 'static>(m: &ModelRc<T>) -> Vec<T> {

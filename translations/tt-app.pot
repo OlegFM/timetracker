@@ -11,7 +11,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/screens/time.slint
 msgid "Time"
 msgstr ""
 
@@ -247,7 +247,7 @@ msgstr ""
 msgid "Create task \"{}\""
 msgstr ""
 
-#: ui/components/timer_bar.slint
+#: ui/components/billable_toggle.slint
 msgid "Billable"
 msgstr ""
 
@@ -277,4 +277,191 @@ msgstr ""
 
 #: ui/strings.slint
 msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Today"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Yesterday"
+msgstr ""
+
+#: ui/strings.slint
+msgid "The start can't be in the future."
+msgstr ""
+
+#: ui/screens/time.slint
+msgid "Add time entry"
+msgstr ""
+
+#: ui/screens/time.slint
+msgid "No time entries yet. Start the timer or add an entry manually."
+msgstr ""
+
+#: ui/components/entry_row.slint
+msgid "(no description)"
+msgstr ""
+
+#: ui/components/entry_row.slint
+msgid "Continue"
+msgstr ""
+
+#: ui/components/entry_row.slint
+msgid "Duplicate"
+msgstr ""
+
+#: ui/components/entry_row.slint ui/main.slint
+msgid "Delete"
+msgstr ""
+
+#: ui/components/entry_row.slint
+msgid "Total {}"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "Edit time entry"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "What did you work on?"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Description"
+msgstr ""
+
+#: ui/components/entry_dialog.slint ui/components/date_picker.slint
+msgid "Date"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Start"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "End"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Duration"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "Running"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a time like 9:30"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a duration like 1:30 or 1h 30m (under 24 h)"
+msgstr ""
+
+#: ui/components/entry_dialog.slint
+msgid "Save"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Mo"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Tu"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "We"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Th"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Fr"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Sa"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Su"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "January"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "February"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "March"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "April"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "May"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "June"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "July"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "August"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "September"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "October"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "November"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "December"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "Previous month"
+msgstr ""
+
+#: ui/components/date_picker.slint
+msgid "Next month"
+msgstr ""
+
+#: ui/main.slint
+msgid "Delete this time entry?"
+msgstr ""
+
+#: ui/main.slint
+msgid "The entry will be removed permanently."
 msgstr ""

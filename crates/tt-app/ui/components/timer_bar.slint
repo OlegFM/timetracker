@@ -1,53 +1,11 @@
 import { Theme } from "../theme.slint";
 import { Icons } from "icon.slint";
 import { Input } from "input.slint";
-import { Activator, Button, ButtonVariant, FocusRing } from "button.slint";
+import { Button, ButtonVariant } from "button.slint";
+import { BillableToggle } from "billable_toggle.slint";
 import { ComboBox } from "combobox.slint";
 import { TagSelect } from "tag_select.slint";
 import { TimerBridge, TimerView } from "../bridges/timer.slint";
-
-// Round "$" toggle for the billable flag.
-component BillableToggle inherits Rectangle {
-    in property <bool> checked;
-    callback toggled();
-
-    width: 30px;
-    height: 30px;
-    border-radius: self.height / 2;
-    border-width: 1px;
-    border-color: root.checked ? Theme.accent : Theme.line;
-    background: root.checked ? Theme.accent.with-alpha(0.15)
-        : touch.has-hover ? Theme.surface-hover : transparent;
-    forward-focus: keys;
-
-    accessible-role: checkbox;
-    accessible-label: @tr("Billable");
-    accessible-checked: root.checked;
-    accessible-action-default => { root.toggled(); }
-
-    Text {
-        text: "$";
-        color: root.checked ? Theme.accent : Theme.muted;
-        font-size: Theme.font-md;
-        font-weight: 600;
-        horizontal-alignment: center;
-        vertical-alignment: center;
-        accessible-role: none;
-    }
-
-    keys := Activator {
-        activated => { root.toggled(); }
-
-        touch := TouchArea {
-            mouse-cursor: pointer;
-            clicked => { root.toggled(); }
-        }
-    }
-
-    if keys.focus-visible: FocusRing {
-        radius: root.height / 2;
-    }
-}
 
 // Top bar of the main window: description, project/task, tags, billable, session clock
 // and Start / Pause·Resume / Stop. State and actions come from `TimerBridge`.

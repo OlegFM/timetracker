@@ -1,0 +1,67 @@
+import { ListView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Button, ButtonVariant } from "../components/button.slint";
+import { DayGroup } from "../components/entry_row.slint";
+import { EntriesBridge } from "../bridges/entries.slint";
+
+// "Time" page: header with "Add time entry", then the entries grouped by day (newest
+// first). Older days load when the list is scrolled to its end. Deleting asks first via
+// `request-delete` (the confirmation is shown by the window).
+export component TimeScreen inherits VerticalLayout {
+    callback request-delete(id: string);
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-2;
+
+    HorizontalLayout {
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Time");
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+        Button {
+            text: @tr("Add time entry");
+            icon: Icons.plus;
+            variant: ButtonVariant.primary;
+            clicked => { EntriesBridge.add-manual(); }
+        }
+    }
+
+    if EntriesBridge.days.length == 0: Text {
+        vertical-stretch: 1;
+        text: @tr("No time entries yet. Start the timer or add an entry manually.");
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        wrap: word-wrap;
+    }
+
+    if EntriesBridge.days.length > 0: list := ListView {
+        vertical-stretch: 1;
+
+        // Near the end: load older days (the controller ignores it when all are loaded).
+        function check-end() {
+            if EntriesBridge.has-more && self.visible-height - self.content-y >= self.content-height - 200px {
+                EntriesBridge.load-more();
+            }
+        }
+        changed content-y => { self.check-end(); }
+        changed content-height => { self.check-end(); }
+
+        for day in EntriesBridge.days: DayGroup {
+            day: day;
+            open(id) => { EntriesBridge.edit(id); }
+            continue(id) => { EntriesBridge.continue(id); }
+            duplicate(id) => { EntriesBridge.duplicate(id); }
+            delete(id) => { root.request-delete(id); }
+        }
+    }
+}

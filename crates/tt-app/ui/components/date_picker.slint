@@ -1,0 +1,207 @@
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "icon.slint";
+import { Activator, Button, ButtonVariant, FocusRing } from "button.slint";
+import { Calendar, CalendarDay, CalendarMonth } from "../bridges/calendar.slint";
+
+// One day of the month grid.
+component DayButton inherits Rectangle {
+    in property <CalendarDay> day;
+    in property <bool> selected;
+    callback clicked();
+
+    width: 34px;
+    height: 30px;
+    border-radius: Theme.radius-sm;
+    border-width: root.day.is-today && !root.selected ? 1px : 0;
+    border-color: Theme.accent;
+    background: root.selected ? Theme.accent : touch.has-hover ? Theme.surface-hover : transparent;
+
+    accessible-role: button;
+    accessible-label: root.day.date;
+    accessible-item-selected: root.selected;
+    accessible-action-default => { root.clicked(); }
+
+    Text {
+        text: root.day.day;
+        color: root.selected ? Theme.text-on-accent : root.day.in-month ? Theme.text : Theme.muted;
+        font-size: Theme.font-md;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        accessible-role: none;
+    }
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Field showing a date (ISO `date`, displayed in the user's format) that opens a month
+// grid; picking a day sets `date` and calls `picked`.
+export component DatePicker inherits Rectangle {
+    in-out property <string> date;
+    callback picked(date: string);
+
+    // Month shown in the popup.
+    private property <CalendarMonth> shown;
+    private property <[string]> weekday-names: [
+        @tr("weekday" => "Mo"), @tr("weekday" => "Tu"), @tr("weekday" => "We"),
+        @tr("weekday" => "Th"), @tr("weekday" => "Fr"), @tr("weekday" => "Sa"),
+        @tr("weekday" => "Su")
+    ];
+    private property <[string]> month-names: [
+        @tr("January"), @tr("February"), @tr("March"), @tr("April"), @tr("May"), @tr("June"),
+        @tr("July"), @tr("August"), @tr("September"), @tr("October"), @tr("November"),
+        @tr("December")
+    ];
+
+    function open() {
+        root.shown = Calendar.month(root.date, 0);
+        popup.show();
+    }
+
+    height: 32px;
+    min-width: 130px;
+    border-radius: Theme.radius-md;
+    border-width: 1px;
+    border-color: popup.is-open ? Theme.accent : Theme.line;
+    background: touch.has-hover ? Theme.surface-hover : Theme.card;
+    forward-focus: keys;
+
+    accessible-role: combobox;
+    accessible-label: @tr("Date");
+    accessible-value: Calendar.format(root.date);
+    accessible-expanded: popup.is-open;
+    accessible-action-default => { root.open(); }
+
+    HorizontalLayout {
+        padding-left: Theme.gap-3;
+        padding-right: Theme.gap-2;
+        spacing: Theme.gap-2;
+
+        Text {
+            horizontal-stretch: 1;
+            text: Calendar.format(root.date);
+            color: Theme.text;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+        Icon {
+            source: Icons.calendar;
+            size: 14px;
+            color: Theme.muted;
+        }
+    }
+
+    keys := Activator {
+        activated => { root.open(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.open(); }
+        }
+    }
+
+    if keys.focus-visible: FocusRing { }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: grid.preferred-width;
+        height: grid.preferred-height;
+        close-policy: close-on-click-outside;
+
+        Rectangle {
+            background: Theme.card;
+            border-radius: Theme.radius-md;
+            border-width: 1px;
+            border-color: Theme.line;
+            drop-shadow-blur: 20px;
+            drop-shadow-offset-y: 6px;
+            drop-shadow-color: #00000066;
+
+            FocusScope {
+                init => { self.focus(); }
+                key-pressed(event) => {
+                    if event.text == Key.Escape {
+                        popup.close();
+                        return accept;
+                    }
+                    if event.text == Key.PageUp {
+                        root.shown = Calendar.month(root.shown.first, -1);
+                        return accept;
+                    }
+                    if event.text == Key.PageDown {
+                        root.shown = Calendar.month(root.shown.first, 1);
+                        return accept;
+                    }
+                    reject
+                }
+
+                grid := VerticalLayout {
+                    padding: Theme.gap-2;
+                    spacing: 2px;
+
+                    HorizontalLayout {
+                        spacing: Theme.gap-1;
+                        padding-bottom: Theme.gap-1;
+
+                        Button {
+                            variant: ButtonVariant.ghost;
+                            icon: Icons.chevron-left;
+                            accessible-label: @tr("Previous month");
+                            clicked => { root.shown = Calendar.month(root.shown.first, -1); }
+                        }
+                        Text {
+                            horizontal-stretch: 1;
+                            text: root.shown.month >= 1
+                                ? root.month-names[root.shown.month - 1] + " " + root.shown.year
+                                : "";
+                            color: Theme.text;
+                            font-size: Theme.font-md;
+                            font-weight: 600;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                        Button {
+                            variant: ButtonVariant.ghost;
+                            icon: Icons.chevron-right;
+                            accessible-label: @tr("Next month");
+                            clicked => { root.shown = Calendar.month(root.shown.first, 1); }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 2px;
+
+                        for col in 7: Text {
+                            width: 34px;
+                            height: 22px;
+                            text: root.shown.days.length >= 7
+                                ? root.weekday-names[root.shown.days[col].weekday]
+                                : "";
+                            color: Theme.muted;
+                            font-size: Theme.font-sm;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                    for week in 6: HorizontalLayout {
+                        spacing: 2px;
+
+                        for col in 7: DayButton {
+                            day: root.shown.days[week * 7 + col];
+                            selected: self.day.date == root.date;
+                            clicked => {
+                                // Close last: closing destroys this button.
+                                root.picked(self.day.date);
+                                root.date = self.day.date;
+                                popup.close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

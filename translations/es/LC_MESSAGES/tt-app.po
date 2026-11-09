@@ -13,7 +13,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr "Resumen"
 
-#: ui/components/sidebar.slint ui/main.slint
+#: ui/components/sidebar.slint ui/screens/time.slint
 msgid "Time"
 msgstr "Tiempo"
 
@@ -249,7 +249,7 @@ msgstr "Crear proyecto «{}»"
 msgid "Create task \"{}\""
 msgstr "Crear tarea «{}»"
 
-#: ui/components/timer_bar.slint
+#: ui/components/billable_toggle.slint
 msgid "Billable"
 msgstr "Facturable"
 
@@ -280,3 +280,190 @@ msgstr "Crear etiqueta «{}»"
 #: ui/strings.slint
 msgid "Something went wrong. Please try again."
 msgstr "Algo salió mal. Inténtelo de nuevo."
+
+#: ui/strings.slint
+msgid "Today"
+msgstr "Hoy"
+
+#: ui/strings.slint
+msgid "Yesterday"
+msgstr "Ayer"
+
+#: ui/strings.slint
+msgid "The start can't be in the future."
+msgstr "El inicio no puede estar en el futuro."
+
+#: ui/screens/time.slint
+msgid "Add time entry"
+msgstr "Añadir registro"
+
+#: ui/screens/time.slint
+msgid "No time entries yet. Start the timer or add an entry manually."
+msgstr "Aún no hay registros. Inicie el temporizador o añada un registro manualmente."
+
+#: ui/components/entry_row.slint
+msgid "(no description)"
+msgstr "(sin descripción)"
+
+#: ui/components/entry_row.slint
+msgid "Continue"
+msgstr "Continuar"
+
+#: ui/components/entry_row.slint
+msgid "Duplicate"
+msgstr "Duplicar"
+
+#: ui/components/entry_row.slint ui/main.slint
+msgid "Delete"
+msgstr "Eliminar"
+
+#: ui/components/entry_row.slint
+msgid "Total {}"
+msgstr "Total {}"
+
+#: ui/components/entry_dialog.slint
+msgid "Edit time entry"
+msgstr "Editar registro"
+
+#: ui/components/entry_dialog.slint
+msgid "What did you work on?"
+msgstr "¿En qué trabajó?"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Description"
+msgstr "Descripción"
+
+#: ui/components/entry_dialog.slint ui/components/date_picker.slint
+msgid "Date"
+msgstr "Fecha"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Start"
+msgstr "Inicio"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "End"
+msgstr "Fin"
+
+#: ui/components/entry_dialog.slint
+msgctxt "entry"
+msgid "Duration"
+msgstr "Duración"
+
+#: ui/components/entry_dialog.slint
+msgid "Running"
+msgstr "En curso"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a time like 9:30"
+msgstr "Introduzca una hora, p. ej. 9:30"
+
+#: ui/components/entry_dialog.slint
+msgid "Enter a duration like 1:30 or 1h 30m (under 24 h)"
+msgstr "Introduzca una duración, p. ej. 1:30 o 1h 30m (menos de 24 h)"
+
+#: ui/components/entry_dialog.slint
+msgid "Save"
+msgstr "Guardar"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Mo"
+msgstr "Lu"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Tu"
+msgstr "Ma"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "We"
+msgstr "Mi"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Th"
+msgstr "Ju"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Fr"
+msgstr "Vi"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Sa"
+msgstr "Sá"
+
+#: ui/components/date_picker.slint
+msgctxt "weekday"
+msgid "Su"
+msgstr "Do"
+
+#: ui/components/date_picker.slint
+msgid "January"
+msgstr "Enero"
+
+#: ui/components/date_picker.slint
+msgid "February"
+msgstr "Febrero"
+
+#: ui/components/date_picker.slint
+msgid "March"
+msgstr "Marzo"
+
+#: ui/components/date_picker.slint
+msgid "April"
+msgstr "Abril"
+
+#: ui/components/date_picker.slint
+msgid "May"
+msgstr "Mayo"
+
+#: ui/components/date_picker.slint
+msgid "June"
+msgstr "Junio"
+
+#: ui/components/date_picker.slint
+msgid "July"
+msgstr "Julio"
+
+#: ui/components/date_picker.slint
+msgid "August"
+msgstr "Agosto"
+
+#: ui/components/date_picker.slint
+msgid "September"
+msgstr "Septiembre"
+
+#: ui/components/date_picker.slint
+msgid "October"
+msgstr "Octubre"
+
+#: ui/components/date_picker.slint
+msgid "November"
+msgstr "Noviembre"
+
+#: ui/components/date_picker.slint
+msgid "December"
+msgstr "Diciembre"
+
+#: ui/components/date_picker.slint
+msgid "Previous month"
+msgstr "Mes anterior"
+
+#: ui/components/date_picker.slint
+msgid "Next month"
+msgstr "Mes siguiente"
+
+#: ui/main.slint
+msgid "Delete this time entry?"
+msgstr "¿Eliminar este registro?"
+
+#: ui/main.slint
+msgid "The entry will be removed permanently."
+msgstr "El registro se eliminará de forma permanente."

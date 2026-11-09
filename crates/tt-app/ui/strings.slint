@@ -38,6 +38,10 @@ export global Tr {
     out property <string> export-end: @tr("export" => "End");
     out property <string> export-date: @tr("export" => "Date");
 
+    // Day titles of the time entries list
+    out property <string> day-today: @tr("Today");
+    out property <string> day-yesterday: @tr("Yesterday");
+
     // Service errors (tt_services::ServiceError)
     out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");
     out property <string> err-in-use-tasks: @tr("Can't delete: it still has tasks. Archive it instead.");
@@ -47,5 +51,6 @@ export global Tr {
     out property <string> err-invalid-color: @tr("Choose a valid color.");
     out property <string> err-invalid-range: @tr("The end must be after the start.");
     out property <string> err-backup: @tr("This file is not a valid TimeTracker backup.");
+    out property <string> err-start-future: @tr("The start can't be in the future.");
     out property <string> err-generic: @tr("Something went wrong. Please try again.");
 }

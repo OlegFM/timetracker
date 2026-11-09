@@ -1,0 +1,85 @@
+// Time screen: entries grouped by day, the entry dialog (edit / manual add) and row
+// actions. Implemented by `controllers::entries`.
+
+// One time entry in the list.
+export struct EntryRowView {
+    id: string,
+    // Empty = no description (the row shows a muted placeholder).
+    description: string,
+    // "Project › Task", "Project" or empty.
+    project-label: string,
+    project-color: color,
+    // Tag names joined with ", "; empty = no tags.
+    tags: string,
+    billable: bool,
+    // "09:30 – 10:15"; a running entry "09:30 – …".
+    range: string,
+    duration: string,
+    running: bool,
+}
+
+// One local day: "Today", "Yesterday" or the date, its total and its entries (newest first).
+export struct DayView {
+    title: string,
+    total: string,
+    rows: [EntryRowView],
+}
+
+// Fields of the entry dialog. `id` is empty for a new entry; `date` is ISO "YYYY-MM-DD";
+// `start` / `end` are times of day as typed ("9:30"); `end` is empty for a running entry.
+// An end not after the start means the next day.
+export struct EntryDialogData {
+    id: string,
+    description: string,
+    project-id: string,
+    task-id: string,
+    tag-ids: [string],
+    billable: bool,
+    date: string,
+    start: string,
+    end: string,
+}
+
+// What the dialog opens with.
+export struct EntryDialogView {
+    data: EntryDialogData,
+    // The running entry: end and duration are read-only.
+    running: bool,
+    project-label: string,
+    project-color: color,
+    // "H:MM" between start and end (for a running entry: up to now).
+    duration: string,
+}
+
+export global EntriesBridge {
+    in property <[DayView]> days;
+    // Older days may exist (scrolling to the end calls `load-more`).
+    in property <bool> has-more;
+    // The entry dialog is shown while true; `edit` / `add-manual` fill `dialog` and open
+    // it, the dialog closes itself after a successful save or on cancel.
+    in-out property <bool> dialog-open;
+    in property <EntryDialogView> dialog;
+
+    callback load-more();
+    // Starts a new timer session with the attributes of the entry.
+    callback continue(id: string);
+    callback edit(id: string);
+    callback duplicate(id: string);
+    // Called after the user confirmed.
+    callback delete(id: string);
+    callback add-manual();
+    // Saves the dialog; returns "" or the error text to show in the dialog.
+    callback save(data: EntryDialogData) -> string;
+    // The default billable flag for entries of the project (false for an empty id).
+    callback project-billable(project-id: string) -> bool;
+
+    // Input helpers (user's time format; "" = not parseable).
+    // The typed time of day in display form ("905" → "09:05").
+    pure callback normalize-time(text: string) -> string;
+    // The typed duration as "H:MM" ("90m" → "1:30"); "" unless 0 < duration < 24 h.
+    pure callback normalize-duration(text: string) -> string;
+    // "H:MM" from start to end (end not after start = next day).
+    pure callback duration-between(start: string, end: string) -> string;
+    // End time of day for start + duration; "" unless 0 < duration < 24 h.
+    pure callback end-after(start: string, duration: string) -> string;
+}

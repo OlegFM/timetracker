@@ -159,6 +159,27 @@ pub fn tag_creatable(items: &[TagOption], query: &str) -> bool {
     creatable_by(items, query, |t| t.name.as_str())
 }
 
+/// `items` with `selected` set exactly for `ids` (for a selection other than the timer's).
+pub fn select_tags(items: &[TagOption], ids: &[SharedString]) -> Vec<TagOption> {
+    items
+        .iter()
+        .map(|t| TagOption {
+            selected: ids.contains(&t.id),
+            ..t.clone()
+        })
+        .collect()
+}
+
+/// Names of the tags in `ids`, in the order of `items`, joined with ", ".
+pub fn selected_names(items: &[TagOption], ids: &[SharedString]) -> String {
+    let names: Vec<&str> = items
+        .iter()
+        .filter(|t| ids.contains(&t.id))
+        .map(|t| t.name.as_str())
+        .collect();
+    names.join(", ")
+}
+
 /// Selected tag ids with `id` toggled (an unknown id is added).
 pub fn toggle_tag(items: &[TagOption], id: &str) -> Vec<SharedString> {
     let mut ids: Vec<SharedString> = items
@@ -327,6 +348,21 @@ pub(crate) mod tests {
         assert_eq!(toggle_tag(&items, "b"), ["a", "c", "b"]);
         assert_eq!(toggle_tag(&items, "a"), ["c"]);
         assert_eq!(toggle_tag(&items, "new"), ["a", "c", "new"]);
+    }
+
+    #[test]
+    fn select_tags_and_names_follow_given_ids() {
+        let items = [tag_opt("a", true), tag_opt("b", false), tag_opt("c", false)];
+        let ids = [SharedString::from("c"), SharedString::from("b")];
+        let marked = select_tags(&items, &ids);
+        assert_eq!(
+            marked.iter().map(|t| t.selected).collect::<Vec<_>>(),
+            [false, true, true]
+        );
+        assert_eq!(selected_names(&items, &ids), "b, c");
+        assert_eq!(selected_names(&items, &[]), "");
+        // Unknown ids (e.g. a tag deleted meanwhile) are ignored.
+        assert_eq!(selected_names(&items, &["zz".into()]), "");
     }
 
     #[test]
