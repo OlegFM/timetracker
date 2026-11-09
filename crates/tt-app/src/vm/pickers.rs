@@ -135,6 +135,15 @@ pub fn filter_options(items: &[ProjectOption], query: &str) -> Vec<ProjectOption
     filter_by(items, query, |o| o.label.as_str())
 }
 
+/// The first `limit` options (a very long list is searched instead of scrolled).
+pub fn limit_options(items: &[ProjectOption], limit: i32) -> Vec<ProjectOption> {
+    items
+        .iter()
+        .take(usize::try_from(limit).unwrap_or_default())
+        .cloned()
+        .collect()
+}
+
 /// Index of the option with `id` (the current choice); -1 if absent or `id` is empty,
 /// so that no row (in particular not "No project") is preselected.
 pub fn option_index(items: &[ProjectOption], id: &str) -> i32 {
@@ -283,6 +292,15 @@ pub(crate) mod tests {
         assert_eq!(hex_color("#22c55e"), Color::from_rgb_u8(0x22, 0xc5, 0x5e));
         assert_eq!(hex_color("22c55e"), Color::default());
         assert_eq!(hex_color("#fff"), Color::default());
+    }
+
+    #[test]
+    fn limit_keeps_the_first_options() {
+        let items = [opt("a"), opt("b"), opt("c")];
+        assert_eq!(labels(&limit_options(&items, 2)), ["a", "b"]);
+        assert_eq!(labels(&limit_options(&items, 9)), ["a", "b", "c"]);
+        assert!(limit_options(&items, 0).is_empty());
+        assert!(limit_options(&items, -1).is_empty());
     }
 
     #[test]

@@ -1,0 +1,377 @@
+import { ScrollView, AboutSlint } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Tr } from "../strings.slint";
+import { Button, ButtonVariant } from "../components/button.slint";
+import { Card } from "../components/card.slint";
+import { CheckBox } from "../components/check_box.slint";
+import { Input } from "../components/input.slint";
+import { Select } from "../components/select.slint";
+import { ComboBox } from "../components/combobox.slint";
+import { Slider } from "../components/slider.slint";
+import { MiniBridge } from "../bridges/mini.slint";
+import { SettingsBridge } from "../bridges/settings.slint";
+
+// One setting: the label (with an optional hint and an error text) on the left, the
+// control on the right, left-aligned so that its popup stays inside the window.
+component Row inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> hint;
+    in property <string> error;
+
+    spacing: Theme.gap-4;
+
+    VerticalLayout {
+        width: 240px;
+        alignment: center;
+        spacing: 2px;
+
+        Text {
+            text: root.label;
+            color: Theme.text-secondary;
+            font-size: Theme.font-md;
+            wrap: word-wrap;
+        }
+        if root.hint != "": Text {
+            text: root.hint;
+            color: Theme.muted;
+            font-size: Theme.font-sm;
+            wrap: word-wrap;
+        }
+        if root.error != "": Text {
+            text: root.error;
+            color: Theme.danger;
+            font-size: Theme.font-sm;
+            wrap: word-wrap;
+        }
+    }
+    VerticalLayout {
+        horizontal-stretch: 1;
+        alignment: center;
+
+        HorizontalLayout {
+            alignment: start;
+            spacing: Theme.gap-2;
+
+            @children
+        }
+    }
+}
+
+// "Settings" page: one card per section. Every change is applied and saved at once by the
+// controller (`SettingsBridge`); the language, theme and formats change the whole app.
+export component SettingsScreen inherits VerticalLayout {
+    init => { SettingsBridge.sync-fields(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-2;
+
+    Text {
+        text: @tr("Settings");
+        color: Theme.text;
+        font-size: Theme.font-xl;
+        font-weight: 600;
+        vertical-alignment: center;
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+
+        VerticalLayout {
+            // Room for the scrollbar.
+            padding-right: Theme.gap-3;
+            padding-bottom: Theme.gap-3;
+            spacing: Theme.gap-3;
+
+            Card {
+                title: @tr("Language");
+
+                HorizontalLayout {
+                    alignment: start;
+
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.languages;
+                        value: SettingsBridge.language;
+                        picked(v) => { SettingsBridge.set-language(v); }
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("Formats");
+
+                Row {
+                    label: @tr("Date format");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.date-options;
+                        value: SettingsBridge.date;
+                        picked(v) => { SettingsBridge.set-date(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Time format");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.time-options;
+                        value: SettingsBridge.time;
+                        picked(v) => { SettingsBridge.set-time(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Duration format");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.interval-options;
+                        value: SettingsBridge.interval;
+                        picked(v) => { SettingsBridge.set-interval(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Number format");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.number-options;
+                        value: SettingsBridge.number;
+                        picked(v) => { SettingsBridge.set-number(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Currency format");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: SettingsBridge.currency-options;
+                        value: SettingsBridge.currency;
+                        picked(v) => { SettingsBridge.set-currency(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Currency code");
+                    error: SettingsBridge.currency-code-invalid ? @tr("Enter 3 letters, for example USD.") : "";
+                    Input {
+                        width: 120px;
+                        text <=> SettingsBridge.currency-code;
+                        accessible-label: @tr("Currency code");
+                        edited(text) => { SettingsBridge.set-currency-code(text); }
+                        changed has-focus => {
+                            if !self.has-focus {
+                                SettingsBridge.sync-fields();
+                            }
+                        }
+                    }
+                }
+                Row {
+                    label: @tr("First day of the week");
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: [
+                            { value: 0, label: @tr("Monday") },
+                            { value: 1, label: @tr("Tuesday") },
+                            { value: 2, label: @tr("Wednesday") },
+                            { value: 3, label: @tr("Thursday") },
+                            { value: 4, label: @tr("Friday") },
+                            { value: 5, label: @tr("Saturday") },
+                            { value: 6, label: @tr("Sunday") },
+                        ];
+                        value: SettingsBridge.week-start;
+                        picked(v) => { SettingsBridge.set-week-start(v); }
+                    }
+                }
+                Row {
+                    label: @tr("Time zone");
+                    ComboBox {
+                        width: 260px;
+                        popup-width: 300px;
+                        items: SettingsBridge.timezones;
+                        current-id: SettingsBridge.timezone;
+                        text: SettingsBridge.timezone;
+                        dots: false;
+                        max-rows: 50;
+                        selected(option) => { SettingsBridge.set-timezone(option.id); }
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("Theme");
+
+                HorizontalLayout {
+                    alignment: start;
+
+                    Select {
+                        width: 220px;
+                        popup-width: 220px;
+                        options: [
+                            { value: 0, label: @tr("Dark") },
+                            { value: 1, label: @tr("Light") },
+                        ];
+                        value: SettingsBridge.theme;
+                        picked(v) => { SettingsBridge.set-theme(v); }
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("Mini timer");
+
+                CheckBox {
+                    text: @tr("Show the mini timer");
+                    checked: MiniBridge.visible;
+                    toggled => { MiniBridge.set-visible(!MiniBridge.visible); }
+                }
+                Row {
+                    label: @tr("Transparency when idle");
+                    hint: @tr("How see-through it is until the mouse is over it.");
+                    Slider {
+                        width: 200px;
+                        minimum: 0;
+                        maximum: 90;
+                        step: 5;
+                        value: SettingsBridge.mini-transparency;
+                        accessible-label: @tr("Transparency when idle");
+                        edited(v) => { SettingsBridge.set-mini-transparency(v); }
+                    }
+                    Text {
+                        width: 40px;
+                        text: "\{SettingsBridge.mini-transparency} %";
+                        color: Theme.text-secondary;
+                        font-size: Theme.font-md;
+                        vertical-alignment: center;
+                        height: 24px;
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("Behavior");
+
+                CheckBox {
+                    text: @tr("The close button hides the window to the tray");
+                    checked: SettingsBridge.close-to-tray;
+                    toggled => { SettingsBridge.set-close-to-tray(!SettingsBridge.close-to-tray); }
+                }
+                CheckBox {
+                    text: @tr("Start with Windows");
+                    checked: SettingsBridge.autostart;
+                    toggled => { SettingsBridge.set-autostart(!SettingsBridge.autostart); }
+                }
+                CheckBox {
+                    text: @tr("Don't allow overlapping time entries");
+                    checked: SettingsBridge.prevent-overlap;
+                    toggled => { SettingsBridge.set-prevent-overlap(!SettingsBridge.prevent-overlap); }
+                }
+            }
+
+            Card {
+                title: @tr("Billing");
+
+                Row {
+                    label: @tr("Default hourly rate");
+                    hint: @tr("Used for projects without a rate of their own.");
+                    error: SettingsBridge.default-rate-invalid ? Tr.err-invalid-rate : "";
+                    Input {
+                        width: 120px;
+                        text <=> SettingsBridge.default-rate;
+                        placeholder: @tr("No rate");
+                        accessible-label: @tr("Default hourly rate");
+                        edited(text) => { SettingsBridge.set-default-rate(text); }
+                        changed has-focus => {
+                            if !self.has-focus {
+                                SettingsBridge.sync-fields();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("Data");
+
+                Text {
+                    text: @tr("Save all your data to a file, or replace it with a saved copy.");
+                    color: Theme.muted;
+                    font-size: Theme.font-md;
+                    wrap: word-wrap;
+                }
+                HorizontalLayout {
+                    alignment: start;
+                    spacing: Theme.gap-2;
+
+                    Button {
+                        text: @tr("Back up data");
+                        clicked => { SettingsBridge.backup(); }
+                    }
+                    Button {
+                        text: @tr("Restore from backup");
+                        clicked => { SettingsBridge.restore(); }
+                    }
+                }
+            }
+
+            if SettingsBridge.updates-enabled: Card {
+                title: @tr("Updates");
+
+                CheckBox {
+                    text: @tr("Check for updates automatically");
+                    checked: SettingsBridge.update-auto-check;
+                    toggled => { SettingsBridge.set-update-auto-check(!SettingsBridge.update-auto-check); }
+                }
+                HorizontalLayout {
+                    spacing: Theme.gap-3;
+
+                    Button {
+                        text: @tr("Check now");
+                        enabled: SettingsBridge.update-state != 1 && SettingsBridge.update-state != 5;
+                        clicked => { SettingsBridge.check-updates(); }
+                    }
+                    Text {
+                        horizontal-stretch: 1;
+                        text: SettingsBridge.update-state == 1 ? @tr("Checking…")
+                            : SettingsBridge.update-state == 2 ? @tr("You have the latest version.")
+                            : SettingsBridge.update-state == 3 ? @tr("Version {} is available.", SettingsBridge.update-version)
+                            : SettingsBridge.update-state == 4 ? @tr("Couldn't check for updates.")
+                            : SettingsBridge.update-state == 5 ? @tr("Downloading…") : "";
+                        color: Theme.text-secondary;
+                        font-size: Theme.font-md;
+                        vertical-alignment: center;
+                        wrap: word-wrap;
+                    }
+                    if SettingsBridge.update-state == 3: Button {
+                        text: @tr("Download and install");
+                        variant: ButtonVariant.primary;
+                        clicked => { SettingsBridge.install-update(); }
+                    }
+                }
+            }
+
+            Card {
+                title: @tr("About");
+
+                Text {
+                    text: "TimeTracker";
+                    color: Theme.text;
+                    font-size: Theme.font-lg;
+                    font-weight: 600;
+                }
+                Text {
+                    text: @tr("Version {}", SettingsBridge.app-version);
+                    color: Theme.muted;
+                    font-size: Theme.font-md;
+                }
+                AboutSlint {
+                    height: 110px;
+                }
+            }
+        }
+    }
+}

@@ -13,6 +13,7 @@ tt-domain.workspace = true
 tt-storage.workspace = true
 tt-services.workspace = true
 chrono.workspace = true
+chrono-tz.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 rfd.workspace = true
@@ -24,6 +25,7 @@ simplelog.workspace = true
 anyhow.workspace = true
 tray-icon.workspace = true
 auto-launch.workspace = true
+windows-registry.workspace = true
 windows-sys = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_Security",

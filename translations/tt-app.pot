@@ -962,3 +962,225 @@ msgstr ""
 msgctxt "month"
 msgid "Dec"
 msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Language"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Formats"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Date format"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Time format"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Duration format"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Number format"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Currency format"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Currency code"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Enter 3 letters, for example USD."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "First day of the week"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Monday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Tuesday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Wednesday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Thursday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Friday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Saturday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Sunday"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Time zone"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Theme"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Dark"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Light"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Mini timer"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Show the mini timer"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Transparency when idle"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "How see-through it is until the mouse is over it."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Behavior"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "The close button hides the window to the tray"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Start with Windows"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Don't allow overlapping time entries"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Billing"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Default hourly rate"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Used for projects without a rate of their own."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "No rate"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Data"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Save all your data to a file, or replace it with a saved copy."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Back up data"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Restore from backup"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Updates"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Check for updates automatically"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Check now"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Checking…"
+msgstr ""
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "You have the latest version."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Version {} is available."
+msgstr ""
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "Couldn't check for updates."
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Downloading…"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Download and install"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "About"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "Version {}"
+msgstr ""
+
+#: ui/main.slint
+msgid "Restore from backup?"
+msgstr ""
+
+#: ui/main.slint
+msgid "All current data will be replaced by the contents of the backup. This can't be undone."
+msgstr ""
+
+#: ui/main.slint
+msgctxt "backup"
+msgid "Restore"
+msgstr ""
+
+#: ui/strings.slint
+msgid "Backup saved."
+msgstr ""
+
+#: ui/strings.slint
+msgid "Data restored from the backup."
+msgstr ""
+
+#: ui/strings.slint
+msgid "A new version is available."
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "font"
+msgid "Segoe UI"
+msgstr ""

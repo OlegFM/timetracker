@@ -110,7 +110,7 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<EntriesCont
 
     let me = Rc::downgrade(&ctl);
     let events = ctx.borrow().events.clone();
-    events.on_entries_changed(move || {
+    events.on_data_changed(move || {
         if let Some(c) = me.upgrade() {
             c.reload();
         }

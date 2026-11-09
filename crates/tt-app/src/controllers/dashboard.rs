@@ -79,12 +79,13 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<DashboardCo
 }
 
 impl DashboardController {
-    /// Totals change with the entries: reload now if the dashboard is shown. Otherwise
-    /// nothing: opening the page always reloads (the cards also depend on the current time).
+    /// Totals change with the entries (the formats with the settings): reload now if the
+    /// dashboard is shown. Otherwise nothing: opening the page always reloads (the cards also
+    /// depend on the current time).
     fn listen_to_entries(self: &Rc<Self>) {
         let me = Rc::downgrade(self);
         let events = self.ctx.borrow().events.clone();
-        events.on_entries_changed(move || {
+        events.on_data_changed(move || {
             if let Some(c) = me.upgrade().filter(|c| c.page_visible()) {
                 c.reload();
             }

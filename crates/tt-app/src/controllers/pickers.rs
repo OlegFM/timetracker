@@ -14,6 +14,7 @@ where
 {
     let p = ui.global::<Pickers>();
     p.on_filter_options(|items, query| model(vm::filter_options(&rows(&items), &query)));
+    p.on_limit_options(|items, limit| model(vm::limit_options(&rows(&items), limit)));
     p.on_option_index(|items, id| vm::option_index(&rows(&items), &id));
     p.on_option_creatable(|items, query| vm::option_creatable(&rows(&items), &query));
     p.on_filter_tags(|items, query| model(vm::filter_tags(&rows(&items), &query)));

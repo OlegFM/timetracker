@@ -71,6 +71,15 @@ pub fn install(ui: &MainWindow, ctx: &Ctx) -> Rc<TimerHub> {
     hub.reload_catalog();
     hub.rollover();
     hub.attach(ui);
+
+    // Formats, language and time zone change what the windows show.
+    let me = Rc::downgrade(&hub);
+    let events = ctx.borrow().events.clone();
+    events.on_settings_changed(move || {
+        if let Some(h) = me.upgrade() {
+            h.refresh();
+        }
+    });
     hub
 }
 
@@ -155,6 +164,13 @@ impl TimerHub {
     /// Shows the stored timer state again (after entries were changed elsewhere).
     pub fn refresh(&self) {
         self.push_all();
+    }
+
+    /// After the database was replaced (a restore): forgets the draft, which may name rows
+    /// that are gone, reloads the options and shows the stored timer state.
+    pub fn reset(&self) {
+        self.draft.replace(EntryTemplate::default());
+        self.refresh_catalog();
     }
 
     /// Runs `f` with the loaded projects, tasks and tags.

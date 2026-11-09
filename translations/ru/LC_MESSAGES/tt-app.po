@@ -967,3 +967,225 @@ msgstr "ноя"
 msgctxt "month"
 msgid "Dec"
 msgstr "дек"
+
+#: ui/screens/settings.slint
+msgid "Language"
+msgstr "Язык"
+
+#: ui/screens/settings.slint
+msgid "Formats"
+msgstr "Форматы"
+
+#: ui/screens/settings.slint
+msgid "Date format"
+msgstr "Формат даты"
+
+#: ui/screens/settings.slint
+msgid "Time format"
+msgstr "Формат времени"
+
+#: ui/screens/settings.slint
+msgid "Duration format"
+msgstr "Формат длительности"
+
+#: ui/screens/settings.slint
+msgid "Number format"
+msgstr "Формат чисел"
+
+#: ui/screens/settings.slint
+msgid "Currency format"
+msgstr "Формат валюты"
+
+#: ui/screens/settings.slint
+msgid "Currency code"
+msgstr "Код валюты"
+
+#: ui/screens/settings.slint
+msgid "Enter 3 letters, for example USD."
+msgstr "Введите 3 буквы, например USD."
+
+#: ui/screens/settings.slint
+msgid "First day of the week"
+msgstr "Первый день недели"
+
+#: ui/screens/settings.slint
+msgid "Monday"
+msgstr "Понедельник"
+
+#: ui/screens/settings.slint
+msgid "Tuesday"
+msgstr "Вторник"
+
+#: ui/screens/settings.slint
+msgid "Wednesday"
+msgstr "Среда"
+
+#: ui/screens/settings.slint
+msgid "Thursday"
+msgstr "Четверг"
+
+#: ui/screens/settings.slint
+msgid "Friday"
+msgstr "Пятница"
+
+#: ui/screens/settings.slint
+msgid "Saturday"
+msgstr "Суббота"
+
+#: ui/screens/settings.slint
+msgid "Sunday"
+msgstr "Воскресенье"
+
+#: ui/screens/settings.slint
+msgid "Time zone"
+msgstr "Часовой пояс"
+
+#: ui/screens/settings.slint
+msgid "Theme"
+msgstr "Тема"
+
+#: ui/screens/settings.slint
+msgid "Dark"
+msgstr "Тёмная"
+
+#: ui/screens/settings.slint
+msgid "Light"
+msgstr "Светлая"
+
+#: ui/screens/settings.slint
+msgid "Mini timer"
+msgstr "Мини-таймер"
+
+#: ui/screens/settings.slint
+msgid "Show the mini timer"
+msgstr "Показывать мини-таймер"
+
+#: ui/screens/settings.slint
+msgid "Transparency when idle"
+msgstr "Прозрачность в покое"
+
+#: ui/screens/settings.slint
+msgid "How see-through it is until the mouse is over it."
+msgstr "Насколько он прозрачен, пока на него не наведена мышь."
+
+#: ui/screens/settings.slint
+msgid "Behavior"
+msgstr "Поведение"
+
+#: ui/screens/settings.slint
+msgid "The close button hides the window to the tray"
+msgstr "Кнопка закрытия сворачивает окно в трей"
+
+#: ui/screens/settings.slint
+msgid "Start with Windows"
+msgstr "Запускать вместе с Windows"
+
+#: ui/screens/settings.slint
+msgid "Don't allow overlapping time entries"
+msgstr "Запретить пересекающиеся записи времени"
+
+#: ui/screens/settings.slint
+msgid "Billing"
+msgstr "Оплата"
+
+#: ui/screens/settings.slint
+msgid "Default hourly rate"
+msgstr "Ставка по умолчанию (в час)"
+
+#: ui/screens/settings.slint
+msgid "Used for projects without a rate of their own."
+msgstr "Используется для проектов без собственной ставки."
+
+#: ui/screens/settings.slint
+msgid "No rate"
+msgstr "Нет ставки"
+
+#: ui/screens/settings.slint
+msgid "Data"
+msgstr "Данные"
+
+#: ui/screens/settings.slint
+msgid "Save all your data to a file, or replace it with a saved copy."
+msgstr "Сохраните все данные в файл или замените их сохранённой копией."
+
+#: ui/screens/settings.slint
+msgid "Back up data"
+msgstr "Создать резервную копию"
+
+#: ui/screens/settings.slint
+msgid "Restore from backup"
+msgstr "Восстановить из копии"
+
+#: ui/screens/settings.slint
+msgid "Updates"
+msgstr "Обновления"
+
+#: ui/screens/settings.slint
+msgid "Check for updates automatically"
+msgstr "Проверять обновления автоматически"
+
+#: ui/screens/settings.slint
+msgid "Check now"
+msgstr "Проверить сейчас"
+
+#: ui/screens/settings.slint
+msgid "Checking…"
+msgstr "Проверка…"
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "You have the latest version."
+msgstr "У вас последняя версия."
+
+#: ui/screens/settings.slint
+msgid "Version {} is available."
+msgstr "Доступна версия {}."
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "Couldn't check for updates."
+msgstr "Не удалось проверить обновления."
+
+#: ui/screens/settings.slint
+msgid "Downloading…"
+msgstr "Загрузка…"
+
+#: ui/screens/settings.slint
+msgid "Download and install"
+msgstr "Скачать и установить"
+
+#: ui/screens/settings.slint
+msgid "About"
+msgstr "О программе"
+
+#: ui/screens/settings.slint
+msgid "Version {}"
+msgstr "Версия {}"
+
+#: ui/main.slint
+msgid "Restore from backup?"
+msgstr "Восстановить из резервной копии?"
+
+#: ui/main.slint
+msgid "All current data will be replaced by the contents of the backup. This can't be undone."
+msgstr "Все текущие данные будут заменены содержимым копии. Это нельзя отменить."
+
+#: ui/main.slint
+msgctxt "backup"
+msgid "Restore"
+msgstr "Восстановить"
+
+#: ui/strings.slint
+msgid "Backup saved."
+msgstr "Копия сохранена."
+
+#: ui/strings.slint
+msgid "Data restored from the backup."
+msgstr "Данные восстановлены из копии."
+
+#: ui/strings.slint
+msgid "A new version is available."
+msgstr "Доступна новая версия."
+
+#: ui/strings.slint
+msgctxt "font"
+msgid "Segoe UI"
+msgstr "Segoe UI"

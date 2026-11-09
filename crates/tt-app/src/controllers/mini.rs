@@ -87,6 +87,19 @@ impl MiniController {
         }
     }
 
+    /// Applies the theme and the idle opacity of the settings to the mini timer window (it
+    /// has its own `Theme` global); a window created later reads them itself.
+    pub fn apply_appearance(&self) {
+        let (theme, opacity) = {
+            let s = &self.ctx.borrow().settings;
+            (s.theme, s.mini_timer_idle_opacity)
+        };
+        if let Some(w) = self.window.borrow().as_ref() {
+            app::apply_theme(w, theme);
+            w.set_idle_opacity(opacity);
+        }
+    }
+
     /// `f` runs after every [`MiniController::set_visible`] (replaces an earlier one).
     pub fn on_visibility_changed(&self, f: impl Fn(bool) + 'static) {
         self.on_visible.replace(Some(Box::new(f)));

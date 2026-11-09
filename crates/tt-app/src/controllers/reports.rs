@@ -140,7 +140,7 @@ impl ReportsController {
     fn listen_to_entries(self: &Rc<Self>) {
         let me = Rc::downgrade(self);
         let events = self.ctx.borrow().events.clone();
-        events.on_entries_changed(move || {
+        events.on_data_changed(move || {
             if let Some(c) = me.upgrade().filter(|c| c.page_visible()) {
                 c.run();
             }

@@ -22,6 +22,8 @@ export struct TagOption {
 export global Pickers {
     // Options whose label contains `query` (case-insensitive); exact matches first.
     pure callback filter-options(items: [ProjectOption], query: string) -> [ProjectOption];
+    // The first `limit` of `items`.
+    pure callback limit-options(items: [ProjectOption], limit: int) -> [ProjectOption];
     // Index of the option with `id` in `items`; -1 if absent or `id` is empty.
     pure callback option-index(items: [ProjectOption], id: string) -> int;
     // `query` (trimmed) is not empty and no option label equals it (case-insensitive).

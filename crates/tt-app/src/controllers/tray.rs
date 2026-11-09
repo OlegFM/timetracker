@@ -6,6 +6,7 @@ use std::rc::{Rc, Weak};
 use anyhow::Context;
 use slint::ComponentHandle;
 
+use crate::app::Ctx;
 use crate::controllers::mini::MiniController;
 use crate::controllers::timer::TimerHub;
 use crate::platform::tray::{AppAction, Tray, TrayState, TrayStrings, tray_label};
@@ -15,6 +16,7 @@ use crate::{MainWindow, Tr};
 /// Creates the tray icon (keep it for the app's lifetime). Call before the event loop runs.
 pub fn install(
     ui: &MainWindow,
+    ctx: &Ctx,
     hub: &Rc<TimerHub>,
     mini: &Rc<MiniController>,
 ) -> anyhow::Result<Rc<Tray>> {
@@ -31,6 +33,15 @@ pub fn install(
         }
     });
     tray.set_mini_visible(mini.is_visible());
+
+    // A language switch: menu and tooltip texts in the new language.
+    let (t, main) = (Rc::downgrade(&tray), ui.as_weak());
+    let events = ctx.borrow().events.clone();
+    events.on_settings_changed(move || {
+        if let (Some(t), Some(ui)) = (t.upgrade(), main.upgrade()) {
+            t.refresh_strings(strings(&ui.global::<Tr>()));
+        }
+    });
 
     let t = Rc::downgrade(&tray);
     hub.on_view(move |v| {

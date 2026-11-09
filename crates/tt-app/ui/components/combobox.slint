@@ -226,13 +226,17 @@ export component ComboBox inherits Rectangle {
     in property <string> none-text;
     in property <[string]> create-texts;
     in property <length> popup-width: 340px;
+    // More than 0: at most this many matches are listed (a very long list is searched,
+    // not scrolled).
+    in property <int> max-rows: 0;
     out property <string> query;
     callback selected(option: ProjectOption);
     callback cleared();
     // `index` into `create-texts`; `name` is the query.
     callback create(index: int, name: string);
 
-    private property <[ProjectOption]> shown: Pickers.filter-options(root.items, root.query);
+    private property <[ProjectOption]> found: Pickers.filter-options(root.items, root.query);
+    private property <[ProjectOption]> shown: root.max-rows > 0 ? Pickers.limit-options(root.found, root.max-rows) : root.found;
     private property <int> none-rows: root.none-text != "" && root.query == "" ? 1 : 0;
     private property <[string]> creates: Pickers.option-creatable(root.items, root.query) ? root.create-texts : [];
     private property <int> row-count: root.none-rows + root.shown.length + root.creates.length;
@@ -242,7 +246,7 @@ export component ComboBox inherits Rectangle {
     function open() {
         root.query = "";
         let current = Pickers.option-index(root.items, root.current-id);
-        root.highlighted = current < 0 ? -1 : root.none-rows + current;
+        root.highlighted = current < 0 || current >= root.shown.length ? -1 : root.none-rows + current;
         popup.show();
     }
 

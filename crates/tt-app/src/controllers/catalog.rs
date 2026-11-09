@@ -140,12 +140,12 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<CatalogCont
 }
 
 impl CatalogController {
-    /// Tracked times change with the entries: reload now if a catalog page is shown, else
-    /// when one is shown next.
+    /// Tracked times change with the entries (the formats with the settings): reload now if
+    /// a catalog page is shown, else when one is shown next.
     fn listen_to_entries(self: &Rc<Self>) {
         let me = Rc::downgrade(self);
         let events = self.ctx.borrow().events.clone();
-        events.on_entries_changed(move || {
+        events.on_data_changed(move || {
             if let Some(c) = me.upgrade() {
                 c.dirty.set(true);
                 if c.page_visible() {

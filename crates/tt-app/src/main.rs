@@ -8,7 +8,7 @@ use anyhow::Context;
 use slint::ComponentHandle;
 use tt_app::app::{self, AppContext, Ctx};
 use tt_app::controllers::{
-    calendar, catalog, dashboard, entries, mini, pickers, reports, timer, tray,
+    calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray,
 };
 use tt_app::platform::{autostart, fatal, single_instance, window_ext};
 use tt_app::{MainWindow, logging};
@@ -64,9 +64,14 @@ fn run() -> anyhow::Result<()> {
     if !minimized {
         ui.show().context("show main window")?;
     }
+    // The Run entry follows the setting, unless Task Manager disabled it (the user's
+    // choice: then the setting turns off).
+    sync_autostart(&ctx);
+
     // Shown after the main window when the settings say so.
     let mini = mini::install(&ui, &ctx, &timer);
-    let _tray = tray::install(&ui, &timer, &mini)?;
+    let _settings = settings::install(&ui, &ctx, &timer, &mini);
+    let _tray = tray::install(&ui, &ctx, &timer, &mini)?;
 
     let main = ui.as_weak();
     instance.on_activate(move || {
@@ -75,12 +80,22 @@ fn run() -> anyhow::Result<()> {
         }
     });
 
-    let autostart = ctx.borrow().settings.autostart;
-    if let Err(e) = autostart::sync(autostart) {
-        log::warn!("autostart not updated: {e}");
-    }
-
     slint::run_event_loop_until_quit().context("event loop")?;
     mini.save_position();
     Ok(())
+}
+
+fn sync_autostart(ctx: &Ctx) {
+    let wanted = ctx.borrow().settings.autostart;
+    match autostart::sync(wanted) {
+        Ok(effective) if effective != wanted => {
+            let mut c = ctx.borrow_mut();
+            c.settings.autostart = effective;
+            if let Err(e) = c.save_settings() {
+                log::warn!("autostart setting not saved: {e}");
+            }
+        }
+        Ok(_) => {}
+        Err(e) => log::warn!("autostart not updated: {e:#}"),
+    }
 }

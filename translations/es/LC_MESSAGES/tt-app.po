@@ -964,3 +964,225 @@ msgstr "nov"
 msgctxt "month"
 msgid "Dec"
 msgstr "dic"
+
+#: ui/screens/settings.slint
+msgid "Language"
+msgstr "Idioma"
+
+#: ui/screens/settings.slint
+msgid "Formats"
+msgstr "Formatos"
+
+#: ui/screens/settings.slint
+msgid "Date format"
+msgstr "Formato de fecha"
+
+#: ui/screens/settings.slint
+msgid "Time format"
+msgstr "Formato de hora"
+
+#: ui/screens/settings.slint
+msgid "Duration format"
+msgstr "Formato de duración"
+
+#: ui/screens/settings.slint
+msgid "Number format"
+msgstr "Formato de números"
+
+#: ui/screens/settings.slint
+msgid "Currency format"
+msgstr "Formato de moneda"
+
+#: ui/screens/settings.slint
+msgid "Currency code"
+msgstr "Código de moneda"
+
+#: ui/screens/settings.slint
+msgid "Enter 3 letters, for example USD."
+msgstr "Introduce 3 letras, por ejemplo USD."
+
+#: ui/screens/settings.slint
+msgid "First day of the week"
+msgstr "Primer día de la semana"
+
+#: ui/screens/settings.slint
+msgid "Monday"
+msgstr "Lunes"
+
+#: ui/screens/settings.slint
+msgid "Tuesday"
+msgstr "Martes"
+
+#: ui/screens/settings.slint
+msgid "Wednesday"
+msgstr "Miércoles"
+
+#: ui/screens/settings.slint
+msgid "Thursday"
+msgstr "Jueves"
+
+#: ui/screens/settings.slint
+msgid "Friday"
+msgstr "Viernes"
+
+#: ui/screens/settings.slint
+msgid "Saturday"
+msgstr "Sábado"
+
+#: ui/screens/settings.slint
+msgid "Sunday"
+msgstr "Domingo"
+
+#: ui/screens/settings.slint
+msgid "Time zone"
+msgstr "Zona horaria"
+
+#: ui/screens/settings.slint
+msgid "Theme"
+msgstr "Tema"
+
+#: ui/screens/settings.slint
+msgid "Dark"
+msgstr "Oscuro"
+
+#: ui/screens/settings.slint
+msgid "Light"
+msgstr "Claro"
+
+#: ui/screens/settings.slint
+msgid "Mini timer"
+msgstr "Minitemporizador"
+
+#: ui/screens/settings.slint
+msgid "Show the mini timer"
+msgstr "Mostrar el minitemporizador"
+
+#: ui/screens/settings.slint
+msgid "Transparency when idle"
+msgstr "Transparencia en reposo"
+
+#: ui/screens/settings.slint
+msgid "How see-through it is until the mouse is over it."
+msgstr "Cuánto se transparenta hasta que el ratón pasa por encima."
+
+#: ui/screens/settings.slint
+msgid "Behavior"
+msgstr "Comportamiento"
+
+#: ui/screens/settings.slint
+msgid "The close button hides the window to the tray"
+msgstr "El botón de cerrar oculta la ventana en la bandeja"
+
+#: ui/screens/settings.slint
+msgid "Start with Windows"
+msgstr "Iniciar con Windows"
+
+#: ui/screens/settings.slint
+msgid "Don't allow overlapping time entries"
+msgstr "No permitir registros de tiempo solapados"
+
+#: ui/screens/settings.slint
+msgid "Billing"
+msgstr "Facturación"
+
+#: ui/screens/settings.slint
+msgid "Default hourly rate"
+msgstr "Tarifa por hora predeterminada"
+
+#: ui/screens/settings.slint
+msgid "Used for projects without a rate of their own."
+msgstr "Se usa en los proyectos sin tarifa propia."
+
+#: ui/screens/settings.slint
+msgid "No rate"
+msgstr "Sin tarifa"
+
+#: ui/screens/settings.slint
+msgid "Data"
+msgstr "Datos"
+
+#: ui/screens/settings.slint
+msgid "Save all your data to a file, or replace it with a saved copy."
+msgstr "Guarda todos tus datos en un archivo o reemplázalos por una copia guardada."
+
+#: ui/screens/settings.slint
+msgid "Back up data"
+msgstr "Crear copia de seguridad"
+
+#: ui/screens/settings.slint
+msgid "Restore from backup"
+msgstr "Restaurar desde copia"
+
+#: ui/screens/settings.slint
+msgid "Updates"
+msgstr "Actualizaciones"
+
+#: ui/screens/settings.slint
+msgid "Check for updates automatically"
+msgstr "Buscar actualizaciones automáticamente"
+
+#: ui/screens/settings.slint
+msgid "Check now"
+msgstr "Comprobar ahora"
+
+#: ui/screens/settings.slint
+msgid "Checking…"
+msgstr "Comprobando…"
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "You have the latest version."
+msgstr "Tienes la última versión."
+
+#: ui/screens/settings.slint
+msgid "Version {} is available."
+msgstr "Hay una versión {} disponible."
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "Couldn't check for updates."
+msgstr "No se pudo comprobar si hay actualizaciones."
+
+#: ui/screens/settings.slint
+msgid "Downloading…"
+msgstr "Descargando…"
+
+#: ui/screens/settings.slint
+msgid "Download and install"
+msgstr "Descargar e instalar"
+
+#: ui/screens/settings.slint
+msgid "About"
+msgstr "Acerca de"
+
+#: ui/screens/settings.slint
+msgid "Version {}"
+msgstr "Versión {}"
+
+#: ui/main.slint
+msgid "Restore from backup?"
+msgstr "¿Restaurar desde la copia de seguridad?"
+
+#: ui/main.slint
+msgid "All current data will be replaced by the contents of the backup. This can't be undone."
+msgstr "Todos los datos actuales se reemplazarán por el contenido de la copia. No se puede deshacer."
+
+#: ui/main.slint
+msgctxt "backup"
+msgid "Restore"
+msgstr "Restaurar"
+
+#: ui/strings.slint
+msgid "Backup saved."
+msgstr "Copia de seguridad guardada."
+
+#: ui/strings.slint
+msgid "Data restored from the backup."
+msgstr "Datos restaurados desde la copia de seguridad."
+
+#: ui/strings.slint
+msgid "A new version is available."
+msgstr "Hay una nueva versión disponible."
+
+#: ui/strings.slint
+msgctxt "font"
+msgid "Segoe UI"
+msgstr "Segoe UI"

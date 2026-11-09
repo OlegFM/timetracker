@@ -1,0 +1,78 @@
+// Settings screen state and actions. Implemented by `controllers::settings`.
+//
+// Every control calls its `set-…` callback with the new value; the controller applies and
+// saves it at once, then writes the (normalized) value back into the property.
+
+import { SelectOption } from "../components/select.slint";
+import { ProjectOption } from "pickers.slint";
+
+export global SettingsBridge {
+    // Language: option values are indexes into the supported languages.
+    in property <[SelectOption]> languages;
+    in property <int> language;
+    // Formats: options show the current format as an example; values are indexes.
+    in property <[SelectOption]> date-options;
+    in property <[SelectOption]> time-options;
+    in property <[SelectOption]> interval-options;
+    in property <[SelectOption]> number-options;
+    in property <[SelectOption]> currency-options;
+    in property <int> date;
+    in property <int> time;
+    in property <int> interval;
+    in property <int> number;
+    in property <int> currency;
+    // 0 Monday … 6 Sunday.
+    in property <int> week-start;
+    // The code field text; `currency-code-invalid` is set while it is not 3 letters.
+    in-out property <string> currency-code;
+    in property <bool> currency-code-invalid;
+    // All IANA zones and the chosen one's name.
+    in property <[ProjectOption]> timezones;
+    in property <string> timezone;
+    // 0 dark, 1 light.
+    in property <int> theme;
+    // Mini timer transparency without the mouse over it, percent 0–90.
+    in property <int> mini-transparency: 70;
+    in property <bool> close-to-tray;
+    in property <bool> autostart;
+    in property <bool> prevent-overlap;
+    // Default hourly rate field text (empty = none); `default-rate-invalid` as above.
+    in-out property <string> default-rate;
+    in property <bool> default-rate-invalid;
+    // Update section: only shown when the build has an update source.
+    in property <bool> updates-enabled;
+    in property <bool> update-auto-check;
+    // 0 idle, 1 checking, 2 up to date, 3 available (`update-version`), 4 failed,
+    // 5 downloading.
+    in property <int> update-state;
+    in property <string> update-version;
+    in property <string> app-version;
+    // A backup file was chosen and waits for the confirmation.
+    in property <bool> restore-pending;
+
+    callback set-language(index: int);
+    callback set-date(index: int);
+    callback set-time(index: int);
+    callback set-interval(index: int);
+    callback set-number(index: int);
+    callback set-currency(index: int);
+    callback set-week-start(index: int);
+    callback set-currency-code(text: string);
+    callback set-timezone(name: string);
+    callback set-theme(index: int);
+    callback set-mini-transparency(percent: int);
+    callback set-close-to-tray(on: bool);
+    callback set-autostart(on: bool);
+    callback set-prevent-overlap(on: bool);
+    callback set-default-rate(text: string);
+    // Shows the saved values in the text fields again (screen opened, field left).
+    callback sync-fields();
+    callback backup();
+    // Asks for a backup file; the confirmation follows (`restore-pending`).
+    callback restore();
+    callback confirm-restore();
+    callback cancel-restore();
+    callback set-update-auto-check(on: bool);
+    callback check-updates();
+    callback install-update();
+}

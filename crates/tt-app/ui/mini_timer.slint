@@ -2,6 +2,7 @@ import { Theme } from "theme.slint";
 import { Icons } from "components/icon.slint";
 import { Button, ButtonVariant } from "components/button.slint";
 import { ColorDot } from "components/color_dot.slint";
+import { Tr } from "strings.slint";
 import { TimerBridge, TimerView } from "bridges/timer.slint";
 
 // Clickable text that opens the main window.
@@ -31,7 +32,7 @@ export component MiniTimer inherits Window {
     background: transparent;
     width: 240px;
     height: 88px;
-    default-font-family: "Segoe UI";
+    default-font-family: Tr.font-family;
 
     Rectangle {
         opacity: area.has-hover ? 1.0 : root.idle-opacity;

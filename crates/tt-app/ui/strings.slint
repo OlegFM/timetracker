@@ -12,6 +12,9 @@ export global Tr {
     out property <string> tray-quit: @tr("Quit");
     out property <string> no-active-task: @tr("No active task");
 
+    // UI font: the CJK catalog names a font that has the characters (no fallback needed)
+    out property <string> font-family: @tr("font" => "Segoe UI");
+
     // Duration suffixes (FormatPrefs)
     out property <string> hour-suffix: @tr("h");
     out property <string> minute-suffix: @tr("min");
@@ -81,6 +84,13 @@ export global Tr {
     out property <string> month-nov: @tr("month" => "Nov");
     out property <string> month-dec: @tr("month" => "Dec");
     out property <string> exported: @tr("Exported");
+
+    // Settings: results of the data and update actions
+    out property <string> backup-saved: @tr("Backup saved.");
+    out property <string> restored: @tr("Data restored from the backup.");
+    out property <string> update-latest: @tr("You have the latest version.");
+    out property <string> update-available: @tr("A new version is available.");
+    out property <string> update-failed: @tr("Couldn't check for updates.");
 
     // Service errors (tt_services::ServiceError)
     out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");

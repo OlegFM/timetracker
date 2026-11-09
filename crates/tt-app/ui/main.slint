@@ -2,7 +2,6 @@ import { Theme } from "theme.slint";
 import { Tr } from "strings.slint";
 import { Sidebar } from "components/sidebar.slint";
 import { Toast, ToastKind } from "components/toast.slint";
-import { PlaceholderScreen } from "screens/placeholder.slint";
 import { TimeScreen } from "screens/time.slint";
 import { ProjectsScreen } from "screens/projects.slint";
 import { ProjectScreen } from "screens/project.slint";
@@ -10,6 +9,7 @@ import { ClientsScreen } from "screens/clients.slint";
 import { TagsScreen } from "screens/tags.slint";
 import { DashboardScreen } from "screens/dashboard.slint";
 import { ReportsScreen } from "screens/reports.slint";
+import { SettingsScreen } from "screens/settings.slint";
 import { ProjectDialog, TaskDialog } from "components/project_dialog.slint";
 import { EntryDialog } from "components/entry_dialog.slint";
 import { TimerBar } from "components/timer_bar.slint";
@@ -20,6 +20,7 @@ import { Calendar, CalendarDay, CalendarMonth } from "bridges/calendar.slint";
 import { CatalogBridge, ProjectRowView, TaskRowView, ClientRowView, TagRowView, ProjectDialogData, TaskDialogData, CatalogKind, DeleteRequest } from "bridges/catalog.slint";
 import { ConfirmDialog } from "components/dialog.slint";
 import { MiniBridge } from "bridges/mini.slint";
+import { SettingsBridge } from "bridges/settings.slint";
 import { DashboardBridge, RecentView, ProjectTotalView } from "bridges/dashboard.slint";
 import { BarView } from "components/bar_chart.slint";
 import { HeatCell } from "components/heatmap.slint";
@@ -33,7 +34,7 @@ export { Theme, Tr, ToastKind, TimerBridge, TimerView, Pickers, ProjectOption, T
 export { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView }
 export { Calendar, CalendarDay, CalendarMonth }
 export { CatalogBridge, ProjectRowView, TaskRowView, ClientRowView, TagRowView, ProjectDialogData, TaskDialogData, CatalogKind, DeleteRequest }
-export { MiniBridge, MiniTimer }
+export { MiniBridge, MiniTimer, SettingsBridge }
 export { DashboardBridge, RecentView, ProjectTotalView, BarView, HeatCell, PieSlice }
 export { ReportsBridge, ReportRowView, FilterView, SelectLabels, SelectOption }
 
@@ -55,7 +56,7 @@ export component MainWindow inherits Window {
     min-height: 600px;
     preferred-width: 1200px;
     preferred-height: 760px;
-    default-font-family: "Segoe UI";
+    default-font-family: Tr.font-family;
     background: Theme.bg;
 
     HorizontalLayout {
@@ -89,9 +90,7 @@ export component MainWindow inherits Window {
                     request-delete(request) => { root.catalog-delete = request; }
                 }
                 if root.page == 6: ReportsScreen { }
-                if root.page == 7: PlaceholderScreen {
-                    title: @tr("Settings");
-                }
+                if root.page == 7: SettingsScreen { }
             }
         }
     }
@@ -144,6 +143,14 @@ export component MainWindow inherits Window {
             }
         }
         cancelled => { root.catalog-delete = { id: "" }; }
+    }
+
+    if SettingsBridge.restore-pending: ConfirmDialog {
+        title: @tr("Restore from backup?");
+        message: @tr("All current data will be replaced by the contents of the backup. This can't be undone.");
+        confirm-text: @tr("backup" => "Restore");
+        confirmed => { SettingsBridge.confirm-restore(); }
+        cancelled => { SettingsBridge.cancel-restore(); }
     }
 
     toast := Toast {

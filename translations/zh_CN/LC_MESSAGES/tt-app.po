@@ -961,3 +961,225 @@ msgstr "11月"
 msgctxt "month"
 msgid "Dec"
 msgstr "12月"
+
+#: ui/screens/settings.slint
+msgid "Language"
+msgstr "语言"
+
+#: ui/screens/settings.slint
+msgid "Formats"
+msgstr "格式"
+
+#: ui/screens/settings.slint
+msgid "Date format"
+msgstr "日期格式"
+
+#: ui/screens/settings.slint
+msgid "Time format"
+msgstr "时间格式"
+
+#: ui/screens/settings.slint
+msgid "Duration format"
+msgstr "时长格式"
+
+#: ui/screens/settings.slint
+msgid "Number format"
+msgstr "数字格式"
+
+#: ui/screens/settings.slint
+msgid "Currency format"
+msgstr "货币格式"
+
+#: ui/screens/settings.slint
+msgid "Currency code"
+msgstr "货币代码"
+
+#: ui/screens/settings.slint
+msgid "Enter 3 letters, for example USD."
+msgstr "请输入 3 个字母，例如 USD。"
+
+#: ui/screens/settings.slint
+msgid "First day of the week"
+msgstr "每周的第一天"
+
+#: ui/screens/settings.slint
+msgid "Monday"
+msgstr "星期一"
+
+#: ui/screens/settings.slint
+msgid "Tuesday"
+msgstr "星期二"
+
+#: ui/screens/settings.slint
+msgid "Wednesday"
+msgstr "星期三"
+
+#: ui/screens/settings.slint
+msgid "Thursday"
+msgstr "星期四"
+
+#: ui/screens/settings.slint
+msgid "Friday"
+msgstr "星期五"
+
+#: ui/screens/settings.slint
+msgid "Saturday"
+msgstr "星期六"
+
+#: ui/screens/settings.slint
+msgid "Sunday"
+msgstr "星期日"
+
+#: ui/screens/settings.slint
+msgid "Time zone"
+msgstr "时区"
+
+#: ui/screens/settings.slint
+msgid "Theme"
+msgstr "主题"
+
+#: ui/screens/settings.slint
+msgid "Dark"
+msgstr "深色"
+
+#: ui/screens/settings.slint
+msgid "Light"
+msgstr "浅色"
+
+#: ui/screens/settings.slint
+msgid "Mini timer"
+msgstr "迷你计时器"
+
+#: ui/screens/settings.slint
+msgid "Show the mini timer"
+msgstr "显示迷你计时器"
+
+#: ui/screens/settings.slint
+msgid "Transparency when idle"
+msgstr "空闲时的透明度"
+
+#: ui/screens/settings.slint
+msgid "How see-through it is until the mouse is over it."
+msgstr "鼠标未悬停在其上时的透明程度。"
+
+#: ui/screens/settings.slint
+msgid "Behavior"
+msgstr "行为"
+
+#: ui/screens/settings.slint
+msgid "The close button hides the window to the tray"
+msgstr "关闭按钮将窗口隐藏到托盘"
+
+#: ui/screens/settings.slint
+msgid "Start with Windows"
+msgstr "随 Windows 启动"
+
+#: ui/screens/settings.slint
+msgid "Don't allow overlapping time entries"
+msgstr "不允许时间记录重叠"
+
+#: ui/screens/settings.slint
+msgid "Billing"
+msgstr "计费"
+
+#: ui/screens/settings.slint
+msgid "Default hourly rate"
+msgstr "默认小时费率"
+
+#: ui/screens/settings.slint
+msgid "Used for projects without a rate of their own."
+msgstr "用于没有自己费率的项目。"
+
+#: ui/screens/settings.slint
+msgid "No rate"
+msgstr "无费率"
+
+#: ui/screens/settings.slint
+msgid "Data"
+msgstr "数据"
+
+#: ui/screens/settings.slint
+msgid "Save all your data to a file, or replace it with a saved copy."
+msgstr "将所有数据保存到文件，或用已保存的副本替换当前数据。"
+
+#: ui/screens/settings.slint
+msgid "Back up data"
+msgstr "备份数据"
+
+#: ui/screens/settings.slint
+msgid "Restore from backup"
+msgstr "从备份恢复"
+
+#: ui/screens/settings.slint
+msgid "Updates"
+msgstr "更新"
+
+#: ui/screens/settings.slint
+msgid "Check for updates automatically"
+msgstr "自动检查更新"
+
+#: ui/screens/settings.slint
+msgid "Check now"
+msgstr "立即检查"
+
+#: ui/screens/settings.slint
+msgid "Checking…"
+msgstr "正在检查…"
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "You have the latest version."
+msgstr "已是最新版本。"
+
+#: ui/screens/settings.slint
+msgid "Version {} is available."
+msgstr "有可用的新版本 {}。"
+
+#: ui/screens/settings.slint ui/strings.slint
+msgid "Couldn't check for updates."
+msgstr "无法检查更新。"
+
+#: ui/screens/settings.slint
+msgid "Downloading…"
+msgstr "正在下载…"
+
+#: ui/screens/settings.slint
+msgid "Download and install"
+msgstr "下载并安装"
+
+#: ui/screens/settings.slint
+msgid "About"
+msgstr "关于"
+
+#: ui/screens/settings.slint
+msgid "Version {}"
+msgstr "版本 {}"
+
+#: ui/main.slint
+msgid "Restore from backup?"
+msgstr "从备份恢复？"
+
+#: ui/main.slint
+msgid "All current data will be replaced by the contents of the backup. This can't be undone."
+msgstr "当前所有数据将被备份中的内容替换。此操作无法撤销。"
+
+#: ui/main.slint
+msgctxt "backup"
+msgid "Restore"
+msgstr "恢复"
+
+#: ui/strings.slint
+msgid "Backup saved."
+msgstr "备份已保存。"
+
+#: ui/strings.slint
+msgid "Data restored from the backup."
+msgstr "已从备份恢复数据。"
+
+#: ui/strings.slint
+msgid "A new version is available."
+msgstr "有可用的新版本。"
+
+#: ui/strings.slint
+msgctxt "font"
+msgid "Segoe UI"
+msgstr "Microsoft YaHei UI"

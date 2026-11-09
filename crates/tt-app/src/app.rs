@@ -28,25 +28,56 @@ pub struct AppContext {
     pub events: Rc<AppEvents>,
 }
 
+/// Callbacks of one kind of event.
+#[derive(Default)]
+struct Listeners(RefCell<Vec<Rc<dyn Fn()>>>);
+
+impl Listeners {
+    fn add(&self, f: impl Fn() + 'static) {
+        self.0.borrow_mut().push(Rc::new(f));
+    }
+
+    /// Calls the listeners registered so far; they may subscribe or emit again.
+    fn emit(&self) {
+        let listeners = self.0.borrow().clone();
+        for f in listeners {
+            f();
+        }
+    }
+}
+
 /// Notifications between controllers (UI thread). Clone the `Rc` out of the context
 /// before emitting so that listeners can borrow the context.
 #[derive(Default)]
 pub struct AppEvents {
-    entries_changed: RefCell<Vec<Rc<dyn Fn()>>>,
+    entries_changed: Listeners,
+    settings_changed: Listeners,
 }
 
 impl AppEvents {
     /// `f` runs after time entries changed (timer actions, midnight rollover, edits).
     pub fn on_entries_changed(&self, f: impl Fn() + 'static) {
-        self.entries_changed.borrow_mut().push(Rc::new(f));
+        self.entries_changed.add(f);
     }
 
-    /// Calls the listeners registered so far; they may subscribe or emit again.
     pub fn emit_entries_changed(&self) {
-        let listeners = self.entries_changed.borrow().clone();
-        for f in listeners {
-            f();
-        }
+        self.entries_changed.emit();
+    }
+
+    /// `f` runs after a setting changed (language, formats, time zone, theme, a restore):
+    /// everything rendered from the settings is drawn again.
+    pub fn on_settings_changed(&self, f: impl Fn() + 'static) {
+        self.settings_changed.add(f);
+    }
+
+    pub fn emit_settings_changed(&self) {
+        self.settings_changed.emit();
+    }
+
+    /// `f` runs after entries or settings changed (views that show both).
+    pub fn on_data_changed(&self, f: impl Fn() + Clone + 'static) {
+        self.on_entries_changed(f.clone());
+        self.on_settings_changed(f);
     }
 }
 
@@ -155,6 +186,27 @@ mod tests {
         assert_eq!(calls.get(), 2);
         events.emit_entries_changed();
         assert_eq!(calls.get(), 4);
+    }
+
+    #[test]
+    fn settings_changed_is_separate_from_entries_changed() {
+        use std::cell::Cell;
+
+        let events = AppEvents::default();
+        let (entries, settings, both) =
+            (Rc::new(Cell::new(0)), Rc::new(Cell::new(0)), Cell::new(0));
+        let both = Rc::new(both);
+        let e = entries.clone();
+        events.on_entries_changed(move || e.set(e.get() + 1));
+        let s = settings.clone();
+        events.on_settings_changed(move || s.set(s.get() + 1));
+        let b = both.clone();
+        events.on_data_changed(move || b.set(b.get() + 1));
+
+        events.emit_settings_changed();
+        assert_eq!((entries.get(), settings.get(), both.get()), (0, 1, 1));
+        events.emit_entries_changed();
+        assert_eq!((entries.get(), settings.get(), both.get()), (1, 1, 2));
     }
 
     #[test]

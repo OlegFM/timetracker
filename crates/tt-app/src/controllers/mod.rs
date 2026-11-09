@@ -20,6 +20,7 @@ pub mod entries;
 pub mod mini;
 pub mod pickers;
 pub mod reports;
+pub mod settings;
 pub mod timer;
 pub mod tray;
 
