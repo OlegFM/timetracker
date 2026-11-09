@@ -7,7 +7,6 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
 publish = false
-license = "MIT"
 
 [workspace.lints.rust]
 unsafe_code = "deny"
@@ -35,14 +34,14 @@ csv = "1.4"
 tray-icon = "0.26"
 windows-sys = "0.61"
 auto-launch = "0.6"
-rfd = "0.15"
+rfd = "0.18"
 sys-locale = "0.3"
 directories = "6"
 winresource = "0.1"
 # updates / crypto
 ed25519-dalek = "3"
-sha2 = "0.10"
-base64 = "0.22"
+sha2 = "0.11"
+base64 = "0.23"
 hex = "0.4"
 ureq = "3"
 # errors / logging
