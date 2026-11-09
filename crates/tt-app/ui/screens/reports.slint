@@ -1,0 +1,375 @@
+import { ScrollView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icons } from "../components/icon.slint";
+import { Button } from "../components/button.slint";
+import { ColorDot } from "../components/color_dot.slint";
+import { Card, EmptyNote } from "../components/card.slint";
+import { BarChart } from "../components/bar_chart.slint";
+import { PieChart } from "../components/pie_chart.slint";
+import { PickerList, PickerPanel, PickerRow } from "../components/combobox.slint";
+import { Select } from "../components/select.slint";
+import { MultiSelect } from "../components/multi_select.slint";
+import { DateRangePicker } from "../components/date_range_picker.slint";
+import { ReportTable } from "../components/report_table.slint";
+import { ReportsBridge } from "../bridges/reports.slint";
+
+// "Export" button opening the list of export actions.
+component ExportMenu inherits Rectangle {
+    callback csv-report();
+    callback csv-entries();
+    callback xlsx();
+
+    height: button.height;
+    min-width: button.min-width;
+    preferred-width: button.preferred-width;
+    max-width: button.preferred-width;
+
+    button := Button {
+        width: 100%;
+        text: @tr("Export");
+        clicked => { popup.show(); }
+    }
+
+    popup := PopupWindow {
+        x: root.width - self.width;
+        y: root.height + 4px;
+        width: 180px;
+        close-policy: close-on-click-outside;
+
+        PickerPanel {
+            VerticalLayout {
+                padding: 6px;
+
+                PickerList {
+                    row-count: 3;
+                    highlighted: -1;
+
+                    PickerRow {
+                        text: @tr("CSV (report)");
+                        clicked => {
+                            popup.close();
+                            root.csv-report();
+                        }
+                    }
+                    PickerRow {
+                        text: @tr("CSV (entries)");
+                        clicked => {
+                            popup.close();
+                            root.csv-entries();
+                        }
+                    }
+                    PickerRow {
+                        text: @tr("XLSX");
+                        clicked => {
+                            popup.close();
+                            root.xlsx();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Figure of the summary: small title over a big value.
+component Stat inherits Rectangle {
+    in property <string> title;
+    in property <string> value;
+
+    background: Theme.card;
+    border-radius: Theme.radius-lg;
+    border-width: 1px;
+    border-color: Theme.line;
+
+    VerticalLayout {
+        padding: Theme.gap-4;
+        spacing: Theme.gap-1;
+
+        Text {
+            text: root.title;
+            color: Theme.muted;
+            font-size: Theme.font-md;
+        }
+        Text {
+            text: root.value;
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+        }
+    }
+}
+
+// "Reports" page: filter bar (period, projects, tasks, clients, tags, billable), grouping,
+// chart interval and rounding; below it the totals, a bar chart over time, a pie of the
+// first grouping and the grouped table. Everything goes through `ReportsBridge`.
+export component ReportsScreen inherits VerticalLayout {
+    init => { ReportsBridge.run(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-2;
+
+    HorizontalLayout {
+        Text {
+            horizontal-stretch: 1;
+            text: @tr("Reports");
+            color: Theme.text;
+            font-size: Theme.font-xl;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+        ExportMenu {
+            csv-report => { ReportsBridge.export-csv(); }
+            csv-entries => { ReportsBridge.export-entries-csv(); }
+            xlsx => { ReportsBridge.export-xlsx(); }
+        }
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+
+        VerticalLayout {
+            // Room for the scrollbar.
+            padding-right: Theme.gap-3;
+            padding-bottom: Theme.gap-3;
+            spacing: Theme.gap-3;
+
+            Rectangle {
+                background: Theme.card;
+                border-radius: Theme.radius-lg;
+                border-width: 1px;
+                border-color: Theme.line;
+
+                VerticalLayout {
+                    padding: Theme.gap-3;
+                    spacing: Theme.gap-2;
+
+                    DateRangePicker {
+                        preset <=> ReportsBridge.preset;
+                        custom-from <=> ReportsBridge.custom-from;
+                        custom-to <=> ReportsBridge.custom-to;
+                        range-text: ReportsBridge.range-text;
+                        changed => { ReportsBridge.run(); }
+                    }
+                    HorizontalLayout {
+                        spacing: Theme.gap-2;
+
+                        MultiSelect {
+                            items: ReportsBridge.projects.options;
+                            text: ReportsBridge.projects.text;
+                            placeholder: @tr("Projects");
+                            selection-changed(ids) => {
+                                ReportsBridge.project-ids = ids;
+                                ReportsBridge.run();
+                            }
+                        }
+                        MultiSelect {
+                            items: ReportsBridge.tasks.options;
+                            text: ReportsBridge.tasks.text;
+                            placeholder: @tr("Tasks");
+                            popup-width: 320px;
+                            selection-changed(ids) => {
+                                ReportsBridge.task-ids = ids;
+                                ReportsBridge.run();
+                            }
+                        }
+                        MultiSelect {
+                            items: ReportsBridge.clients.options;
+                            text: ReportsBridge.clients.text;
+                            placeholder: @tr("Clients");
+                            selection-changed(ids) => {
+                                ReportsBridge.client-ids = ids;
+                                ReportsBridge.run();
+                            }
+                        }
+                        MultiSelect {
+                            items: ReportsBridge.tags.options;
+                            text: ReportsBridge.tags.text;
+                            placeholder: @tr("Tags");
+                            icon: Icons.tag;
+                            selection-changed(ids) => {
+                                ReportsBridge.tag-ids = ids;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Select {
+                            label: @tr("Match");
+                            popup-width: 140px;
+                            value: ReportsBridge.tag-match-all ? 1 : 0;
+                            options: [
+                                { value: 0, label: @tr("Any tag") },
+                                { value: 1, label: @tr("All tags") },
+                            ];
+                            picked(value) => {
+                                ReportsBridge.tag-match-all = value == 1;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Select {
+                            label: @tr("Billable");
+                            popup-width: 140px;
+                            value: ReportsBridge.billable;
+                            options: [
+                                { value: 0, label: @tr("All") },
+                                { value: 1, label: @tr("Yes") },
+                                { value: 2, label: @tr("No") },
+                            ];
+                            picked(value) => {
+                                ReportsBridge.billable = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Rectangle { }
+                    }
+                    HorizontalLayout {
+                        spacing: Theme.gap-2;
+
+                        Select {
+                            label: @tr("Group by");
+                            value: ReportsBridge.group1;
+                            options: ReportsBridge.group1-options;
+                            picked(value) => {
+                                ReportsBridge.group1 = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Select {
+                            label: @tr("Then by");
+                            value: ReportsBridge.group2;
+                            options: ReportsBridge.group2-options;
+                            picked(value) => {
+                                ReportsBridge.group2 = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Select {
+                            label: @tr("Interval");
+                            popup-width: 140px;
+                            value: ReportsBridge.interval;
+                            options: [
+                                { value: 0, label: @tr("Day") },
+                                { value: 1, label: @tr("Week") },
+                                { value: 2, label: @tr("Month") },
+                            ];
+                            picked(value) => {
+                                ReportsBridge.interval = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Select {
+                            label: @tr("Rounding");
+                            popup-width: 140px;
+                            value: ReportsBridge.rounding-mode;
+                            options: [
+                                { value: -1, label: @tr("None") },
+                                { value: 0, label: @tr("Up") },
+                                { value: 1, label: @tr("Down") },
+                                { value: 2, label: @tr("Nearest") },
+                            ];
+                            picked(value) => {
+                                ReportsBridge.rounding-mode = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        if ReportsBridge.rounding-mode >= 0: Select {
+                            label: @tr("Step");
+                            popup-width: 120px;
+                            value: ReportsBridge.rounding-step;
+                            options: [
+                                { value: 1, label: @tr("{} min", 1) },
+                                { value: 5, label: @tr("{} min", 5) },
+                                { value: 6, label: @tr("{} min", 6) },
+                                { value: 10, label: @tr("{} min", 10) },
+                                { value: 15, label: @tr("{} min", 15) },
+                                { value: 30, label: @tr("{} min", 30) },
+                                { value: 60, label: @tr("{} min", 60) },
+                            ];
+                            picked(value) => {
+                                ReportsBridge.rounding-step = value;
+                                ReportsBridge.run();
+                            }
+                        }
+                        Rectangle { }
+                    }
+                }
+            }
+
+            if ReportsBridge.rows.length <= 1: Card {
+                height: 160px;
+
+                EmptyNote {
+                    vertical-stretch: 1;
+                    text: @tr("Nothing tracked in this period.");
+                }
+            }
+            if ReportsBridge.rows.length > 1: HorizontalLayout {
+                spacing: Theme.gap-3;
+
+                Stat {
+                    horizontal-stretch: 1;
+                    title: @tr("Total time");
+                    value: ReportsBridge.total;
+                }
+                if ReportsBridge.cost != "": Stat {
+                    horizontal-stretch: 1;
+                    title: @tr("Total cost");
+                    value: ReportsBridge.cost;
+                }
+            }
+            if ReportsBridge.rows.length > 1: Card {
+                height: 270px;
+                title: @tr("Over time");
+
+                BarChart {
+                    vertical-stretch: 1;
+                    bars: ReportsBridge.bars;
+                }
+            }
+            if ReportsBridge.rows.length > 1 && ReportsBridge.pie.length > 0: Card {
+                height: 260px;
+                title: @tr("Distribution");
+
+                HorizontalLayout {
+                    vertical-stretch: 1;
+                    spacing: Theme.gap-4;
+
+                    PieChart {
+                        horizontal-stretch: 1;
+                        slices: ReportsBridge.pie;
+                    }
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 2px;
+
+                        for slice in ReportsBridge.pie: HorizontalLayout {
+                            height: 24px;
+                            spacing: Theme.gap-2;
+
+                            ColorDot {
+                                dot-color: slice.color.alpha == 0 ? Theme.muted : slice.color;
+                            }
+                            Text {
+                                text: slice.label;
+                                color: Theme.text-secondary;
+                                font-size: Theme.font-sm;
+                                vertical-alignment: center;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+            if ReportsBridge.rows.length > 1: Card {
+                title: @tr("Details");
+
+                ReportTable {
+                    rows: ReportsBridge.rows;
+                    show-cost: ReportsBridge.cost != "";
+                }
+            }
+        }
+    }
+}

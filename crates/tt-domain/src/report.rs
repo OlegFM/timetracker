@@ -124,6 +124,16 @@ fn matches(e: &TimeEntry, f: &ReportFilter, ctx: &ReportContext) -> bool {
         && f.billable.is_none_or(|b| b == e.billable)
 }
 
+/// The entries a report over `filter` covers (period, projects, tasks, clients, tags,
+/// billable), in input order. Rounding does not affect selection.
+pub fn select_entries<'a>(
+    entries: &'a [TimeEntry],
+    filter: &ReportFilter,
+    ctx: &ReportContext,
+) -> Vec<&'a TimeEntry> {
+    entries.iter().filter(|e| matches(e, filter, ctx)).collect()
+}
+
 fn keys(e: &TimeEntry, by: GroupBy, ctx: &ReportContext) -> Vec<GroupKey> {
     let opt = |v: Option<Id>| v.map_or(GroupKey::None, GroupKey::Id);
     match by {
@@ -166,8 +176,11 @@ fn group(
             children: next.map_or_else(Vec::new, |n| group(&members, n, None, ctx)),
         })
         .collect();
-    // Stable sort over BTreeMap order (ascending key) keeps key ties deterministic.
-    rows.sort_by_key(|r| (r.key == GroupKey::None, std::cmp::Reverse(r.seconds)));
+    // Days stay chronological (BTreeMap order); other groups go by time, largest first. The
+    // stable sort keeps key ties deterministic and "no value" last.
+    if by != GroupBy::Day {
+        rows.sort_by_key(|r| (r.key == GroupKey::None, std::cmp::Reverse(r.seconds)));
+    }
     rows
 }
 
@@ -227,9 +240,8 @@ pub fn aggregate(
     interval: Interval,
     ctx: &ReportContext,
 ) -> ReportResult {
-    let items: Vec<Item> = entries
-        .iter()
-        .filter(|e| matches(e, filter, ctx))
+    let items: Vec<Item> = select_entries(entries, filter, ctx)
+        .into_iter()
         .map(|e| {
             let end = e.end.unwrap_or(ctx.now);
             let seconds = match filter.rounding {
@@ -388,6 +400,43 @@ mod tests {
 
     fn run(f: &Fx, es: &[TimeEntry], flt: &ReportFilter, g1: GroupBy) -> ReportResult {
         aggregate(es, flt, g1, None, Interval::Day, &f.ctx())
+    }
+
+    #[test]
+    fn day_groups_are_chronological_other_groups_by_time() {
+        let f = fx();
+        let mut flt = filter();
+        flt.end = at(2026, 11, 12, 0);
+        // The later day has more time.
+        let short = hour(9);
+        let long = entry(at(2026, 11, 10, 9), Some(at(2026, 11, 10, 12)));
+        let r = run(&f, &[long, short], &flt, GroupBy::Day);
+        let days: Vec<_> = r.groups.iter().map(|g| g.key.clone()).collect();
+        assert_eq!(
+            days,
+            [
+                GroupKey::Date(date(2026, 11, 9)),
+                GroupKey::Date(date(2026, 11, 10))
+            ]
+        );
+    }
+
+    #[test]
+    fn select_entries_applies_the_filter_and_keeps_input_order() {
+        let f = fx();
+        let mut a = hour(9);
+        a.project_id = Some(f.pa);
+        let mut b = hour(10);
+        b.project_id = Some(f.pb);
+        let mut c = hour(11);
+        c.project_id = Some(f.pa);
+        let outside = entry(at(2026, 11, 10, 9), Some(at(2026, 11, 10, 10)));
+        let es = [a.clone(), b, outside, c.clone()];
+        let mut flt = filter();
+        flt.project_ids = vec![f.pa];
+        let got = select_entries(&es, &flt, &f.ctx());
+        assert_eq!(got, [&a, &c]);
+        assert_eq!(select_entries(&es, &filter(), &f.ctx()).len(), 3);
     }
 
     #[test]

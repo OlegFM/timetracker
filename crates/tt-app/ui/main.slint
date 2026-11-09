@@ -9,6 +9,7 @@ import { ProjectScreen } from "screens/project.slint";
 import { ClientsScreen } from "screens/clients.slint";
 import { TagsScreen } from "screens/tags.slint";
 import { DashboardScreen } from "screens/dashboard.slint";
+import { ReportsScreen } from "screens/reports.slint";
 import { ProjectDialog, TaskDialog } from "components/project_dialog.slint";
 import { EntryDialog } from "components/entry_dialog.slint";
 import { TimerBar } from "components/timer_bar.slint";
@@ -23,6 +24,8 @@ import { DashboardBridge, RecentView, ProjectTotalView } from "bridges/dashboard
 import { BarView } from "components/bar_chart.slint";
 import { HeatCell } from "components/heatmap.slint";
 import { PieSlice } from "components/pie_chart.slint";
+import { ReportsBridge, ReportRowView, FilterView } from "bridges/reports.slint";
+import { SelectLabels, SelectOption } from "components/select.slint";
 import { MiniTimer } from "mini_timer.slint";
 
 // Globals and enums used from Rust must be exported from the main file.
@@ -32,6 +35,7 @@ export { Calendar, CalendarDay, CalendarMonth }
 export { CatalogBridge, ProjectRowView, TaskRowView, ClientRowView, TagRowView, ProjectDialogData, TaskDialogData, CatalogKind, DeleteRequest }
 export { MiniBridge, MiniTimer }
 export { DashboardBridge, RecentView, ProjectTotalView, BarView, HeatCell, PieSlice }
+export { ReportsBridge, ReportRowView, FilterView, SelectLabels, SelectOption }
 
 export component MainWindow inherits Window {
     // Page index: 0 Dashboard, 1 Time, 2 Projects, 3 Project, 4 Clients, 5 Tags,
@@ -84,9 +88,7 @@ export component MainWindow inherits Window {
                 if root.page == 5: TagsScreen {
                     request-delete(request) => { root.catalog-delete = request; }
                 }
-                if root.page == 6: PlaceholderScreen {
-                    title: @tr("Reports");
-                }
+                if root.page == 6: ReportsScreen { }
                 if root.page == 7: PlaceholderScreen {
                     title: @tr("Settings");
                 }

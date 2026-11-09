@@ -7,7 +7,9 @@ use std::rc::Rc;
 use anyhow::Context;
 use slint::ComponentHandle;
 use tt_app::app::{self, AppContext, Ctx};
-use tt_app::controllers::{calendar, catalog, dashboard, entries, mini, pickers, timer, tray};
+use tt_app::controllers::{
+    calendar, catalog, dashboard, entries, mini, pickers, reports, timer, tray,
+};
 use tt_app::platform::{autostart, fatal, single_instance, window_ext};
 use tt_app::{MainWindow, logging};
 
@@ -48,6 +50,7 @@ fn run() -> anyhow::Result<()> {
     let _entries = entries::install(&ui, &ctx, &timer);
     let _catalog = catalog::install(&ui, &ctx, &timer);
     let _dashboard = dashboard::install(&ui, &ctx, &timer);
+    let _reports = reports::install(&ui, &ctx);
 
     // ✕ hides the window to the tray (setting "close to tray"), else quits.
     let close_ctx = ctx.clone();

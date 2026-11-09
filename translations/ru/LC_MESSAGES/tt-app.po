@@ -731,3 +731,239 @@ msgstr "Сб"
 msgctxt "weekday"
 msgid "Sun"
 msgstr "Вс"
+
+#: ui/screens/reports.slint
+msgid "All"
+msgstr "Все"
+
+#: ui/screens/reports.slint
+msgid "All tags"
+msgstr "Все теги"
+
+#: ui/screens/reports.slint
+msgid "Any tag"
+msgstr "Любой тег"
+
+#: ui/screens/reports.slint
+msgid "CSV (entries)"
+msgstr "CSV (записи)"
+
+#: ui/screens/reports.slint
+msgid "CSV (report)"
+msgstr "CSV (отчёт)"
+
+#: ui/components/date_range_picker.slint
+msgid "Custom range"
+msgstr "Свой диапазон"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "Day"
+msgstr "День"
+
+#: ui/strings.slint
+msgid "Description"
+msgstr "Описание"
+
+#: ui/screens/reports.slint
+msgid "Details"
+msgstr "Подробности"
+
+#: ui/screens/reports.slint
+msgid "Distribution"
+msgstr "Распределение"
+
+#: ui/screens/reports.slint
+msgid "Down"
+msgstr "Вниз"
+
+#: ui/screens/reports.slint
+msgid "Export"
+msgstr "Экспорт"
+
+#: ui/strings.slint
+msgid "Exported"
+msgstr "Экспортировано"
+
+#: ui/screens/reports.slint
+msgid "Group by"
+msgstr "Группировать по"
+
+#: ui/screens/reports.slint
+msgid "Interval"
+msgstr "Интервал"
+
+#: ui/components/date_range_picker.slint
+msgid "Last month"
+msgstr "Прошлый месяц"
+
+#: ui/components/date_range_picker.slint
+msgid "Last week"
+msgstr "Прошлая неделя"
+
+#: ui/screens/reports.slint
+msgid "Match"
+msgstr "Совпадение"
+
+#: ui/screens/reports.slint
+msgid "Month"
+msgstr "Месяц"
+
+#: ui/screens/reports.slint
+msgid "Nearest"
+msgstr "До ближайшего"
+
+#: ui/screens/reports.slint
+msgid "No"
+msgstr "Нет"
+
+#: ui/strings.slint
+msgid "No description"
+msgstr "Без описания"
+
+#: ui/strings.slint
+msgid "No tag"
+msgstr "Без тега"
+
+#: ui/strings.slint
+msgid "No task"
+msgstr "Без задачи"
+
+#: ui/strings.slint
+msgid "Non-billable"
+msgstr "Неоплачиваемая"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "None"
+msgstr "Нет"
+
+#: ui/screens/reports.slint
+msgid "Nothing tracked in this period."
+msgstr "За этот период ничего не учтено."
+
+#: ui/strings.slint
+msgid "Other"
+msgstr "Прочее"
+
+#: ui/screens/reports.slint
+msgid "Over time"
+msgstr "По времени"
+
+#: ui/components/date_range_picker.slint
+msgid "Period"
+msgstr "Период"
+
+#: ui/screens/reports.slint
+msgid "Rounding"
+msgstr "Округление"
+
+#: ui/screens/reports.slint
+msgid "Step"
+msgstr "Шаг"
+
+#: ui/strings.slint
+msgid "Tag"
+msgstr "Тег"
+
+#: ui/strings.slint
+msgid "Task"
+msgstr "Задача"
+
+#: ui/screens/reports.slint
+msgid "Then by"
+msgstr "Затем по"
+
+#: ui/components/date_range_picker.slint
+msgid "This month"
+msgstr "Этот месяц"
+
+#: ui/components/date_range_picker.slint
+msgid "This year"
+msgstr "Этот год"
+
+#: ui/screens/reports.slint
+msgid "Total cost"
+msgstr "Общая сумма"
+
+#: ui/screens/reports.slint
+msgid "Total time"
+msgstr "Общее время"
+
+#: ui/screens/reports.slint
+msgid "Up"
+msgstr "Вверх"
+
+#: ui/screens/reports.slint
+msgid "Week"
+msgstr "Неделя"
+
+#: ui/screens/reports.slint
+msgid "XLSX"
+msgstr "XLSX"
+
+#: ui/screens/reports.slint
+msgid "Yes"
+msgstr "Да"
+
+#: ui/screens/reports.slint
+msgid "{} min"
+msgstr "{} мин"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jan"
+msgstr "янв"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Feb"
+msgstr "фев"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Mar"
+msgstr "мар"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Apr"
+msgstr "апр"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "May"
+msgstr "май"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jun"
+msgstr "июн"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jul"
+msgstr "июл"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Aug"
+msgstr "авг"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Sep"
+msgstr "сен"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Oct"
+msgstr "окт"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Nov"
+msgstr "ноя"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Dec"
+msgstr "дек"

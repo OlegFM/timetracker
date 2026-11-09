@@ -1,0 +1,58 @@
+import { Theme } from "../theme.slint";
+import { ColorDot } from "color_dot.slint";
+import { ReportRowView } from "../bridges/reports.slint";
+
+// Grouped report table: group rows (level 0) with their sub-group rows (level 1)
+// indented, and the total as the last row. A transparent `color` shows no dot.
+// `show-cost` adds the cost column.
+export component ReportTable inherits VerticalLayout {
+    in property <[ReportRowView]> rows;
+    in property <bool> show-cost;
+
+    spacing: 2px;
+
+    for row[i] in root.rows: item := VerticalLayout {
+        private property <bool> total: i == root.rows.length - 1;
+
+        if item.total: Rectangle {
+            height: 1px;
+            background: Theme.line;
+        }
+        HorizontalLayout {
+            height: 26px;
+            spacing: Theme.gap-2;
+            padding-left: row.level * Theme.gap-5;
+
+            if row.color.alpha > 0: ColorDot {
+                dot-color: row.color;
+            }
+            Text {
+                horizontal-stretch: 1;
+                min-width: 40px;
+                text: row.label;
+                color: item.total || row.level == 0 ? Theme.text : Theme.text-secondary;
+                font-size: Theme.font-md;
+                font-weight: item.total ? 600 : row.level == 0 ? 500 : 400;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            Text {
+                text: row.duration;
+                color: Theme.text;
+                font-size: Theme.font-md;
+                font-weight: item.total ? 600 : 400;
+                vertical-alignment: center;
+                horizontal-alignment: right;
+            }
+            if root.show-cost: Text {
+                min-width: 90px;
+                text: row.cost;
+                color: Theme.muted;
+                font-size: Theme.font-md;
+                font-weight: item.total ? 600 : 400;
+                vertical-alignment: center;
+                horizontal-alignment: right;
+            }
+        }
+    }
+}

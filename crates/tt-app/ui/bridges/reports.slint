@@ -1,0 +1,77 @@
+// Report screen: filter state, options and results. Implemented by `controllers::reports`.
+//
+// The UI changes the in-out properties and calls `run()`; the controller reads them,
+// normalizes them (for example group 2 can't equal group 1), saves them as the last report
+// state, runs the report and writes everything back.
+
+import { BarView } from "../components/bar_chart.slint";
+import { PieSlice } from "../components/pie_chart.slint";
+import { SelectOption } from "../components/select.slint";
+import { TagOption } from "pickers.slint";
+
+// One row of the report table (the tree flattened). `level` 0 = group (and the total, which
+// is the last row), 1 = sub-group. A transparent `color` = no dot.
+export struct ReportRowView {
+    level: int,
+    label: string,
+    color: color,
+    duration: string,
+    // Empty = nothing billable.
+    cost: string,
+}
+
+// Options of a multi-select filter (`selected` marks the chosen ones) and the shown value.
+export struct FilterView {
+    options: [TagOption],
+    text: string,
+}
+
+export global ReportsBridge {
+    // Period: 0 Today, 1 Yesterday, 2 This week, 3 Last week, 4 This month, 5 Last month,
+    // 6 This year, 7 Custom range (`custom-from` / `custom-to`, ISO dates).
+    in-out property <int> preset: 2;
+    in-out property <string> custom-from;
+    in-out property <string> custom-to;
+    // The resolved period in the user's date format.
+    in property <string> range-text;
+
+    in-out property <[string]> project-ids;
+    in-out property <[string]> task-ids;
+    in-out property <[string]> client-ids;
+    in-out property <[string]> tag-ids;
+    in property <FilterView> projects;
+    in property <FilterView> tasks;
+    in property <FilterView> clients;
+    in property <FilterView> tags;
+    // Tags: false = a time entry with any of them, true = with all of them.
+    in-out property <bool> tag-match-all;
+    // 0 all, 1 billable only, 2 non-billable only.
+    in-out property <int> billable;
+
+    // Groupings: values 0 Project, 1 Task, 2 Client, 3 Tag, 4 Billable, 5 Description, 6 Day;
+    // group 2 may also be -1 (none) and never equals group 1.
+    in-out property <int> group1: 0;
+    in-out property <int> group2: 1;
+    in property <[SelectOption]> group1-options;
+    in property <[SelectOption]> group2-options;
+    // Chart interval: 0 Day, 1 Week, 2 Month.
+    in-out property <int> interval: 0;
+    // -1 none, 0 up, 1 down, 2 nearest; the step is in minutes.
+    in-out property <int> rounding-mode: -1;
+    in-out property <int> rounding-step: 15;
+
+    // Results.
+    in property <string> total;
+    // Empty = nothing billable (the cost column is hidden).
+    in property <string> cost;
+    in property <[BarView]> bars;
+    in property <[PieSlice]> pie;
+    in property <[ReportRowView]> rows;
+
+    // Runs the report with the current state (also when the screen is opened).
+    callback run();
+    // Save dialogs; each exports the current report.
+    callback export-csv();
+    callback export-entries-csv();
+    callback export-xlsx();
+}

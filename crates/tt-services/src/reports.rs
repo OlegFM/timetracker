@@ -5,7 +5,8 @@ use std::collections::{HashMap, HashSet};
 use chrono::{Datelike, Days, NaiveDate};
 use tt_domain::{
     EntryTemplate, GroupBy, GroupKey, Id, Interval, Millis, Project, ReportContext, ReportFilter,
-    ReportResult, Task, TimeEntry, aggregate, day_total, local_date, start_of_local_day,
+    ReportResult, Task, TimeEntry, aggregate, day_total, local_date, select_entries,
+    start_of_local_day,
 };
 use tt_storage::{Db, catalog, entries};
 
@@ -56,6 +57,22 @@ impl ReportService {
         let (projects, tasks) = catalog_maps(db)?;
         let ctx = context(&projects, &tasks, settings, now);
         Ok(aggregate(&list, filter, g1, g2, interval, &ctx))
+    }
+
+    /// The entries a report over `filter` covers, oldest first (the export's entry list).
+    pub fn filtered_entries(
+        db: &Db,
+        filter: &ReportFilter,
+        settings: &Settings,
+        now: Millis,
+    ) -> Result<Vec<TimeEntry>> {
+        let list = entries::entries_in_range(db.conn(), filter.start, filter.end)?;
+        let (projects, tasks) = catalog_maps(db)?;
+        let ctx = context(&projects, &tasks, settings, now);
+        Ok(select_entries(&list, filter, &ctx)
+            .into_iter()
+            .cloned()
+            .collect())
     }
 }
 
@@ -205,6 +222,40 @@ mod tests {
         };
         entries::insert_entry(db.conn(), &e).unwrap();
         e
+    }
+
+    #[test]
+    fn filtered_entries_apply_the_filter() {
+        let db = Db::open_in_memory().unwrap();
+        let p = Project {
+            id: new_id(),
+            name: "P".into(),
+            color: "#000000".into(),
+            client_id: None,
+            is_billable: true,
+            billable_rate: None,
+            estimated_time: None,
+            archived_at: None,
+            created_at: 0,
+            updated_at: 0,
+        };
+        catalog::insert_project(db.conn(), &p).unwrap();
+        let early = put(&db, "a", Some(p.id), at(9, 9, 0), Some(at(9, 10, 0)));
+        put(&db, "b", None, at(9, 11, 0), Some(at(9, 12, 0)));
+        put(&db, "out", Some(p.id), at(10, 9, 0), Some(at(10, 10, 0)));
+        let filter = ReportFilter {
+            start: at(9, 0, 0),
+            end: at(10, 0, 0),
+            project_ids: vec![p.id],
+            task_ids: vec![],
+            client_ids: vec![],
+            tag_ids: vec![],
+            tag_match: tt_domain::TagMatch::Any,
+            billable: None,
+            rounding: None,
+        };
+        let got = ReportService::filtered_entries(&db, &filter, &settings(), at(11, 0, 0)).unwrap();
+        assert_eq!(got, [early]);
     }
 
     #[test]

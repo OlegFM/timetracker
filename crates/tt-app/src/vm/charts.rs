@@ -9,7 +9,7 @@ use crate::vm::pickers::{Catalog, hex_color, option_label};
 use crate::{BarView, HeatCell, PieSlice, ProjectTotalView, RecentView};
 
 /// Between the parts of a chart caption.
-const CAPTION_SEPARATOR: &str = " · ";
+pub(crate) const CAPTION_SEPARATOR: &str = " · ";
 
 /// Center and radius of the pie in its 100 x 100 box.
 const PIE_CENTER: f64 = 50.0;
@@ -168,7 +168,7 @@ fn heat_cells(days: &[(NaiveDate, i64)], prefs: &FormatPrefs) -> Vec<HeatCell> {
 }
 
 /// Money text; empty for nothing.
-fn money(cents: i64, prefs: &FormatPrefs) -> String {
+pub(crate) fn money(cents: i64, prefs: &FormatPrefs) -> String {
     if cents > 0 {
         format_money(cents, prefs)
     } else {

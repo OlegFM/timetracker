@@ -725,3 +725,239 @@ msgstr "周六"
 msgctxt "weekday"
 msgid "Sun"
 msgstr "周日"
+
+#: ui/screens/reports.slint
+msgid "All"
+msgstr "全部"
+
+#: ui/screens/reports.slint
+msgid "All tags"
+msgstr "所有标签"
+
+#: ui/screens/reports.slint
+msgid "Any tag"
+msgstr "任一标签"
+
+#: ui/screens/reports.slint
+msgid "CSV (entries)"
+msgstr "CSV（记录）"
+
+#: ui/screens/reports.slint
+msgid "CSV (report)"
+msgstr "CSV（报表）"
+
+#: ui/components/date_range_picker.slint
+msgid "Custom range"
+msgstr "自定义范围"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "Day"
+msgstr "日"
+
+#: ui/strings.slint
+msgid "Description"
+msgstr "描述"
+
+#: ui/screens/reports.slint
+msgid "Details"
+msgstr "详情"
+
+#: ui/screens/reports.slint
+msgid "Distribution"
+msgstr "分布"
+
+#: ui/screens/reports.slint
+msgid "Down"
+msgstr "向下"
+
+#: ui/screens/reports.slint
+msgid "Export"
+msgstr "导出"
+
+#: ui/strings.slint
+msgid "Exported"
+msgstr "已导出"
+
+#: ui/screens/reports.slint
+msgid "Group by"
+msgstr "分组依据"
+
+#: ui/screens/reports.slint
+msgid "Interval"
+msgstr "间隔"
+
+#: ui/components/date_range_picker.slint
+msgid "Last month"
+msgstr "上个月"
+
+#: ui/components/date_range_picker.slint
+msgid "Last week"
+msgstr "上周"
+
+#: ui/screens/reports.slint
+msgid "Match"
+msgstr "匹配"
+
+#: ui/screens/reports.slint
+msgid "Month"
+msgstr "月"
+
+#: ui/screens/reports.slint
+msgid "Nearest"
+msgstr "最接近"
+
+#: ui/screens/reports.slint
+msgid "No"
+msgstr "否"
+
+#: ui/strings.slint
+msgid "No description"
+msgstr "无描述"
+
+#: ui/strings.slint
+msgid "No tag"
+msgstr "无标签"
+
+#: ui/strings.slint
+msgid "No task"
+msgstr "无任务"
+
+#: ui/strings.slint
+msgid "Non-billable"
+msgstr "不计费"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "None"
+msgstr "无"
+
+#: ui/screens/reports.slint
+msgid "Nothing tracked in this period."
+msgstr "此期间没有记录时间。"
+
+#: ui/strings.slint
+msgid "Other"
+msgstr "其他"
+
+#: ui/screens/reports.slint
+msgid "Over time"
+msgstr "随时间变化"
+
+#: ui/components/date_range_picker.slint
+msgid "Period"
+msgstr "时间段"
+
+#: ui/screens/reports.slint
+msgid "Rounding"
+msgstr "舍入"
+
+#: ui/screens/reports.slint
+msgid "Step"
+msgstr "步长"
+
+#: ui/strings.slint
+msgid "Tag"
+msgstr "标签"
+
+#: ui/strings.slint
+msgid "Task"
+msgstr "任务"
+
+#: ui/screens/reports.slint
+msgid "Then by"
+msgstr "然后按"
+
+#: ui/components/date_range_picker.slint
+msgid "This month"
+msgstr "本月"
+
+#: ui/components/date_range_picker.slint
+msgid "This year"
+msgstr "今年"
+
+#: ui/screens/reports.slint
+msgid "Total cost"
+msgstr "总费用"
+
+#: ui/screens/reports.slint
+msgid "Total time"
+msgstr "总时间"
+
+#: ui/screens/reports.slint
+msgid "Up"
+msgstr "向上"
+
+#: ui/screens/reports.slint
+msgid "Week"
+msgstr "周"
+
+#: ui/screens/reports.slint
+msgid "XLSX"
+msgstr "XLSX"
+
+#: ui/screens/reports.slint
+msgid "Yes"
+msgstr "是"
+
+#: ui/screens/reports.slint
+msgid "{} min"
+msgstr "{} 分钟"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jan"
+msgstr "1月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Feb"
+msgstr "2月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Mar"
+msgstr "3月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Apr"
+msgstr "4月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "May"
+msgstr "5月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jun"
+msgstr "6月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jul"
+msgstr "7月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Aug"
+msgstr "8月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Sep"
+msgstr "9月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Oct"
+msgstr "10月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Nov"
+msgstr "11月"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Dec"
+msgstr "12月"

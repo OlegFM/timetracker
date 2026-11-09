@@ -8,4 +8,5 @@ pub mod error;
 pub mod format;
 pub mod lang;
 pub mod pickers;
+pub mod report;
 pub mod timer;

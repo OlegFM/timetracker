@@ -1,0 +1,116 @@
+import { Theme } from "../theme.slint";
+import { Input } from "input.slint";
+import { PickerChip, PickerList, PickerPanel, PickerRow } from "combobox.slint";
+import { Pickers, TagOption } from "../bridges/pickers.slint";
+
+// Multiple choice from a fixed list (projects, tasks, clients, tags of a filter) with
+// case-insensitive search; like `TagSelect` but nothing can be created. Items reuse
+// `TagOption` (`name` is the row text). Keys: Up / Down move, Enter toggles, Esc closes;
+// nothing is highlighted on open.
+export component MultiSelect inherits Rectangle {
+    in property <[TagOption]> items;
+    // Shown value; empty = nothing selected (placeholder).
+    in property <string> text;
+    in property <string> placeholder;
+    in property <image> icon;
+    in property <length> popup-width: 260px;
+    out property <string> query;
+    // The new set of selected ids.
+    callback selection-changed(ids: [string]);
+
+    private property <[TagOption]> shown: Pickers.filter-tags(root.items, root.query);
+    // Row index; -1 = none.
+    private property <int> highlighted: -1;
+
+    function open() {
+        root.query = "";
+        root.highlighted = -1;
+        popup.show();
+    }
+
+    function activate(i: int) {
+        if i >= 0 && i < root.shown.length {
+            root.selection-changed(Pickers.toggle-tag(root.items, root.shown[i].id));
+        }
+    }
+
+    height: chip.height;
+    min-width: chip.min-width;
+    preferred-width: chip.preferred-width;
+    max-width: chip.max-width;
+    forward-focus: chip;
+
+    accessible-role: combobox;
+    accessible-label: root.placeholder;
+    accessible-value: root.text;
+    accessible-expanded: popup.is-open;
+    accessible-action-default => { root.open(); }
+
+    chip := PickerChip {
+        width: 100%;
+        text: root.text;
+        placeholder: root.placeholder;
+        icon: root.icon;
+        open: popup.is-open;
+        clicked => { root.open(); }
+    }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: root.popup-width;
+        close-policy: close-on-click-outside;
+        forward-focus: search;
+
+        PickerPanel {
+            FocusScope {
+                focus-on-click: false;
+                focus-on-tab-navigation: false;
+                capture-key-pressed(event) => {
+                    if event.text == Key.UpArrow {
+                        root.highlighted = max(0, root.highlighted - 1);
+                        return accept;
+                    }
+                    if event.text == Key.DownArrow {
+                        root.highlighted = min(root.shown.length - 1, root.highlighted + 1);
+                        return accept;
+                    }
+                    if event.text == Key.Return {
+                        root.activate(root.highlighted);
+                        return accept;
+                    }
+                    if event.text == Key.Escape {
+                        popup.close();
+                        return accept;
+                    }
+                    reject
+                }
+
+                VerticalLayout {
+                    padding: 6px;
+                    spacing: 6px;
+
+                    search := Input {
+                        text <=> root.query;
+                        placeholder: @tr("Search");
+                        // First match while searching; nothing for an empty (or blank) query.
+                        edited(text) => { root.highlighted = text.replace-all(" ", "") == "" ? -1 : 0; }
+                    }
+                    PickerList {
+                        row-count: root.shown.length;
+                        highlighted: root.highlighted;
+
+                        for item[i] in root.shown: PickerRow {
+                            text: item.name;
+                            checkbox: true;
+                            checked: item.selected;
+                            highlighted: root.highlighted == i;
+                            hovered => { root.highlighted = i; }
+                            clicked => { root.activate(i); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

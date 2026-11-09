@@ -728,3 +728,239 @@ msgstr "sáb"
 msgctxt "weekday"
 msgid "Sun"
 msgstr "dom"
+
+#: ui/screens/reports.slint
+msgid "All"
+msgstr "Todos"
+
+#: ui/screens/reports.slint
+msgid "All tags"
+msgstr "Todas las etiquetas"
+
+#: ui/screens/reports.slint
+msgid "Any tag"
+msgstr "Cualquier etiqueta"
+
+#: ui/screens/reports.slint
+msgid "CSV (entries)"
+msgstr "CSV (registros)"
+
+#: ui/screens/reports.slint
+msgid "CSV (report)"
+msgstr "CSV (informe)"
+
+#: ui/components/date_range_picker.slint
+msgid "Custom range"
+msgstr "Rango personalizado"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "Day"
+msgstr "Día"
+
+#: ui/strings.slint
+msgid "Description"
+msgstr "Descripción"
+
+#: ui/screens/reports.slint
+msgid "Details"
+msgstr "Detalles"
+
+#: ui/screens/reports.slint
+msgid "Distribution"
+msgstr "Distribución"
+
+#: ui/screens/reports.slint
+msgid "Down"
+msgstr "Abajo"
+
+#: ui/screens/reports.slint
+msgid "Export"
+msgstr "Exportar"
+
+#: ui/strings.slint
+msgid "Exported"
+msgstr "Exportado"
+
+#: ui/screens/reports.slint
+msgid "Group by"
+msgstr "Agrupar por"
+
+#: ui/screens/reports.slint
+msgid "Interval"
+msgstr "Intervalo"
+
+#: ui/components/date_range_picker.slint
+msgid "Last month"
+msgstr "Mes pasado"
+
+#: ui/components/date_range_picker.slint
+msgid "Last week"
+msgstr "Semana pasada"
+
+#: ui/screens/reports.slint
+msgid "Match"
+msgstr "Coincidencia"
+
+#: ui/screens/reports.slint
+msgid "Month"
+msgstr "Mes"
+
+#: ui/screens/reports.slint
+msgid "Nearest"
+msgstr "Más cercano"
+
+#: ui/screens/reports.slint
+msgid "No"
+msgstr "No"
+
+#: ui/strings.slint
+msgid "No description"
+msgstr "Sin descripción"
+
+#: ui/strings.slint
+msgid "No tag"
+msgstr "Sin etiqueta"
+
+#: ui/strings.slint
+msgid "No task"
+msgstr "Sin tarea"
+
+#: ui/strings.slint
+msgid "Non-billable"
+msgstr "No facturable"
+
+#: ui/screens/reports.slint ui/strings.slint
+msgid "None"
+msgstr "Ninguno"
+
+#: ui/screens/reports.slint
+msgid "Nothing tracked in this period."
+msgstr "No se registró nada en este periodo."
+
+#: ui/strings.slint
+msgid "Other"
+msgstr "Otros"
+
+#: ui/screens/reports.slint
+msgid "Over time"
+msgstr "A lo largo del tiempo"
+
+#: ui/components/date_range_picker.slint
+msgid "Period"
+msgstr "Periodo"
+
+#: ui/screens/reports.slint
+msgid "Rounding"
+msgstr "Redondeo"
+
+#: ui/screens/reports.slint
+msgid "Step"
+msgstr "Paso"
+
+#: ui/strings.slint
+msgid "Tag"
+msgstr "Etiqueta"
+
+#: ui/strings.slint
+msgid "Task"
+msgstr "Tarea"
+
+#: ui/screens/reports.slint
+msgid "Then by"
+msgstr "Luego por"
+
+#: ui/components/date_range_picker.slint
+msgid "This month"
+msgstr "Este mes"
+
+#: ui/components/date_range_picker.slint
+msgid "This year"
+msgstr "Este año"
+
+#: ui/screens/reports.slint
+msgid "Total cost"
+msgstr "Costo total"
+
+#: ui/screens/reports.slint
+msgid "Total time"
+msgstr "Tiempo total"
+
+#: ui/screens/reports.slint
+msgid "Up"
+msgstr "Arriba"
+
+#: ui/screens/reports.slint
+msgid "Week"
+msgstr "Semana"
+
+#: ui/screens/reports.slint
+msgid "XLSX"
+msgstr "XLSX"
+
+#: ui/screens/reports.slint
+msgid "Yes"
+msgstr "Sí"
+
+#: ui/screens/reports.slint
+msgid "{} min"
+msgstr "{} min"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jan"
+msgstr "ene"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Feb"
+msgstr "feb"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Mar"
+msgstr "mar"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Apr"
+msgstr "abr"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "May"
+msgstr "may"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jun"
+msgstr "jun"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Jul"
+msgstr "jul"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Aug"
+msgstr "ago"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Sep"
+msgstr "sep"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Oct"
+msgstr "oct"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Nov"
+msgstr "nov"
+
+#: ui/strings.slint
+msgctxt "month"
+msgid "Dec"
+msgstr "dic"

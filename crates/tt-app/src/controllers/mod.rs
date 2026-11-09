@@ -19,6 +19,7 @@ pub mod dashboard;
 pub mod entries;
 pub mod mini;
 pub mod pickers;
+pub mod reports;
 pub mod timer;
 pub mod tray;
 

@@ -13,6 +13,9 @@ tt-domain.workspace = true
 tt-storage.workspace = true
 tt-services.workspace = true
 chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rfd.workspace = true
 slint = { workspace = true, features = ["unstable-winit-030"] }
 sys-locale.workspace = true
 directories.workspace = true

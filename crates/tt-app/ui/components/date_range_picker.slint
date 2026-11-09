@@ -1,0 +1,64 @@
+import { Theme } from "../theme.slint";
+import { DatePicker } from "date_picker.slint";
+import { Select } from "select.slint";
+
+// Period of a report: a preset (0 Today, 1 Yesterday, 2 This week, 3 Last week, 4 This
+// month, 5 Last month, 6 This year, 7 Custom range). A preset shows its resolved range
+// (`range-text`), the custom range two date pickers (ISO dates). Any change calls `changed`.
+export component DateRangePicker inherits HorizontalLayout {
+    in-out property <int> preset;
+    in-out property <string> custom-from;
+    in-out property <string> custom-to;
+    in property <string> range-text;
+    callback changed();
+
+    spacing: Theme.gap-2;
+
+    Select {
+        label: @tr("Period");
+        popup-width: 170px;
+        value: root.preset;
+        options: [
+            { value: 0, label: @tr("Today") },
+            { value: 1, label: @tr("Yesterday") },
+            { value: 2, label: @tr("This week") },
+            { value: 3, label: @tr("Last week") },
+            { value: 4, label: @tr("This month") },
+            { value: 5, label: @tr("Last month") },
+            { value: 6, label: @tr("This year") },
+            { value: 7, label: @tr("Custom range") },
+        ];
+        picked(value) => {
+            root.preset = value;
+            root.changed();
+        }
+    }
+    if root.preset == 7: DatePicker {
+        date <=> root.custom-from;
+        picked(date) => {
+            // `picked` comes before the picker stores the date.
+            root.custom-from = date;
+            root.changed();
+        }
+    }
+    if root.preset == 7: Text {
+        text: "–";
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        vertical-alignment: center;
+    }
+    if root.preset == 7: DatePicker {
+        date <=> root.custom-to;
+        picked(date) => {
+            root.custom-to = date;
+            root.changed();
+        }
+    }
+    if root.preset != 7: Text {
+        text: root.range-text;
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        vertical-alignment: center;
+    }
+    Rectangle { }
+}

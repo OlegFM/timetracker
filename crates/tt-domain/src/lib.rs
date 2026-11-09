@@ -21,7 +21,7 @@ pub use ids::{Id, Millis, new_id};
 pub use model::{Client, Project, SessionState, Tag, Task, TimeEntry, TimerSession};
 pub use report::{
     Bucket, GroupBy, GroupKey, GroupRow, Interval, ReportContext, ReportFilter, ReportResult,
-    TagMatch, aggregate,
+    TagMatch, aggregate, select_entries,
 };
 pub use rounding::{RoundingMode, rounded_duration_s};
 pub use session::{EntryTemplate, day_total, session_total};

@@ -1,0 +1,111 @@
+import { Theme } from "../theme.slint";
+import { PickerChip, PickerList, PickerPanel, PickerRow } from "combobox.slint";
+
+export struct SelectOption {
+    value: int,
+    label: string,
+}
+
+// Helper implemented in Rust (`controllers::reports`); register it in every window that
+// shows a `Select`, like `Pickers`.
+export global SelectLabels {
+    // Label of the option with `value`; "" if there is none.
+    pure callback label(options: [SelectOption], value: int) -> string;
+}
+
+// Single choice from a short list (no search). `label` is a muted prefix of the shown
+// value. Keys: Up / Down move, Enter picks, Esc closes; nothing is highlighted on open.
+export component Select inherits Rectangle {
+    in property <[SelectOption]> options;
+    // The chosen option's `value`.
+    in property <int> value;
+    in property <string> label;
+    in property <length> popup-width: 180px;
+    callback picked(value: int);
+
+    private property <string> shown: SelectLabels.label(root.options, root.value);
+    // Row index; -1 = none.
+    private property <int> highlighted: -1;
+
+    function open() {
+        root.highlighted = -1;
+        popup.show();
+    }
+
+    function activate(i: int) {
+        if i < 0 || i >= root.options.length {
+            return;
+        }
+        // Close last: closing destroys the row.
+        root.picked(root.options[i].value);
+        popup.close();
+    }
+
+    height: chip.height;
+    min-width: chip.min-width;
+    preferred-width: chip.preferred-width;
+    max-width: chip.max-width;
+    forward-focus: chip;
+
+    accessible-role: combobox;
+    accessible-label: root.label;
+    accessible-value: root.shown;
+    accessible-expanded: popup.is-open;
+    accessible-action-default => { root.open(); }
+
+    chip := PickerChip {
+        width: 100%;
+        text: root.label != "" ? root.label + ": " + root.shown : root.shown;
+        open: popup.is-open;
+        clicked => { root.open(); }
+    }
+
+    popup := PopupWindow {
+        x: 0;
+        y: root.height + 4px;
+        width: root.popup-width;
+        close-policy: close-on-click-outside;
+
+        PickerPanel {
+            FocusScope {
+                init => { self.focus(); }
+                key-pressed(event) => {
+                    if event.text == Key.UpArrow {
+                        root.highlighted = max(0, root.highlighted - 1);
+                        return accept;
+                    }
+                    if event.text == Key.DownArrow {
+                        root.highlighted = min(root.options.length - 1, root.highlighted + 1);
+                        return accept;
+                    }
+                    if event.text == Key.Return {
+                        root.activate(root.highlighted);
+                        return accept;
+                    }
+                    if event.text == Key.Escape {
+                        popup.close();
+                        return accept;
+                    }
+                    reject
+                }
+
+                VerticalLayout {
+                    padding: 6px;
+
+                    PickerList {
+                        row-count: root.options.length;
+                        highlighted: root.highlighted;
+
+                        for option[i] in root.options: PickerRow {
+                            text: option.label;
+                            checked: option.value == root.value;
+                            highlighted: root.highlighted == i;
+                            hovered => { root.highlighted = i; }
+                            clicked => { root.activate(i); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
