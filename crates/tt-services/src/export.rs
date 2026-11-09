@@ -150,6 +150,15 @@ fn entry_rows(
         .collect()
 }
 
+/// Defuses spreadsheet formula injection: text starting with a formula trigger gets a `'` prefix.
+fn safe(text: &str) -> String {
+    if text.starts_with(['=', '+', '-', '@', '\t', '\r']) {
+        format!("'{text}")
+    } else {
+        text.to_owned()
+    }
+}
+
 fn write_bom(w: &mut impl Write) -> Result<()> {
     w.write_all(&[0xEF, 0xBB, 0xBF]).map_err(ServiceError::Io)
 }
@@ -180,8 +189,8 @@ pub fn export_report_csv(
     .map_err(io_err)?;
     for l in summary_lines(r, names, labels) {
         record(
-            &l.group,
-            &l.sub,
+            &safe(&l.group),
+            &safe(&l.sub),
             &format_duration(l.seconds, prefs),
             &format_money(l.cost, prefs),
         )
@@ -208,11 +217,11 @@ pub fn export_entries_csv(
             &r.start,
             &r.end,
             &duration,
-            description,
-            project,
-            task,
-            client,
-            tags,
+            &safe(description),
+            &safe(project),
+            &safe(task),
+            &safe(client),
+            &safe(tags),
             billable,
         ])
         .map_err(io_err)?;
@@ -505,5 +514,52 @@ mod tests {
         let has = |needle: &str| bytes.windows(needle.len()).any(|w| w == needle.as_bytes());
         assert!(has("xl/worksheets/sheet1.xml"));
         assert!(has("xl/worksheets/sheet2.xml"));
+    }
+
+    #[test]
+    fn csv_neutralizes_formula_cells() {
+        let proj = Project {
+            id: new_id(),
+            name: "@SUM(A1)".into(),
+            color: "#000000".into(),
+            client_id: None,
+            is_billable: false,
+            billable_rate: None,
+            estimated_time: None,
+            archived_at: None,
+            created_at: 0,
+            updated_at: 0,
+        };
+        let projects = HashMap::from([(proj.id, proj.clone())]);
+        let (t, c, g) = Default::default();
+        let lk = Lookup {
+            projects: &projects,
+            tasks: &t,
+            clients: &c,
+            tags: &g,
+        };
+        let mut e = entry("=1+1", Some(3_600_000));
+        e.project_id = Some(proj.id);
+        let mut buf = Vec::new();
+        export_entries_csv(&mut buf, &[e], &lk, &labels(), &FormatPrefs::default()).unwrap();
+        let mut rd = csv::Reader::from_reader(strip_bom(&buf));
+        let rec = rd.records().next().unwrap().unwrap();
+        assert_eq!(&rec[4], "'=1+1");
+        assert_eq!(&rec[5], "'@SUM(A1)");
+
+        let a = new_id();
+        let mut buf = Vec::new();
+        export_report_csv(
+            &mut buf,
+            &report(a, a),
+            &|_: &GroupKey| "+cmd".to_owned(),
+            &labels(),
+            &FormatPrefs::default(),
+        )
+        .unwrap();
+        let mut rd = csv::Reader::from_reader(strip_bom(&buf));
+        let rec = rd.records().next().unwrap().unwrap();
+        assert_eq!(&rec[0], "'+cmd");
+        assert_eq!(&rec[1], "");
     }
 }
