@@ -1,0 +1,54 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+license = "MIT"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.dependencies]
+# internal
+tt-domain = { path = "crates/tt-domain" }
+tt-storage = { path = "crates/tt-storage" }
+tt-services = { path = "crates/tt-services" }
+# UI
+slint = "1.18.1"
+slint-build = "1.18.1"
+# storage / time / ids
+rusqlite = { version = "0.41", features = ["bundled"] }
+chrono = "0.4"
+chrono-tz = "0.10"
+iana-time-zone = "0.1"
+uuid = { version = "1", features = ["v7", "serde"] }
+# serialization / export
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rust_xlsxwriter = "0.102"
+csv = "1.4"
+# platform
+tray-icon = "0.26"
+windows-sys = "0.61"
+auto-launch = "0.6"
+rfd = "0.15"
+sys-locale = "0.3"
+directories = "6"
+winresource = "0.1"
+# updates / crypto
+ed25519-dalek = "3"
+sha2 = "0.10"
+base64 = "0.22"
+hex = "0.4"
+ureq = "3"
+# errors / logging
+thiserror = "2"
+anyhow = "1"
+log = "0.4"
+simplelog = "0.12"
+# dev
+tempfile = "3"
