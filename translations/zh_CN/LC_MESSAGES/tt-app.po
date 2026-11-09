@@ -650,3 +650,78 @@ msgstr[0] "{n} 个项目"
 msgid "{n} time entry"
 msgid_plural "{n} time entries"
 msgstr[0] "{n} 条时间记录"
+
+#: ui/screens/dashboard.slint
+msgid "Recent tasks"
+msgstr "最近的任务"
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked yet. Start the timer and your recent tasks will appear here."
+msgstr "还没有记录。启动计时器后，最近的任务会显示在这里。"
+
+#: ui/screens/dashboard.slint
+msgid "Last 7 days"
+msgstr "最近 7 天"
+
+#: ui/screens/dashboard.slint
+msgid "No time tracked in the last 7 days."
+msgstr "最近 7 天没有记录时间。"
+
+#: ui/screens/dashboard.slint
+msgid "Activity"
+msgstr "活动"
+
+#: ui/screens/dashboard.slint
+msgid "No activity yet. Track some time and it will show up here."
+msgstr "暂无活动。记录一些时间后会显示在这里。"
+
+#: ui/screens/dashboard.slint
+msgid "By project"
+msgstr "按项目"
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked this week."
+msgstr "本周还没有记录。"
+
+#: ui/screens/dashboard.slint
+msgid "This week"
+msgstr "本周"
+
+#: ui/screens/dashboard.slint
+msgid "Total"
+msgstr "合计"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Mon"
+msgstr "周一"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Tue"
+msgstr "周二"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Wed"
+msgstr "周三"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Thu"
+msgstr "周四"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Fri"
+msgstr "周五"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sat"
+msgstr "周六"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sun"
+msgstr "周日"

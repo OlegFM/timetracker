@@ -8,6 +8,7 @@ import { ProjectsScreen } from "screens/projects.slint";
 import { ProjectScreen } from "screens/project.slint";
 import { ClientsScreen } from "screens/clients.slint";
 import { TagsScreen } from "screens/tags.slint";
+import { DashboardScreen } from "screens/dashboard.slint";
 import { ProjectDialog, TaskDialog } from "components/project_dialog.slint";
 import { EntryDialog } from "components/entry_dialog.slint";
 import { TimerBar } from "components/timer_bar.slint";
@@ -18,6 +19,10 @@ import { Calendar, CalendarDay, CalendarMonth } from "bridges/calendar.slint";
 import { CatalogBridge, ProjectRowView, TaskRowView, ClientRowView, TagRowView, ProjectDialogData, TaskDialogData, CatalogKind, DeleteRequest } from "bridges/catalog.slint";
 import { ConfirmDialog } from "components/dialog.slint";
 import { MiniBridge } from "bridges/mini.slint";
+import { DashboardBridge, RecentView, ProjectTotalView } from "bridges/dashboard.slint";
+import { BarView } from "components/bar_chart.slint";
+import { HeatCell } from "components/heatmap.slint";
+import { PieSlice } from "components/pie_chart.slint";
 import { MiniTimer } from "mini_timer.slint";
 
 // Globals and enums used from Rust must be exported from the main file.
@@ -26,6 +31,7 @@ export { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView 
 export { Calendar, CalendarDay, CalendarMonth }
 export { CatalogBridge, ProjectRowView, TaskRowView, ClientRowView, TagRowView, ProjectDialogData, TaskDialogData, CatalogKind, DeleteRequest }
 export { MiniBridge, MiniTimer }
+export { DashboardBridge, RecentView, ProjectTotalView, BarView, HeatCell, PieSlice }
 
 export component MainWindow inherits Window {
     // Page index: 0 Dashboard, 1 Time, 2 Projects, 3 Project, 4 Clients, 5 Tags,
@@ -57,9 +63,7 @@ export component MainWindow inherits Window {
             TimerBar { }
 
             VerticalLayout {
-                if root.page == 0: PlaceholderScreen {
-                    title: @tr("Dashboard");
-                }
+                if root.page == 0: DashboardScreen { }
                 if root.page == 1: TimeScreen {
                     request-delete(id) => { root.delete-id = id; }
                 }

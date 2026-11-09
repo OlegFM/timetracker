@@ -1,0 +1,57 @@
+import { Theme } from "../theme.slint";
+import { ChartTip } from "card.slint";
+
+// One slice: angles in degrees clockwise from 12 o'clock (the sweeps of all slices add
+// up to 360). `path` is the SVG path of the slice in a 100 x 100 box.
+export struct PieSlice {
+    start-angle: float,
+    sweep: float,
+    color: color,
+    label: string,
+    caption: string,
+    path: string,
+}
+
+// Pie of `Path` slices in the largest centered square. Hovering a slice shows its caption.
+export component PieChart inherits Rectangle {
+    in property <[PieSlice]> slices;
+
+    private property <length> size: min(root.width, root.height);
+    private property <length> origin-x: (root.width - root.size) / 2;
+    private property <length> origin-y: (root.height - root.size) / 2;
+    // Pointer position relative to the center (px) and its angle clockwise from 12 o'clock.
+    private property <float> dx: (touch.mouse-x - root.width / 2) / 1px;
+    private property <float> dy: (touch.mouse-y - root.height / 2) / 1px;
+    private property <float> angle: mod(atan2(root.dx, -root.dy) / 1deg + 360, 360);
+    private property <float> radius: root.size / 2 / 1px;
+    private property <bool> inside: touch.has-hover && root.dx * root.dx + root.dy * root.dy <= root.radius * root.radius;
+
+    min-width: 80px;
+    min-height: 80px;
+    accessible-role: list;
+
+    for slice in root.slices: Path {
+        x: root.origin-x;
+        y: root.origin-y;
+        width: root.size;
+        height: root.size;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        commands: slice.path;
+        fill: slice.color.alpha == 0 ? Theme.muted : slice.color;
+        stroke: Theme.card;
+        stroke-width: 1px;
+        accessible-role: list-item;
+        accessible-label: slice.caption;
+    }
+
+    touch := TouchArea { }
+
+    for slice in root.slices: Rectangle {
+        if root.inside && root.angle >= slice.start-angle && root.angle < slice.start-angle + slice.sweep: ChartTip {
+            text: slice.caption;
+            x: max(0px, min(root.width - self.width, touch.mouse-x + Theme.gap-3));
+            y: max(0px, touch.mouse-y - self.height - Theme.gap-2);
+        }
+    }
+}

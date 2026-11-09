@@ -656,3 +656,78 @@ msgid_plural "{n} time entries"
 msgstr[0] "{n} запись"
 msgstr[1] "{n} записи"
 msgstr[2] "{n} записей"
+
+#: ui/screens/dashboard.slint
+msgid "Recent tasks"
+msgstr "Недавние задачи"
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked yet. Start the timer and your recent tasks will appear here."
+msgstr "Пока ничего не отслежено. Запустите таймер, и здесь появятся недавние задачи."
+
+#: ui/screens/dashboard.slint
+msgid "Last 7 days"
+msgstr "Последние 7 дней"
+
+#: ui/screens/dashboard.slint
+msgid "No time tracked in the last 7 days."
+msgstr "За последние 7 дней время не отслеживалось."
+
+#: ui/screens/dashboard.slint
+msgid "Activity"
+msgstr "Активность"
+
+#: ui/screens/dashboard.slint
+msgid "No activity yet. Track some time and it will show up here."
+msgstr "Активности пока нет. Отследите время, и она появится здесь."
+
+#: ui/screens/dashboard.slint
+msgid "By project"
+msgstr "По проектам"
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked this week."
+msgstr "На этой неделе ничего не отслежено."
+
+#: ui/screens/dashboard.slint
+msgid "This week"
+msgstr "Эта неделя"
+
+#: ui/screens/dashboard.slint
+msgid "Total"
+msgstr "Итого"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Mon"
+msgstr "Пн"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Tue"
+msgstr "Вт"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Wed"
+msgstr "Ср"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Thu"
+msgstr "Чт"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Fri"
+msgstr "Пт"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sat"
+msgstr "Сб"
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sun"
+msgstr "Вс"

@@ -54,8 +54,14 @@ impl AppEvents {
 pub type Ctx = Rc<RefCell<AppContext>>;
 
 impl AppContext {
-    /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`.
+    /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`. Debug builds use
+    /// the file named by the `TT_DB_PATH` environment variable instead when it is set
+    /// (manual checks on a seed database, see `examples/seed.rs`).
     pub fn open_default() -> anyhow::Result<AppContext> {
+        #[cfg(debug_assertions)]
+        if let Some(path) = std::env::var_os("TT_DB_PATH").filter(|p| !p.is_empty()) {
+            return Self::open(PathBuf::from(path));
+        }
         let dirs = BaseDirs::new().context("no user profile folders")?;
         Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))
     }

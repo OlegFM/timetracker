@@ -42,6 +42,16 @@ export global Tr {
     out property <string> day-today: @tr("Today");
     out property <string> day-yesterday: @tr("Yesterday");
 
+    // Dashboard: weekday abbreviations (Monday first) and the label of time without a project
+    out property <string> weekday-mon: @tr("weekday" => "Mon");
+    out property <string> weekday-tue: @tr("weekday" => "Tue");
+    out property <string> weekday-wed: @tr("weekday" => "Wed");
+    out property <string> weekday-thu: @tr("weekday" => "Thu");
+    out property <string> weekday-fri: @tr("weekday" => "Fri");
+    out property <string> weekday-sat: @tr("weekday" => "Sat");
+    out property <string> weekday-sun: @tr("weekday" => "Sun");
+    out property <string> no-project: @tr("No project");
+
     // Service errors (tt_services::ServiceError)
     out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");
     out property <string> err-in-use-tasks: @tr("Can't delete: it still has tasks. Archive it instead.");

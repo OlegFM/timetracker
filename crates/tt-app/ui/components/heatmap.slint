@@ -1,0 +1,55 @@
+import { Theme } from "../theme.slint";
+import { ChartTip } from "card.slint";
+
+// One day of the activity map: `level` 0 (nothing) .. 4 (the busiest quarter).
+export struct HeatCell {
+    level: int,
+    caption: string,
+}
+
+// Activity of 12 weeks: 12 columns (weeks, oldest first) of 7 rows (days). `cells` are
+// the days in order, so cell i is in column i / 7, row i % 7. Hovering shows the caption.
+export component Heatmap inherits Rectangle {
+    in property <[HeatCell]> cells;
+
+    private property <int> hover: -1;
+    private property <length> gap: 3px;
+    private property <length> cell-size: min(28px, (root.width - 11 * root.gap) / 12);
+
+    min-height: 7 * root.cell-size + 6 * root.gap;
+    preferred-height: 7 * root.cell-size + 6 * root.gap;
+    accessible-role: list;
+
+    for cell[i] in root.cells: Rectangle {
+        x: floor(i / 7) * (root.cell-size + root.gap);
+        y: mod(i, 7) * (root.cell-size + root.gap);
+        width: root.cell-size;
+        height: root.cell-size;
+        border-radius: 3px;
+        background: cell.level <= 0 ? Theme.line
+            : Theme.accent.with-alpha(cell.level == 1 ? 0.3 : cell.level == 2 ? 0.5 : cell.level == 3 ? 0.75 : 1.0);
+        border-width: root.hover == i ? 1px : 0px;
+        border-color: Theme.text;
+        accessible-role: list-item;
+        accessible-label: cell.caption;
+
+        TouchArea {
+            changed has-hover => {
+                if self.has-hover {
+                    root.hover = i;
+                } else if root.hover == i {
+                    root.hover = -1;
+                }
+            }
+        }
+    }
+
+    if root.hover >= 0 && root.hover < root.cells.length: ChartTip {
+        property <length> cell-y: mod(root.hover, 7) * (root.cell-size + root.gap);
+        text: root.cells[root.hover].caption;
+        x: max(0px, min(root.width - self.width, (floor(root.hover / 7) + 0.5) * (root.cell-size + root.gap) - self.width / 2));
+        // Above the cell, below it in the top row.
+        y: self.cell-y - self.height - Theme.gap-1 >= 0 ? self.cell-y - self.height - Theme.gap-1
+            : self.cell-y + root.cell-size + Theme.gap-1;
+    }
+}

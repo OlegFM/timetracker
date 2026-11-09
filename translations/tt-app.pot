@@ -651,3 +651,78 @@ msgid "{n} time entry"
 msgid_plural "{n} time entries"
 msgstr[0] ""
 msgstr[1] ""
+
+#: ui/screens/dashboard.slint
+msgid "Recent tasks"
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked yet. Start the timer and your recent tasks will appear here."
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "Last 7 days"
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "No time tracked in the last 7 days."
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "Activity"
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "No activity yet. Track some time and it will show up here."
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "By project"
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "Nothing tracked this week."
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "This week"
+msgstr ""
+
+#: ui/screens/dashboard.slint
+msgid "Total"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Mon"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Tue"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Wed"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Thu"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Fri"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sat"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "weekday"
+msgid "Sun"
+msgstr ""

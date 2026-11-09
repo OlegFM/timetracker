@@ -1,0 +1,44 @@
+// Dashboard data. Implemented by `controllers::dashboard`.
+
+import { BarView } from "../components/bar_chart.slint";
+import { HeatCell } from "../components/heatmap.slint";
+import { PieSlice } from "../components/pie_chart.slint";
+
+// A recently tracked task: the attributes a click starts the timer with.
+export struct RecentView {
+    description: string,
+    // "Project › Task", "Project" or empty.
+    project-label: string,
+    project-color: color,
+}
+
+// One row of the "This week" table. A transparent `color` is "no project".
+export struct ProjectTotalView {
+    label: string,
+    color: color,
+    duration: string,
+    // Empty = nothing billable.
+    cost: string,
+}
+
+export global DashboardBridge {
+    in property <[RecentView]> recent;
+    in property <[BarView]> last7;
+    in property <string> last7-total;
+    // Whether there is anything to draw (else the card shows a friendly note).
+    in property <bool> has-last7;
+    in property <[HeatCell]> heatmap;
+    in property <bool> has-heatmap;
+    // This week, one bar per day in week-start order.
+    in property <[BarView]> week;
+    in property <[ProjectTotalView]> week-projects;
+    in property <string> week-total;
+    // Total cost of the week; empty = none (the cost column is hidden).
+    in property <string> week-cost;
+    in property <[PieSlice]> pie;
+
+    // The screen was opened: reload if the data is stale.
+    callback refresh();
+    // Starts the timer with the `index`-th recent task.
+    callback start-recent(index: int);
+}

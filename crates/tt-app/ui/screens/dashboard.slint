@@ -1,0 +1,293 @@
+import { ScrollView } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Icon, Icons } from "../components/icon.slint";
+import { Activator, FocusRing } from "../components/button.slint";
+import { ColorDot } from "../components/color_dot.slint";
+import { Card, EmptyNote } from "../components/card.slint";
+import { BarChart } from "../components/bar_chart.slint";
+import { Heatmap } from "../components/heatmap.slint";
+import { PieChart } from "../components/pie_chart.slint";
+import { DashboardBridge, RecentView } from "../bridges/dashboard.slint";
+
+// A recently tracked task; the whole row starts the timer with it.
+component RecentRow inherits Rectangle {
+    in property <RecentView> task;
+    callback clicked();
+
+    height: 36px;
+    border-radius: Theme.radius-md;
+    background: touch.has-hover ? Theme.surface-hover : transparent;
+    forward-focus: keys;
+
+    accessible-role: button;
+    accessible-label: root.task.description != "" ? root.task.description : @tr("(no description)");
+    accessible-description: root.task.project-label;
+    accessible-action-default => { root.clicked(); }
+
+    keys := Activator {
+        activated => { root.clicked(); }
+
+        touch := TouchArea {
+            mouse-cursor: pointer;
+            clicked => { root.clicked(); }
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: Theme.gap-2;
+        padding-right: Theme.gap-2;
+        spacing: Theme.gap-3;
+
+        Text {
+            horizontal-stretch: 1;
+            min-width: 60px;
+            text: root.task.description != "" ? root.task.description : @tr("(no description)");
+            color: root.task.description != "" ? Theme.text : Theme.muted;
+            font-size: Theme.font-md;
+            vertical-alignment: center;
+            overflow: elide;
+            accessible-role: none;
+        }
+        if root.task.project-label != "": HorizontalLayout {
+            spacing: 6px;
+            max-width: 160px;
+            horizontal-stretch: 0;
+
+            ColorDot {
+                dot-color: root.task.project-color;
+            }
+            Text {
+                text: root.task.project-label;
+                color: Theme.text-secondary;
+                font-size: Theme.font-sm;
+                vertical-alignment: center;
+                overflow: elide;
+                accessible-role: none;
+            }
+        }
+        Icon {
+            source: Icons.play;
+            size: 14px;
+            color: touch.has-hover ? Theme.accent : Theme.muted;
+        }
+    }
+
+    if keys.focus-visible: FocusRing { }
+}
+
+// Row of the "This week" table: project, time, cost.
+component TotalRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <color> dot: transparent;
+    in property <bool> show-dot: true;
+    in property <string> duration;
+    in property <string> cost;
+    in property <bool> bold: false;
+
+    height: 24px;
+    spacing: Theme.gap-2;
+
+    if root.show-dot: ColorDot {
+        dot-color: root.dot.alpha == 0 ? Theme.muted : root.dot;
+    }
+    Text {
+        horizontal-stretch: 1;
+        min-width: 40px;
+        text: root.label;
+        color: root.bold ? Theme.text : Theme.text-secondary;
+        font-size: Theme.font-md;
+        font-weight: root.bold ? 600 : 400;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+    Text {
+        text: root.duration;
+        color: Theme.text;
+        font-size: Theme.font-md;
+        font-weight: root.bold ? 600 : 400;
+        vertical-alignment: center;
+        horizontal-alignment: right;
+    }
+    if DashboardBridge.week-cost != "": Text {
+        min-width: 84px;
+        text: root.cost;
+        color: Theme.muted;
+        font-size: Theme.font-md;
+        font-weight: root.bold ? 600 : 400;
+        vertical-alignment: center;
+        horizontal-alignment: right;
+    }
+}
+
+// "Dashboard" page: recent tasks, the last 7 days, activity of 12 weeks, this week by day
+// and by project, and the project split. Data comes from `DashboardBridge`.
+export component DashboardScreen inherits VerticalLayout {
+    init => { DashboardBridge.refresh(); }
+
+    padding-top: Theme.gap-4;
+    padding-bottom: Theme.gap-2;
+    padding-left: 18px;
+    padding-right: 18px;
+    spacing: Theme.gap-2;
+
+    Text {
+        text: @tr("Dashboard");
+        color: Theme.text;
+        font-size: Theme.font-xl;
+        font-weight: 600;
+        vertical-alignment: center;
+    }
+
+    ScrollView {
+        vertical-stretch: 1;
+
+        VerticalLayout {
+            // Room for the scrollbar.
+            padding-right: Theme.gap-3;
+            padding-bottom: Theme.gap-3;
+            spacing: Theme.gap-3;
+
+            HorizontalLayout {
+                spacing: Theme.gap-3;
+
+                Card {
+                    horizontal-stretch: 1;
+                    height: 300px;
+                    title: @tr("Recent tasks");
+
+                    if DashboardBridge.recent.length == 0: EmptyNote {
+                        vertical-stretch: 1;
+                        text: @tr("Nothing tracked yet. Start the timer and your recent tasks will appear here.");
+                    }
+                    if DashboardBridge.recent.length > 0: VerticalLayout {
+                        vertical-stretch: 1;
+                        spacing: 2px;
+                        alignment: start;
+
+                        for task[i] in DashboardBridge.recent: RecentRow {
+                            task: task;
+                            clicked => { DashboardBridge.start-recent(i); }
+                        }
+                    }
+                }
+                Card {
+                    horizontal-stretch: 1;
+                    height: 300px;
+                    title: @tr("Last 7 days");
+                    subtitle: DashboardBridge.last7-total;
+
+                    if !DashboardBridge.has-last7: EmptyNote {
+                        vertical-stretch: 1;
+                        text: @tr("No time tracked in the last 7 days.");
+                    }
+                    if DashboardBridge.has-last7: BarChart {
+                        vertical-stretch: 1;
+                        bars: DashboardBridge.last7;
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                spacing: Theme.gap-3;
+
+                Card {
+                    horizontal-stretch: 1;
+                    height: 260px;
+                    title: @tr("Activity");
+
+                    if !DashboardBridge.has-heatmap: EmptyNote {
+                        vertical-stretch: 1;
+                        text: @tr("No activity yet. Track some time and it will show up here.");
+                    }
+                    if DashboardBridge.has-heatmap: Heatmap {
+                        vertical-stretch: 1;
+                        cells: DashboardBridge.heatmap;
+                    }
+                }
+                Card {
+                    horizontal-stretch: 1;
+                    height: 260px;
+                    title: @tr("By project");
+
+                    if DashboardBridge.pie.length == 0: EmptyNote {
+                        vertical-stretch: 1;
+                        text: @tr("Nothing tracked this week.");
+                    }
+                    if DashboardBridge.pie.length > 0: HorizontalLayout {
+                        vertical-stretch: 1;
+                        spacing: Theme.gap-4;
+
+                        PieChart {
+                            horizontal-stretch: 1;
+                            slices: DashboardBridge.pie;
+                        }
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 2px;
+
+                            for slice in DashboardBridge.pie: HorizontalLayout {
+                                height: 24px;
+                                spacing: Theme.gap-2;
+
+                                ColorDot {
+                                    dot-color: slice.color.alpha == 0 ? Theme.muted : slice.color;
+                                }
+                                Text {
+                                    text: slice.label;
+                                    color: Theme.text-secondary;
+                                    font-size: Theme.font-sm;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Card {
+                height: 280px;
+                title: @tr("This week");
+                subtitle: DashboardBridge.week-total;
+
+                if DashboardBridge.week-projects.length == 0: EmptyNote {
+                    vertical-stretch: 1;
+                    text: @tr("Nothing tracked this week.");
+                }
+                if DashboardBridge.week-projects.length > 0: HorizontalLayout {
+                    vertical-stretch: 1;
+                    spacing: Theme.gap-6;
+
+                    BarChart {
+                        horizontal-stretch: 3;
+                        bars: DashboardBridge.week;
+                    }
+                    VerticalLayout {
+                        horizontal-stretch: 2;
+                        alignment: center;
+                        spacing: 2px;
+
+                        for row in DashboardBridge.week-projects: TotalRow {
+                            label: row.label;
+                            dot: row.color;
+                            duration: row.duration;
+                            cost: row.cost;
+                        }
+                        Rectangle {
+                            height: 1px;
+                            background: Theme.line;
+                        }
+                        TotalRow {
+                            label: @tr("Total");
+                            show-dot: false;
+                            bold: true;
+                            duration: DashboardBridge.week-total;
+                            cost: DashboardBridge.week-cost;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

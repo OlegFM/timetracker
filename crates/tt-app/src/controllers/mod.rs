@@ -15,6 +15,7 @@
 
 pub mod calendar;
 pub mod catalog;
+pub mod dashboard;
 pub mod entries;
 pub mod mini;
 pub mod pickers;

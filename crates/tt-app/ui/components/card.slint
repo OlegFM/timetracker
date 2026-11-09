@@ -1,0 +1,68 @@
+import { Theme } from "../theme.slint";
+
+// Dark-on-light (light-on-dark) hover label of the charts. The chart positions it; it
+// sizes itself to the text.
+export component ChartTip inherits Rectangle {
+    in property <string> text;
+
+    width: label.preferred-width + 2 * Theme.gap-2;
+    height: label.preferred-height + Theme.gap-2;
+    background: Theme.text;
+    border-radius: Theme.radius-sm;
+    accessible-role: none;
+
+    label := Text {
+        x: Theme.gap-2;
+        y: Theme.gap-1;
+        text: root.text;
+        color: Theme.bg;
+        font-size: Theme.font-sm;
+    }
+}
+
+// Titled panel of the dashboard. The content goes below the header; `subtitle` (a total,
+// for example) is shown at the right of the title.
+export component Card inherits Rectangle {
+    in property <string> title;
+    in property <string> subtitle;
+
+    background: Theme.card;
+    border-radius: Theme.radius-lg;
+    border-width: 1px;
+    border-color: Theme.line;
+
+    VerticalLayout {
+        padding: Theme.gap-4;
+        spacing: Theme.gap-3;
+
+        HorizontalLayout {
+            spacing: Theme.gap-2;
+
+            Text {
+                horizontal-stretch: 1;
+                text: root.title;
+                color: Theme.text;
+                font-size: Theme.font-lg;
+                font-weight: 600;
+                overflow: elide;
+            }
+            Text {
+                text: root.subtitle;
+                color: Theme.muted;
+                font-size: Theme.font-md;
+                vertical-alignment: center;
+            }
+        }
+
+        @children
+    }
+}
+
+// Text centered in the free space of a card: shown instead of an empty chart.
+export component EmptyNote inherits Text {
+    color: Theme.muted;
+    font-size: Theme.font-md;
+    horizontal-alignment: center;
+    vertical-alignment: center;
+    wrap: word-wrap;
+}
