@@ -9,4 +9,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-
+chrono.workspace = true
+chrono-tz.workspace = true
+serde.workspace = true
+uuid.workspace = true
