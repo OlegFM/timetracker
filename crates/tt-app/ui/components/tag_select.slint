@@ -6,6 +6,7 @@ import { Pickers, TagOption } from "../bridges/pickers.slint";
 
 // Multiple choice of tags with case-insensitive search and a "Create tag" row while the
 // query has no exact match. Keys: ↑ ↓ move, Enter toggles / creates, Esc closes.
+// Nothing is highlighted on open, so Enter alone toggles nothing.
 export component TagSelect inherits Rectangle {
     in property <[TagOption]> items;
     // Shown value; empty = no tags (placeholder).
@@ -21,11 +22,12 @@ export component TagSelect inherits Rectangle {
     private property <[TagOption]> shown: Pickers.filter-tags(root.items, root.query);
     private property <int> create-rows: Pickers.tag-creatable(root.items, root.query) ? 1 : 0;
     private property <int> row-count: root.shown.length + root.create-rows;
+    // Row index; -1 = none.
     private property <int> highlighted;
 
     function open() {
         root.query = "";
-        root.highlighted = 0;
+        root.highlighted = -1;
         popup.show();
     }
 

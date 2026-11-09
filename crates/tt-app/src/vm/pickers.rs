@@ -135,6 +135,18 @@ pub fn filter_options(items: &[ProjectOption], query: &str) -> Vec<ProjectOption
     filter_by(items, query, |o| o.label.as_str())
 }
 
+/// Index of the option with `id` (the current choice); -1 if absent or `id` is empty,
+/// so that no row (in particular not "No project") is preselected.
+pub fn option_index(items: &[ProjectOption], id: &str) -> i32 {
+    if id.is_empty() {
+        return -1;
+    }
+    items
+        .iter()
+        .position(|o| o.id == id)
+        .map_or(-1, |i| i as i32)
+}
+
 pub fn option_creatable(items: &[ProjectOption], query: &str) -> bool {
     creatable_by(items, query, |o| o.label.as_str())
 }
@@ -268,6 +280,26 @@ pub(crate) mod tests {
         let found = filter_tags(&tags, "дизайн");
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].name, "ДИЗАЙН");
+    }
+
+    #[test]
+    fn option_index_finds_current_choice_only() {
+        let items = [
+            ProjectOption {
+                id: "p".into(),
+                ..opt("Website")
+            },
+            ProjectOption {
+                id: "t".into(),
+                ..opt("Website › Reports")
+            },
+        ];
+        assert_eq!(option_index(&items, "t"), 1);
+        assert_eq!(option_index(&items, "p"), 0);
+        // No current choice: nothing preselected (not the "No project" row).
+        assert_eq!(option_index(&items, ""), -1);
+        // Current choice not pickable (archived project / done task).
+        assert_eq!(option_index(&items, "gone"), -1);
     }
 
     #[test]

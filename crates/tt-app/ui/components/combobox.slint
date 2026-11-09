@@ -166,7 +166,7 @@ export component PickerPanel inherits Rectangle {
 }
 
 // Scrollable list area showing up to `visible-rows` rows of 30px; keeps `highlighted`
-// in view and shows `empty-text` when there are no rows.
+// (-1 = none) in view and shows `empty-text` when there are no rows.
 export component PickerList inherits Rectangle {
     in property <int> row-count;
     in property <int> highlighted;
@@ -175,7 +175,10 @@ export component PickerList inherits Rectangle {
 
     height: max(1, min(root.row-count, root.visible-rows)) * 30px;
 
-    changed highlighted => {
+    function reveal-highlighted() {
+        if root.highlighted < 0 {
+            return;
+        }
         let top = root.highlighted * 30px;
         if top + list.content-y < 0 {
             list.content-y = -top;
@@ -183,6 +186,9 @@ export component PickerList inherits Rectangle {
             list.content-y = root.height - top - 30px;
         }
     }
+
+    init => { root.reveal-highlighted(); }
+    changed highlighted => { root.reveal-highlighted(); }
 
     list := Flickable {
         content-height: root.row-count * 30px;
@@ -205,7 +211,8 @@ export component PickerList inherits Rectangle {
 
 // Single choice from `items` with case-insensitive search. Rows: an optional `none-text`
 // row (clears the choice), the matching items, then `create-texts` while the query has no
-// exact match. Keys: ↑ ↓ move, Enter picks, Esc closes.
+// exact match. Keys: ↑ ↓ move, Enter picks, Esc closes. On open the current option is
+// highlighted (none if there is no current option), so Enter alone changes nothing.
 export component ComboBox inherits Rectangle {
     in property <[ProjectOption]> items;
     // Id of the current option (marked with a check).
@@ -227,11 +234,13 @@ export component ComboBox inherits Rectangle {
     private property <int> none-rows: root.none-text != "" && root.query == "" ? 1 : 0;
     private property <[string]> creates: Pickers.option-creatable(root.items, root.query) ? root.create-texts : [];
     private property <int> row-count: root.none-rows + root.shown.length + root.creates.length;
+    // Row index; -1 = none.
     private property <int> highlighted;
 
     function open() {
         root.query = "";
-        root.highlighted = 0;
+        let current = Pickers.option-index(root.items, root.current-id);
+        root.highlighted = current < 0 ? -1 : root.none-rows + current;
         popup.show();
     }
 
