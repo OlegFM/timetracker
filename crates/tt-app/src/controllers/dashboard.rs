@@ -41,8 +41,6 @@ pub struct DashboardController {
     week: Rc<VecModel<BarView>>,
     week_projects: Rc<VecModel<ProjectTotalView>>,
     pie: Rc<VecModel<PieSlice>>,
-    /// The shown data may be older than the stored one (entries changed meanwhile).
-    dirty: Cell<bool>,
     /// Number of database reloads (tests).
     reloads: Cell<u32>,
 }
@@ -60,7 +58,6 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<DashboardCo
         week: Rc::default(),
         week_projects: Rc::default(),
         pie: Rc::default(),
-        dirty: Cell::new(true),
         reloads: Cell::new(0),
     });
     let b = ui.global::<DashboardBridge>();
@@ -72,7 +69,7 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<DashboardCo
     b.set_pie(ModelRc::from(ctl.pie.clone()));
 
     let c = ctl.clone();
-    b.on_refresh(move || c.reload_if_dirty());
+    b.on_refresh(move || c.reload());
     let c = ctl.clone();
     b.on_start_recent(move |index| c.start_recent(index));
 
@@ -82,17 +79,14 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<DashboardCo
 }
 
 impl DashboardController {
-    /// Totals change with the entries: reload now if the dashboard is shown, else when it
-    /// is shown next.
+    /// Totals change with the entries: reload now if the dashboard is shown. Otherwise
+    /// nothing: opening the page always reloads (the cards also depend on the current time).
     fn listen_to_entries(self: &Rc<Self>) {
         let me = Rc::downgrade(self);
         let events = self.ctx.borrow().events.clone();
         events.on_entries_changed(move || {
-            if let Some(c) = me.upgrade() {
-                c.dirty.set(true);
-                if c.page_visible() {
-                    c.reload();
-                }
+            if let Some(c) = me.upgrade().filter(|c| c.page_visible()) {
+                c.reload();
             }
         });
     }
@@ -101,15 +95,8 @@ impl DashboardController {
         self.ui.upgrade().is_some_and(|ui| ui.get_page() == PAGE)
     }
 
-    fn reload_if_dirty(&self) {
-        if self.dirty.get() {
-            self.reload();
-        }
-    }
-
     /// Loads the dashboard from the database and shows it.
     fn reload(&self) {
-        self.dirty.set(false);
         self.reloads.set(self.reloads.get() + 1);
         let res = {
             let c = self.ctx.borrow();
@@ -230,7 +217,6 @@ mod tests {
             week: Rc::default(),
             week_projects: Rc::default(),
             pie: Rc::default(),
-            dirty: Cell::new(true),
             reloads: Cell::new(0),
         });
         ctl.listen_to_entries();
@@ -287,23 +273,19 @@ mod tests {
     }
 
     #[test]
-    fn entry_events_only_mark_dirty_without_a_visible_dashboard() {
+    fn opening_always_reloads_and_entry_events_only_reload_a_visible_page() {
         let dir = tempfile::tempdir().unwrap();
         let ctx = ctx(&dir);
         let ctl = controller(&ctx);
 
-        ctl.reload_if_dirty();
-        assert_eq!(ctl.reloads.get(), 1);
-        ctl.reload_if_dirty();
-        assert_eq!(ctl.reloads.get(), 1, "clean data is not reloaded");
+        // Opening the page twice with no events in between: two reloads (time moves on).
+        ctl.reload();
+        ctl.reload();
+        assert_eq!(ctl.reloads.get(), 2);
 
-        // No window = the dashboard is not the open page.
+        // No window = the dashboard is not the open page: events do not reload.
         let events = ctx.borrow().events.clone();
         events.emit_entries_changed();
-        events.emit_entries_changed();
-        assert_eq!(ctl.reloads.get(), 1);
-        assert!(ctl.dirty.get());
-        ctl.reload_if_dirty();
         assert_eq!(ctl.reloads.get(), 2);
     }
 

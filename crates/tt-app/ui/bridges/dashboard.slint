@@ -37,7 +37,7 @@ export global DashboardBridge {
     in property <string> week-cost;
     in property <[PieSlice]> pie;
 
-    // The screen was opened: reload if the data is stale.
+    // The screen was opened: always reloads (the cards depend on the current time).
     callback refresh();
     // Starts the timer with the `index`-th recent task.
     callback start-recent(index: int);
