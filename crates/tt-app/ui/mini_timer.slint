@@ -1,0 +1,191 @@
+import { Theme } from "theme.slint";
+import { Icons } from "components/icon.slint";
+import { Button, ButtonVariant } from "components/button.slint";
+import { ColorDot } from "components/color_dot.slint";
+import { TimerBridge, TimerView } from "bridges/timer.slint";
+
+// Clickable text that opens the main window.
+component OpenMainArea inherits TouchArea {
+    mouse-cursor: pointer;
+    accessible-role: button;
+    accessible-label: @tr("Open window");
+}
+
+// Floating timer (spec §7.2): frameless, always on top, no taskbar button (set from Rust),
+// `idle-opacity` visible without the mouse over it and fully visible on hover. State and
+// actions come from this window's own `TimerBridge`, updated by the same `TimerHub` as the
+// main window.
+export component MiniTimer inherits Window {
+    in property <float> idle-opacity: 0.3;
+    // Click on the texts.
+    callback open-main();
+    // Left button pressed on the ⠿ handle: Rust hands the window move to the OS.
+    callback drag-started();
+
+    private property <TimerView> view: TimerBridge.view;
+    private property <bool> active: root.view.state != 0;
+
+    title: "TimeTracker";
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+    width: 240px;
+    height: 88px;
+    default-font-family: "Segoe UI";
+
+    Rectangle {
+        opacity: area.has-hover ? 1.0 : root.idle-opacity;
+        animate opacity { duration: 150ms; }
+        background: Theme.panel;
+        border-radius: Theme.radius-lg;
+        border-width: 1px;
+        border-color: Theme.line;
+
+        // Hover only; the controls inside handle the clicks.
+        area := TouchArea {
+            VerticalLayout {
+                padding-left: Theme.gap-3;
+                padding-right: Theme.gap-2;
+                padding-top: Theme.gap-2;
+                padding-bottom: Theme.gap-2;
+                spacing: 2px;
+                alignment: center;
+
+                HorizontalLayout {
+                    spacing: Theme.gap-1;
+
+                    OpenMainArea {
+                        horizontal-stretch: 1;
+                        clicked => { root.open-main(); }
+                        accessible-action-default => { root.open-main(); }
+
+                        VerticalLayout {
+                            spacing: 2px;
+
+                            HorizontalLayout {
+                                spacing: 6px;
+
+                                if root.active && root.view.project-label != "": ColorDot {
+                                    dot-color: root.view.project-color;
+                                }
+                                Text {
+                                    text: !root.active ? @tr("No active task")
+                                        : root.view.project-label != "" ? root.view.project-label
+                                        : @tr("No project");
+                                    color: Theme.muted;
+                                    font-size: 11px;
+                                    overflow: elide;
+                                    vertical-alignment: center;
+                                }
+                            }
+
+                            Text {
+                                text: !root.active ? ""
+                                    : root.view.description != "" ? root.view.description
+                                    : @tr("(no description)");
+                                color: root.view.description != "" ? Theme.text : Theme.muted;
+                                font-size: Theme.font-md;
+                                overflow: elide;
+                            }
+                        }
+                    }
+
+                    // Drag handle, top right.
+                    VerticalLayout {
+                        alignment: start;
+
+                        Rectangle {
+                            width: 18px;
+                            height: 18px;
+                            border-radius: Theme.radius-sm;
+                            background: handle.has-hover ? Theme.surface-hover : transparent;
+
+                            Text {
+                                text: "⠿";
+                                color: Theme.muted;
+                                font-size: Theme.font-md;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                                accessible-role: none;
+                            }
+
+                            handle := TouchArea {
+                                mouse-cursor: move;
+                                pointer-event(e) => {
+                                    if e.kind == PointerEventKind.down && e.button == PointerEventButton.left {
+                                        root.drag-started();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: Theme.gap-2;
+
+                    OpenMainArea {
+                        horizontal-stretch: 1;
+                        clicked => { root.open-main(); }
+                        accessible-action-default => { root.open-main(); }
+
+                        HorizontalLayout {
+                            spacing: 6px;
+
+                            Text {
+                                text: root.view.clock;
+                                color: root.active ? Theme.text : Theme.muted;
+                                font-size: 22px;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                                accessible-label: @tr("Session time");
+                            }
+                            if root.active && root.view.today != "": Text {
+                                text: @tr("Today {}", root.view.today);
+                                color: Theme.muted;
+                                font-size: 11px;
+                                overflow: elide;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    if root.active: Button {
+                        width: 30px;
+                        height: 30px;
+                        round: true;
+                        variant: root.view.state == 1 ? ButtonVariant.warning : ButtonVariant.primary;
+                        icon: root.view.state == 1 ? Icons.pause : Icons.play;
+                        accessible-label: root.view.state == 1 ? @tr("Pause") : @tr("Resume");
+                        clicked => {
+                            if root.view.state == 1 {
+                                TimerBridge.pause();
+                            } else {
+                                TimerBridge.resume();
+                            }
+                        }
+                    }
+                    if root.active: Button {
+                        width: 30px;
+                        height: 30px;
+                        round: true;
+                        variant: ButtonVariant.danger;
+                        icon: Icons.stop;
+                        accessible-label: @tr("Stop");
+                        clicked => { TimerBridge.stop(); }
+                    }
+                    if !root.active: Button {
+                        width: 30px;
+                        height: 30px;
+                        round: true;
+                        variant: ButtonVariant.primary;
+                        icon: Icons.play;
+                        enabled: TimerBridge.can-start-recent;
+                        accessible-label: @tr("Start the last task");
+                        clicked => { TimerBridge.start-recent(); }
+                    }
+                }
+            }
+        }
+    }
+}

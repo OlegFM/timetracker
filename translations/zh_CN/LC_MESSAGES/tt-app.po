@@ -61,27 +61,27 @@ msgstr "取消"
 msgid "Close"
 msgstr "关闭"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Pause"
 msgstr "暂停"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Resume"
 msgstr "继续"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Stop"
 msgstr "停止"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Show mini timer"
 msgstr "显示迷你计时器"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Hide mini timer"
 msgstr "隐藏迷你计时器"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "Open window"
 msgstr "打开窗口"
 
@@ -89,7 +89,7 @@ msgstr "打开窗口"
 msgid "Quit"
 msgstr "退出"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "No active task"
 msgstr "没有进行中的任务"
 
@@ -237,7 +237,7 @@ msgstr "此文件不是有效的 TimeTracker 备份。"
 msgid "What are you working on?"
 msgstr "你在做什么？"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "No project"
 msgstr "无项目"
 
@@ -253,11 +253,11 @@ msgstr "创建任务“{}”"
 msgid "Billable"
 msgstr "计费"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Session time"
 msgstr "会话时长"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Today {}"
 msgstr "今天 {}"
 
@@ -301,7 +301,7 @@ msgstr "添加时间记录"
 msgid "No time entries yet. Start the timer or add an entry manually."
 msgstr "还没有时间记录。启动计时器或手动添加记录。"
 
-#: ui/components/entry_row.slint
+#: ui/components/entry_row.slint ui/mini_timer.slint
 msgid "(no description)"
 msgstr "（无描述）"
 
@@ -467,3 +467,7 @@ msgstr "删除此时间记录？"
 #: ui/main.slint
 msgid "The entry will be removed permanently."
 msgstr "该记录将被永久删除。"
+
+#: ui/mini_timer.slint
+msgid "Start the last task"
+msgstr "开始最近的任务"

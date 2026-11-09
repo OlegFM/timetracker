@@ -11,11 +11,14 @@ import { Pickers, ProjectOption, TagOption } from "bridges/pickers.slint";
 import { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView } from "bridges/entries.slint";
 import { Calendar, CalendarDay, CalendarMonth } from "bridges/calendar.slint";
 import { ConfirmDialog } from "components/dialog.slint";
+import { MiniBridge } from "bridges/mini.slint";
+import { MiniTimer } from "mini_timer.slint";
 
 // Globals and enums used from Rust must be exported from the main file.
 export { Theme, Tr, ToastKind, TimerBridge, TimerView, Pickers, ProjectOption, TagOption }
 export { EntriesBridge, DayView, EntryRowView, EntryDialogData, EntryDialogView }
 export { Calendar, CalendarDay, CalendarMonth }
+export { MiniBridge, MiniTimer }
 
 export component MainWindow inherits Window {
     // Page index: 0 Dashboard, 1 Time, 2 Projects, 3 Project, 4 Clients, 5 Tags,

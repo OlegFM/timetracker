@@ -6,6 +6,7 @@ import { BillableToggle } from "billable_toggle.slint";
 import { ComboBox } from "combobox.slint";
 import { TagSelect } from "tag_select.slint";
 import { TimerBridge, TimerView } from "../bridges/timer.slint";
+import { MiniBridge } from "../bridges/mini.slint";
 
 // Top bar of the main window: description, project/task, tags, billable, session clock
 // and Start / Pause·Resume / Stop. State and actions come from `TimerBridge`.
@@ -178,6 +179,22 @@ export component TimerBar inherits Rectangle {
                 clicked => {
                     root.commit-description();
                     TimerBridge.stop();
+                }
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+
+            Button {
+                width: 36px;
+                height: 36px;
+                variant: ButtonVariant.ghost;
+                icon: Icons.mini;
+                icon-color: MiniBridge.visible ? Theme.accent : Theme.muted;
+                accessible-label: MiniBridge.visible ? @tr("Hide mini timer") : @tr("Show mini timer");
+                clicked => {
+                    MiniBridge.set-visible(!MiniBridge.visible);
                 }
             }
         }

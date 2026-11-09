@@ -1,0 +1,7 @@
+// Mini timer visibility in the main window (timer bar toggle; later the settings screen).
+// Implemented by `controllers::mini::MiniController`.
+
+export global MiniBridge {
+    in property <bool> visible;
+    callback set-visible(visible: bool);
+}

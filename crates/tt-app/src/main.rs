@@ -7,7 +7,7 @@ use std::rc::Rc;
 use anyhow::Context;
 use slint::ComponentHandle;
 use tt_app::app::{self, AppContext, Ctx};
-use tt_app::controllers::{calendar, entries, pickers, timer};
+use tt_app::controllers::{calendar, entries, mini, pickers, timer};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
@@ -32,7 +32,6 @@ fn run() -> anyhow::Result<()> {
 
     pickers::install(&ui);
     calendar::install(&ui, &ctx);
-    // Kept for the mini timer (Task 13), which attaches its window to the same hub.
     let timer = timer::install(&ui, &ctx);
     let _entries = entries::install(&ui, &ctx, &timer);
 
@@ -43,6 +42,9 @@ fn run() -> anyhow::Result<()> {
     });
 
     ui.show().context("show main window")?;
+    // Shown after the main window when the settings say so; kept for the tray (Task 14).
+    let mini = mini::install(&ui, &ctx, &timer);
     slint::run_event_loop_until_quit().context("event loop")?;
+    mini.save_position();
     Ok(())
 }

@@ -6,14 +6,14 @@ use std::rc::Rc;
 
 use anyhow::Context;
 use directories::BaseDirs;
-use slint::ComponentHandle;
+use slint::{ComponentHandle, Global};
 use tt_services::{
     CatalogService, EntryService, Settings, SettingsService, SystemClock, TimerService,
 };
 use tt_storage::Db;
 
+use crate::Theme;
 use crate::vm::lang;
-use crate::{MainWindow, Theme};
 
 /// Folder name under `%APPDATA%` (data) and `%LOCALAPPDATA%` (logs).
 const APP_DIR: &str = "TimeTracker";
@@ -107,7 +107,12 @@ pub fn apply_language(lang: &str) {
     }
 }
 
-pub fn apply_theme(ui: &MainWindow, theme: tt_services::Theme) {
+/// Sets the theme of one window (each window has its own `Theme` global).
+pub fn apply_theme<C>(ui: &C, theme: tt_services::Theme)
+where
+    C: ComponentHandle,
+    for<'a> Theme<'a>: Global<'a, C>,
+{
     ui.global::<Theme>()
         .set_dark(theme == tt_services::Theme::Dark);
 }

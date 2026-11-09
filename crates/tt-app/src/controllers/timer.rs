@@ -3,7 +3,7 @@
 //!
 //! [`TimerHub`] owns the state and pushes every update to all attached windows (each
 //! window has its own `TimerBridge` global): the main window via [`install`], the mini
-//! timer later via [`TimerHub::attach`].
+//! timer via [`TimerHub::attach`]. Closed windows are dropped on the next update.
 
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
@@ -19,16 +19,12 @@ use crate::vm::error::error_code;
 use crate::vm::format::prefs_from;
 use crate::vm::pickers::{Catalog, palette_color, parse_id, project_options, tag_options};
 use crate::vm::timer::{active_template, timer_view};
-use crate::{MainWindow, ProjectOption, TagOption, TimerBridge, TimerView, ToastKind, Tr};
+use crate::{MainWindow, TimerBridge, TimerView, ToastKind, Tr};
 
-/// Pushes state into one window's `TimerBridge`.
-struct Sink {
-    view: Box<dyn Fn(&TimerView)>,
-    options: OptionsSink,
-}
+/// Runs a function with one window's `TimerBridge`; false once that window is gone.
+type Sink = Rc<dyn Fn(&dyn Fn(&TimerBridge<'_>)) -> bool>;
 
 type Reporter = Rc<dyn Fn(&ServiceError)>;
-type OptionsSink = Box<dyn Fn(&[ProjectOption], &[TagOption])>;
 
 pub struct TimerHub {
     ctx: Ctx,
@@ -36,7 +32,7 @@ pub struct TimerHub {
     /// Attributes for the next Start while no session is active.
     draft: RefCell<EntryTemplate>,
     catalog: RefCell<Catalog>,
-    windows: RefCell<Vec<Rc<Sink>>>,
+    windows: RefCell<Vec<Sink>>,
     report: Reporter,
     /// Localized (hour, minute) duration suffixes.
     suffixes: Box<dyn Fn() -> (SharedString, SharedString)>,
@@ -124,21 +120,17 @@ impl TimerHub {
         let h = self.clone();
         b.on_create_tag(move |name| h.create_tag(&name));
 
-        let (view_ui, options_ui) = (ui.as_weak(), ui.as_weak());
-        self.windows.borrow_mut().push(Rc::new(Sink {
-            view: Box::new(move |v| {
-                if let Some(ui) = view_ui.upgrade() {
-                    ui.global::<TimerBridge>().set_view(v.clone());
-                }
-            }),
-            options: Box::new(move |projects, tags| {
-                if let Some(ui) = options_ui.upgrade() {
-                    let b = ui.global::<TimerBridge>();
-                    b.set_projects(model(projects.to_vec()));
-                    b.set_tags(model(tags.to_vec()));
-                }
-            }),
-        }));
+        let h = self.clone();
+        b.on_start_recent(move || h.start_recent());
+
+        let weak = ui.as_weak();
+        self.windows
+            .borrow_mut()
+            .push(Rc::new(move |f: &dyn Fn(&TimerBridge<'_>)| {
+                weak.upgrade()
+                    .map(|ui| f(&ui.global::<TimerBridge>()))
+                    .is_some()
+            }));
         self.push_all();
     }
 
@@ -166,6 +158,19 @@ impl TimerHub {
         {
             self.draft.replace(EntryTemplate::default());
             self.changed();
+        }
+    }
+
+    /// Starts a session with the attributes of the most recent entry (if there is one).
+    fn start_recent(&self) {
+        let res = self.with_ctx(|c, tz| match last_template(c)? {
+            Some(t) => c.timer.start(&mut c.db, t, tz).map(Some),
+            None => Ok(None),
+        });
+        match res {
+            Ok(Some(_)) => self.changed(),
+            Ok(None) => self.push_all(),
+            Err(e) => self.fail("start recent", &e),
         }
     }
 
@@ -375,8 +380,15 @@ impl TimerHub {
         Ok((view, status))
     }
 
-    fn sinks(&self) -> Vec<Rc<Sink>> {
-        self.windows.borrow().clone()
+    /// Runs `f` with the `TimerBridge` of every attached window and forgets closed windows.
+    fn each_window(&self, f: &dyn Fn(&TimerBridge<'_>)) {
+        let sinks = self.windows.borrow().clone();
+        let dead: Vec<Sink> = sinks.into_iter().filter(|s| !s(f)).collect();
+        if !dead.is_empty() {
+            self.windows
+                .borrow_mut()
+                .retain(|s| !dead.iter().any(|d| Rc::ptr_eq(s, d)));
+        }
     }
 
     fn push_view(&self) {
@@ -387,9 +399,7 @@ impl TimerHub {
                 return;
             }
         };
-        for s in self.sinks() {
-            (s.view)(&view);
-        }
+        self.each_window(&|b| b.set_view(view.clone()));
         let running = status
             .session
             .is_some_and(|s| s.state == SessionState::Running);
@@ -407,9 +417,18 @@ impl TimerHub {
             let c = self.catalog.borrow();
             (project_options(&c), tag_options(&c, &selected))
         };
-        for s in self.sinks() {
-            (s.options)(&projects, &tags);
-        }
+        let recent = self
+            .with_ctx(|c, _| last_template(c))
+            .map(|t| t.is_some())
+            .unwrap_or_else(|e| {
+                log::warn!("timer recent entry failed: {}", error_code(&e));
+                false
+            });
+        self.each_window(&|b| {
+            b.set_projects(model(projects.clone()));
+            b.set_tags(model(tags.clone()));
+            b.set_can_start_recent(recent);
+        });
         self.push_view();
     }
 
@@ -425,5 +444,87 @@ impl TimerHub {
         } else if !on && self.ticker.running() {
             self.ticker.stop();
         }
+    }
+}
+
+/// Attributes of the most recent entry (the mini timer's "start the last task").
+fn last_template(c: &AppContext) -> Result<Option<EntryTemplate>> {
+    let latest = tt_storage::entries::recent_entries(c.db.conn(), 1)?;
+    Ok(latest.first().map(EntryTemplate::from_entry))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::Cell;
+
+    use super::*;
+
+    fn hub(dir: &tempfile::TempDir) -> Rc<TimerHub> {
+        let ctx = AppContext::open(dir.path().join("tt.db")).unwrap();
+        TimerHub::new(
+            Rc::new(RefCell::new(ctx)),
+            Rc::new(|_| {}),
+            Box::new(Default::default),
+        )
+    }
+
+    /// A window stand-in that counts updates; `alive` = whether its window still exists.
+    fn fake(calls: &Rc<Cell<u32>>, alive: bool) -> Sink {
+        let calls = calls.clone();
+        Rc::new(move |_| {
+            calls.set(calls.get() + 1);
+            alive
+        })
+    }
+
+    #[test]
+    fn closed_windows_are_dropped_on_update() {
+        let dir = tempfile::tempdir().unwrap();
+        let hub = hub(&dir);
+        let (open, closed) = (Rc::new(Cell::new(0)), Rc::new(Cell::new(0)));
+        hub.windows
+            .borrow_mut()
+            .extend([fake(&closed, false), fake(&open, true)]);
+
+        hub.refresh();
+        assert_eq!(hub.windows.borrow().len(), 1);
+        let (open_calls, closed_calls) = (open.get(), closed.get());
+        assert!(open_calls > 0);
+
+        hub.refresh();
+        assert!(
+            open.get() > open_calls,
+            "the open window still gets updates"
+        );
+        assert_eq!(
+            closed.get(),
+            closed_calls,
+            "the closed one is not asked again"
+        );
+    }
+
+    #[test]
+    fn last_template_is_the_latest_entry() {
+        let dir = tempfile::tempdir().unwrap();
+        let hub = hub(&dir);
+        assert_eq!(last_template(&hub.ctx.borrow()).unwrap(), None);
+
+        let first = EntryTemplate {
+            description: "first".into(),
+            ..EntryTemplate::default()
+        };
+        let second = EntryTemplate {
+            description: "second".into(),
+            billable: true,
+            ..EntryTemplate::default()
+        };
+        for t in [first, second.clone()] {
+            let mut c = hub.ctx.borrow_mut();
+            let c = &mut *c;
+            let tz = c.settings.format.tz;
+            c.timer.start(&mut c.db, t, tz).unwrap();
+            c.timer.stop(&mut c.db, tz).unwrap();
+        }
+        assert_eq!(last_template(&hub.ctx.borrow()).unwrap(), Some(second));
     }
 }

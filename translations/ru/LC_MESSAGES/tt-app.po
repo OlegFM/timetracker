@@ -61,27 +61,27 @@ msgstr "Отмена"
 msgid "Close"
 msgstr "Закрыть"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Pause"
 msgstr "Пауза"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Resume"
 msgstr "Продолжить"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Stop"
 msgstr "Стоп"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Show mini timer"
 msgstr "Показать мини-таймер"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Hide mini timer"
 msgstr "Скрыть мини-таймер"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "Open window"
 msgstr "Открыть окно"
 
@@ -89,7 +89,7 @@ msgstr "Открыть окно"
 msgid "Quit"
 msgstr "Выход"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "No active task"
 msgstr "Нет активной задачи"
 
@@ -237,7 +237,7 @@ msgstr "Файл не является корректной резервной �
 msgid "What are you working on?"
 msgstr "Над чем вы работаете?"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "No project"
 msgstr "Без проекта"
 
@@ -253,11 +253,11 @@ msgstr "Создать задачу «{}»"
 msgid "Billable"
 msgstr "Оплачиваемая"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Session time"
 msgstr "Время сессии"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Today {}"
 msgstr "Сегодня {}"
 
@@ -301,7 +301,7 @@ msgstr "Добавить запись"
 msgid "No time entries yet. Start the timer or add an entry manually."
 msgstr "Записей пока нет. Запустите таймер или добавьте запись вручную."
 
-#: ui/components/entry_row.slint
+#: ui/components/entry_row.slint ui/mini_timer.slint
 msgid "(no description)"
 msgstr "(без описания)"
 
@@ -467,3 +467,7 @@ msgstr "Удалить эту запись?"
 #: ui/main.slint
 msgid "The entry will be removed permanently."
 msgstr "Запись будет удалена безвозвратно."
+
+#: ui/mini_timer.slint
+msgid "Start the last task"
+msgstr "Запустить последнюю задачу"

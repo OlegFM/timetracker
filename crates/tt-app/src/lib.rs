@@ -6,4 +6,5 @@ slint::include_modules!();
 pub mod app;
 pub mod controllers;
 pub mod logging;
+pub mod platform;
 pub mod vm;

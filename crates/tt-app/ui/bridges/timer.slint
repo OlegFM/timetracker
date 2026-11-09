@@ -28,8 +28,12 @@ export global TimerBridge {
     in property <[ProjectOption]> projects;
     // All tags; `selected` follows the current entry (or the draft when stopped).
     in property <[TagOption]> tags;
+    // Whether any time entry exists (`start-recent` has something to start).
+    in property <bool> can-start-recent;
 
     callback start();
+    // Starts a session with the attributes of the most recent entry (mini timer ▶).
+    callback start-recent();
     callback pause();
     callback resume();
     callback stop();

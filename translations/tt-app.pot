@@ -59,27 +59,27 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Pause"
 msgstr ""
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Resume"
 msgstr ""
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Stop"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Show mini timer"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Hide mini timer"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "Open window"
 msgstr ""
 
@@ -87,7 +87,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "No active task"
 msgstr ""
 
@@ -235,7 +235,7 @@ msgstr ""
 msgid "What are you working on?"
 msgstr ""
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "No project"
 msgstr ""
 
@@ -251,11 +251,11 @@ msgstr ""
 msgid "Billable"
 msgstr ""
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Session time"
 msgstr ""
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Today {}"
 msgstr ""
 
@@ -299,7 +299,7 @@ msgstr ""
 msgid "No time entries yet. Start the timer or add an entry manually."
 msgstr ""
 
-#: ui/components/entry_row.slint
+#: ui/components/entry_row.slint ui/mini_timer.slint
 msgid "(no description)"
 msgstr ""
 
@@ -464,4 +464,8 @@ msgstr ""
 
 #: ui/main.slint
 msgid "The entry will be removed permanently."
+msgstr ""
+
+#: ui/mini_timer.slint
+msgid "Start the last task"
 msgstr ""

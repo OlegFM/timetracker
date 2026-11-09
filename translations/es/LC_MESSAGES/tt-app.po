@@ -61,27 +61,27 @@ msgstr "Cancelar"
 msgid "Close"
 msgstr "Cerrar"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Pause"
 msgstr "Pausar"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Resume"
 msgstr "Reanudar"
 
-#: ui/components/timer_bar.slint ui/strings.slint
+#: ui/components/timer_bar.slint ui/strings.slint ui/mini_timer.slint
 msgid "Stop"
 msgstr "Detener"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Show mini timer"
 msgstr "Mostrar minitemporizador"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/components/timer_bar.slint
 msgid "Hide mini timer"
 msgstr "Ocultar minitemporizador"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "Open window"
 msgstr "Abrir ventana"
 
@@ -89,7 +89,7 @@ msgstr "Abrir ventana"
 msgid "Quit"
 msgstr "Salir"
 
-#: ui/strings.slint
+#: ui/strings.slint ui/mini_timer.slint
 msgid "No active task"
 msgstr "Ninguna tarea activa"
 
@@ -237,7 +237,7 @@ msgstr "Este archivo no es una copia de seguridad válida de TimeTracker."
 msgid "What are you working on?"
 msgstr "¿En qué está trabajando?"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "No project"
 msgstr "Sin proyecto"
 
@@ -253,11 +253,11 @@ msgstr "Crear tarea «{}»"
 msgid "Billable"
 msgstr "Facturable"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Session time"
 msgstr "Tiempo de la sesión"
 
-#: ui/components/timer_bar.slint
+#: ui/components/timer_bar.slint ui/mini_timer.slint
 msgid "Today {}"
 msgstr "Hoy {}"
 
@@ -301,7 +301,7 @@ msgstr "Añadir registro"
 msgid "No time entries yet. Start the timer or add an entry manually."
 msgstr "Aún no hay registros. Inicie el temporizador o añada un registro manualmente."
 
-#: ui/components/entry_row.slint
+#: ui/components/entry_row.slint ui/mini_timer.slint
 msgid "(no description)"
 msgstr "(sin descripción)"
 
@@ -467,3 +467,7 @@ msgstr "¿Eliminar este registro?"
 #: ui/main.slint
 msgid "The entry will be removed permanently."
 msgstr "El registro se eliminará de forma permanente."
+
+#: ui/mini_timer.slint
+msgid "Start the last task"
+msgstr "Iniciar la última tarea"
