@@ -15,11 +15,12 @@ use tt_domain::{FormatPrefs, Id, Millis, TimeEntry, TimeFormat, Tz, format_durat
 use tt_services::{Clock, Result, ServiceError, default_billable};
 
 use crate::app::{AppContext, Ctx};
-use crate::controllers::error_message;
 use crate::controllers::timer::TimerHub;
+use crate::controllers::{error_message, sync_vec};
 use crate::vm::entries::{
-    Day, day_title, day_total_ms, dialog_range, duration_between, edit_view, end_after, entry_row,
-    new_entry_view, normalize_duration, normalize_time, page_bound, reload_days, template_of,
+    Day, day_title, day_total_ms, dialog_range_from, duration_between, edit_view, end_after,
+    entry_row, new_entry_view, normalize_duration, normalize_time, page_bound, reload_days,
+    template_of,
 };
 use crate::vm::error::error_code;
 use crate::vm::format::prefs_from;
@@ -154,7 +155,7 @@ impl EntriesController {
         match res {
             Ok(page) => {
                 self.bound.replace(bound_after(&page));
-                let mut days = std::mem::take(&mut self.shown.borrow_mut().days);
+                let mut days = self.shown.borrow().days.clone();
                 days.extend(page);
                 self.show(days);
             }
@@ -162,12 +163,15 @@ impl EntriesController {
         }
     }
 
-    /// Replaces the list with `days`.
+    /// Shows `days`, updating the models in place (rows that did not change are not
+    /// touched, so the list keeps its scroll position and appends on load-more).
     fn show(&self, days: Vec<Day>) {
         let (prefs, labels) = self.prefs_and_labels();
         let now = self.now();
         let today = local_date(now, prefs.tz);
-        let mut shown = Shown::default();
+        let mut row_models = std::mem::take(&mut self.shown.borrow_mut().rows);
+        row_models.truncate(days.len());
+        let mut running = None;
         let mut views = Vec::with_capacity(days.len());
         self.hub.with_catalog(|catalog| {
             for (di, (date, list, _)) in days.iter().enumerate() {
@@ -176,26 +180,30 @@ impl EntriesController {
                     .map(|e| entry_row(e, catalog, &prefs, now))
                     .collect();
                 if let Some(ri) = list.iter().position(|e| e.end.is_none()) {
-                    shown.running = Some((di, ri));
+                    running = Some((di, ri));
                 }
-                let model = Rc::new(VecModel::from(rows));
+                if di == row_models.len() {
+                    row_models.push(Rc::new(VecModel::default()));
+                }
+                sync_vec(&row_models[di], rows);
                 views.push(DayView {
                     title: day_title(*date, today, prefs.date, &labels.0, &labels.1).into(),
                     total: total_text(list, now, &prefs),
-                    rows: ModelRc::from(model.clone()),
+                    rows: ModelRc::from(row_models[di].clone()),
                 });
-                shown.rows.push(model);
             }
         });
-        shown.days = days;
-        let ticking = shown.running.is_some();
-        self.shown.replace(shown);
-        self.days.set_vec(views);
+        self.shown.replace(Shown {
+            days,
+            rows: row_models,
+            running,
+        });
+        sync_vec(&self.days, views);
         let has_more = matches!(*self.bound.borrow(), Bound::Since(_) | Bound::Initial);
         if let Some(ui) = self.ui.upgrade() {
             ui.global::<EntriesBridge>().set_has_more(has_more);
         }
-        self.set_ticking(ticking);
+        self.set_ticking(running.is_some());
     }
 
     /// Updates the running row's duration and its day total.
@@ -298,7 +306,9 @@ impl EntriesController {
     /// Saves the dialog; "" on success, else the message for the dialog.
     fn save(&self, d: &EntryDialogData) -> SharedString {
         let (tz, now) = (self.ctx.borrow().settings.format.tz, self.now());
-        let Some((start, end)) = dialog_range(&d.date, &d.start, &d.end, tz) else {
+        // Unchanged fields keep the entry's exact instants (seconds included).
+        let original = self.find(&d.id).map(|e| (e.start, e.end));
+        let Some((start, end)) = dialog_range_from(&d.date, &d.start, &d.end, tz, original) else {
             return self.tr(|tr| tr.get_err_generic());
         };
         let t = template_of(d);

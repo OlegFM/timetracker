@@ -1,7 +1,7 @@
 //! Time screen: day groups and rows, the entry dialog, and parsing of typed times and
 //! durations.
 
-use chrono::{Days, NaiveDate, TimeZone};
+use chrono::{DateTime, Days, NaiveDate, NaiveDateTime, TimeZone, Timelike, Utc};
 use slint::{Model, ModelRc, SharedString, VecModel};
 use tt_domain::{
     DateFormat, EntryTemplate, FormatPrefs, Id, Millis, TimeEntry, TimeFormat, Tz, format_date,
@@ -257,12 +257,13 @@ pub fn normalize_time(s: &str, f: TimeFormat) -> String {
     parse_time_input(s).map_or_else(String::new, |(h, m)| time_text(h, m, f))
 }
 
-/// A typed duration of more than 0 and less than 24 hours.
+/// A typed duration of less than 24 hours.
 fn day_duration(s: &str) -> Option<i64> {
-    parse_duration_input(s).filter(|d| (1..DAY_S).contains(d))
+    parse_duration_input(s).filter(|d| (0..DAY_S).contains(d))
 }
 
-/// The typed duration as "H:MM", "" unless `0 < duration < 24 h`.
+/// The typed duration as "H:MM", "" unless it is less than 24 h. Zero is accepted: timer
+/// entries under a minute show as "0:00", and the save rejects an empty range.
 pub fn normalize_duration(s: &str) -> String {
     day_duration(s).map_or_else(String::new, hm_text)
 }
@@ -305,17 +306,16 @@ pub fn local_millis(date: NaiveDate, h: u32, m: u32, tz: Tz) -> Millis {
     0
 }
 
-/// Start and end (`None` for an empty end = running) of the dialog fields; the end is on
-/// the next day when it is not after the start. `None` if a field is invalid.
-pub fn dialog_range(
+/// Local wall times (to the minute) of the dialog fields; the end is on the next day when
+/// it is not after the start, `None` for an empty end.
+fn dialog_wall(
     date: &str,
     start: &str,
     end: &str,
-    tz: Tz,
-) -> Option<(Millis, Option<Millis>)> {
+) -> Option<(NaiveDateTime, Option<NaiveDateTime>)> {
     let day = parse_iso(date)?;
     let (sh, sm) = parse_time_input(start)?;
-    let s = local_millis(day, sh, sm, tz);
+    let s = day.and_hms_opt(sh, sm, 0)?;
     if end.trim().is_empty() {
         return Some((s, None));
     }
@@ -325,7 +325,52 @@ pub fn dialog_range(
     } else {
         day
     };
-    Some((s, Some(local_millis(end_day, eh, em, tz))))
+    Some((s, Some(end_day.and_hms_opt(eh, em, 0)?)))
+}
+
+/// Local wall time of `t` truncated to the minute.
+fn wall_minute(t: Millis, tz: Tz) -> Option<NaiveDateTime> {
+    let local = DateTime::<Utc>::from_timestamp_millis(t)?
+        .with_timezone(&tz)
+        .naive_local();
+    local.with_second(0)?.with_nanosecond(0)
+}
+
+/// `original` if it shows as `wall`, else the instant of `wall`.
+fn instant(wall: NaiveDateTime, tz: Tz, original: Option<Millis>) -> Millis {
+    match original {
+        Some(t) if wall_minute(t, tz) == Some(wall) => t,
+        _ => local_millis(wall.date(), wall.hour(), wall.minute(), tz),
+    }
+}
+
+/// Start and end (`None` for an empty end = running) of the dialog fields; the end is on
+/// the next day when it is not after the start. `None` if a field is invalid.
+pub fn dialog_range(
+    date: &str,
+    start: &str,
+    end: &str,
+    tz: Tz,
+) -> Option<(Millis, Option<Millis>)> {
+    dialog_range_from(date, start, end, tz, None)
+}
+
+/// Like [`dialog_range`], but a field that still shows the `original` start / end (same
+/// local date and time to the minute) keeps the original instant, seconds included, so
+/// saving an otherwise edited entry does not move it.
+pub fn dialog_range_from(
+    date: &str,
+    start: &str,
+    end: &str,
+    tz: Tz,
+    original: Option<(Millis, Option<Millis>)>,
+) -> Option<(Millis, Option<Millis>)> {
+    let (s, e) = dialog_wall(date, start, end)?;
+    let (orig_start, orig_end) = original.map_or((None, None), |(s, e)| (Some(s), e));
+    Some((
+        instant(s, tz, orig_start),
+        e.map(|e| instant(e, tz, orig_end)),
+    ))
 }
 
 pub fn template_of(d: &EntryDialogData) -> EntryTemplate {
@@ -435,6 +480,7 @@ mod tests {
     use crate::vm::pickers::tests::{project, tag, task};
 
     const MSK: Tz = Tz::Europe__Moscow;
+    const HOUR_MS: i64 = 60 * MINUTE_MS;
 
     fn date(y: i32, m: u32, d: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, d).unwrap()
@@ -636,7 +682,7 @@ mod tests {
         assert_eq!(normalize_time("21:30", TimeFormat::H12), "9:30 PM");
         assert_eq!(normalize_time("x", TimeFormat::H24), "");
         assert_eq!(normalize_duration("90m"), "1:30");
-        assert_eq!(normalize_duration("0"), "");
+        assert_eq!(normalize_duration("0"), "0:00");
         assert_eq!(normalize_duration("24h"), "");
         assert_eq!(normalize_duration("23:59"), "23:59");
     }
@@ -652,7 +698,7 @@ mod tests {
         assert_eq!(end_after("23:00", "2:30", TimeFormat::H24), "01:30");
         assert_eq!(end_after("9:30", "45m", TimeFormat::H12), "10:15 AM");
         assert_eq!(end_after("9:30", "24h", TimeFormat::H24), "");
-        assert_eq!(end_after("9:30", "0", TimeFormat::H24), "");
+        assert_eq!(end_after("9:30", "0", TimeFormat::H24), "09:30");
         assert_eq!(end_after("x", "1h", TimeFormat::H24), "");
     }
 
@@ -780,6 +826,106 @@ mod tests {
         assert_eq!(t.task_id, None);
         assert!(t.tag_ids.is_empty());
         assert!(t.billable);
+    }
+
+    /// An entry with seconds and milliseconds, as the timer writes them.
+    fn precise() -> TimeEntry {
+        entry(at(9, 9, 30) + 12_345, Some(at(9, 10, 15) + 45_678))
+    }
+
+    fn range_of(v: &EntryDialogView, e: &TimeEntry) -> Option<(Millis, Option<Millis>)> {
+        let d = &v.data;
+        dialog_range_from(&d.date, &d.start, &d.end, MSK, Some((e.start, e.end)))
+    }
+
+    #[test]
+    fn unchanged_fields_keep_exact_instants() {
+        let e = precise();
+        let v = edit_view(&e, &Catalog::default(), &prefs(), at(9, 12, 0));
+        assert_eq!(range_of(&v, &e), Some((e.start, e.end)));
+        // Typed differently but the same time: still the original instant.
+        let mut v2 = v.clone();
+        v2.data.start = "930".into();
+        assert_eq!(range_of(&v2, &e), Some((e.start, e.end)));
+        // Running entry: the start keeps its milliseconds.
+        let r = entry(at(9, 9, 30) + 12_345, None);
+        let v = edit_view(&r, &Catalog::default(), &prefs(), at(9, 12, 0));
+        assert_eq!(range_of(&v, &r), Some((r.start, None)));
+    }
+
+    #[test]
+    fn changed_start_only_keeps_end_instant() {
+        let e = precise();
+        let mut v = edit_view(&e, &Catalog::default(), &prefs(), at(9, 12, 0));
+        v.data.start = "9:00".into();
+        assert_eq!(range_of(&v, &e), Some((at(9, 9, 0), e.end)));
+        // A new end is parsed, the unchanged start keeps its instant.
+        let mut v = edit_view(&e, &Catalog::default(), &prefs(), at(9, 12, 0));
+        v.data.end = "11:00".into();
+        assert_eq!(range_of(&v, &e), Some((e.start, Some(at(9, 11, 0)))));
+        // Another date: both are parsed.
+        let mut v = edit_view(&e, &Catalog::default(), &prefs(), at(9, 12, 0));
+        v.data.date = "2026-11-08".into();
+        assert_eq!(range_of(&v, &e), Some((at(8, 9, 30), Some(at(8, 10, 15)))));
+    }
+
+    #[test]
+    fn unchanged_time_in_repeated_dst_hour_is_kept() {
+        // Europe/Berlin 2026-10-25: 02:00–03:00 happens twice; take the second 02:30.
+        let tz = Tz::Europe__Berlin;
+        let naive = date(2026, 10, 25).and_hms_opt(2, 30, 0).unwrap();
+        let late = tz
+            .from_local_datetime(&naive)
+            .latest()
+            .unwrap()
+            .timestamp_millis();
+        let e = entry(late + 1_000, Some(late + 20 * MINUTE_MS));
+        let p = FormatPrefs { tz, ..prefs() };
+        let v = edit_view(&e, &Catalog::default(), &p, late + HOUR_MS);
+        let d = &v.data;
+        assert_eq!(
+            dialog_range_from(&d.date, &d.start, &d.end, tz, Some((e.start, e.end))),
+            Some((e.start, e.end))
+        );
+    }
+
+    #[test]
+    fn editing_adjacent_timer_entries_does_not_overlap() {
+        use tt_services::{EntryService, SystemClock};
+        let svc = EntryService::new(SystemClock);
+        let mut db = tt_storage::Db::open_in_memory().unwrap();
+        // Switched tasks at the same millisecond (as `continue` / start do).
+        let (t0, t1, t2) = (
+            at(2, 9, 0) + 1_234,
+            at(2, 9, 41) + 56_789,
+            at(2, 10, 7) + 999,
+        );
+        let tpl = |d: &str| EntryTemplate {
+            description: d.into(),
+            ..Default::default()
+        };
+        svc.create_manual(&mut db, tpl("a"), t0, t1, MSK, true)
+            .unwrap();
+        let b = svc
+            .create_manual(&mut db, tpl("b"), t1, t2, MSK, true)
+            .unwrap()
+            .remove(0);
+        let mut v = edit_view(&b, &Catalog::default(), &prefs(), at(9, 12, 0));
+        v.data.description = "b, renamed".into();
+        let d = &v.data;
+        // Re-parsing the minute alone would move the start into the previous entry.
+        let (floored, _) = dialog_range(&d.date, &d.start, &d.end, MSK).unwrap();
+        assert!(floored < t1);
+        let (start, end) = range_of(&v, &b).unwrap();
+        let edited = TimeEntry {
+            description: d.description.to_string(),
+            start,
+            end,
+            ..b.clone()
+        };
+        let saved = svc.update(&mut db, edited, MSK, true).unwrap();
+        assert_eq!((saved[0].start, saved[0].end), (t1, Some(t2)));
+        assert_eq!(saved[0].description, "b, renamed");
     }
 
     fn fake_days(dates: &[u32]) -> Vec<Day> {

@@ -76,10 +76,10 @@ export global EntriesBridge {
     // Input helpers (user's time format; "" = not parseable).
     // The typed time of day in display form ("905" → "09:05").
     pure callback normalize-time(text: string) -> string;
-    // The typed duration as "H:MM" ("90m" → "1:30"); "" unless 0 < duration < 24 h.
+    // The typed duration as "H:MM" ("90m" → "1:30"); "" unless duration < 24 h.
     pure callback normalize-duration(text: string) -> string;
     // "H:MM" from start to end (end not after start = next day).
     pure callback duration-between(start: string, end: string) -> string;
-    // End time of day for start + duration; "" unless 0 < duration < 24 h.
+    // End time of day for start + duration; "" unless duration < 24 h.
     pure callback end-after(start: string, duration: string) -> string;
 }

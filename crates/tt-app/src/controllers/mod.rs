@@ -18,7 +18,7 @@ pub mod entries;
 pub mod pickers;
 pub mod timer;
 
-use slint::SharedString;
+use slint::{Model, SharedString, VecModel};
 use tt_services::ServiceError;
 
 use crate::Tr;
@@ -36,5 +36,40 @@ pub fn error_message(tr: &Tr<'_>, e: &ServiceError) -> SharedString {
         ErrorText::InvalidRange => tr.get_err_invalid_range(),
         ErrorText::Backup => tr.get_err_backup(),
         ErrorText::Generic => tr.get_err_generic(),
+    }
+}
+
+/// Makes `model` hold `items`, notifying only rows that changed, appended or removed (a
+/// list view keeps its instances and scroll position).
+pub fn sync_vec<T: Clone + PartialEq + 'static>(model: &VecModel<T>, items: Vec<T>) {
+    while model.row_count() > items.len() {
+        model.remove(model.row_count() - 1);
+    }
+    for (i, item) in items.into_iter().enumerate() {
+        match model.row_data(i) {
+            Some(old) if old == item => {}
+            Some(_) => model.set_row_data(i, item),
+            None => model.push(item),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use slint::{Model, VecModel};
+
+    use super::sync_vec;
+
+    #[test]
+    fn sync_vec_grows_updates_and_shrinks_in_place() {
+        let model = VecModel::from(vec![1, 2, 3]);
+        sync_vec(&model, vec![1, 2, 3, 4, 5]);
+        assert_eq!(model.iter().collect::<Vec<_>>(), [1, 2, 3, 4, 5]);
+        sync_vec(&model, vec![1, 9, 3, 4, 5]);
+        assert_eq!(model.iter().collect::<Vec<_>>(), [1, 9, 3, 4, 5]);
+        sync_vec(&model, vec![1, 9]);
+        assert_eq!(model.iter().collect::<Vec<_>>(), [1, 9]);
+        sync_vec(&model, vec![]);
+        assert_eq!(model.row_count(), 0);
     }
 }
