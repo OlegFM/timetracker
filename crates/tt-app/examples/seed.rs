@@ -1,12 +1,14 @@
 //! Creates a demo database for manual checks of the UI.
 //!
 //! ```text
-//! cargo run -p tt-app --example seed -- <path-to-new.db>
+//! cargo run -p tt-app --example seed -- <path-to-new.db> [--running]
+//! cargo run -p tt-app -- --db <path-to-new.db>                   # any build
 //! $env:TT_DB_PATH = "<path-to-new.db>"; cargo run -p tt-app      # debug builds only
 //! ```
 //!
 //! Two clients, five projects (colors, rates, one estimate), tasks, tags and about 300
-//! closed entries over the last 90 days. The numbers come from a small fixed-seed
+//! closed entries over the last 90 days; with `--running` the timer is left running
+//! (memory measurements, `docs/perf.md`). The numbers come from a small fixed-seed
 //! generator, so every run produces the same data shape. Entries stay inside one local day
 //! (08:00 to 20:00), so none is cut at midnight. Refuses to touch an existing file.
 
@@ -56,6 +58,7 @@ fn main() -> anyhow::Result<()> {
     if path.exists() {
         bail!("{} already exists; refusing to touch it", path.display());
     }
+    let running = std::env::args().skip(2).any(|a| a == "--running");
     let mut ctx = AppContext::open(path.clone())?;
     let c = &mut ctx;
     let tz = c.settings.format.tz;
@@ -225,11 +228,25 @@ fn main() -> anyhow::Result<()> {
             count += 1;
         }
     }
+    if running {
+        let s = &seeded[0];
+        let template = EntryTemplate {
+            description: s.descriptions[0].to_owned(),
+            project_id: Some(s.project),
+            task_id: None,
+            tag_ids: Vec::new(),
+            billable: billable[0],
+        };
+        c.timer.start(&mut c.db, template, tz)?;
+    }
     println!(
         "Created {} with 2 clients, {} projects, {} tags and {count} time entries.",
         path.display(),
         seeded.len(),
         tags.len()
     );
+    if running {
+        println!("The timer is running.");
+    }
     Ok(())
 }

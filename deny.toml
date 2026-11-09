@@ -17,6 +17,8 @@ allow = [
     "OFL-1.1",
     "CC0-1.0",
     "BSL-1.0",
+    # webpki-roots (Mozilla's CA list, via ureq for the update check), ruling R19.
+    "CDLA-Permissive-2.0",
     # Slint is `GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR ...`;
     # we use the royalty-free option (AboutSlint attribution required).
     "LicenseRef-Slint-Royalty-free-2.0",

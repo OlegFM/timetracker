@@ -1,6 +1,7 @@
 //! Application context owned by the UI thread, and app-wide UI settings helpers.
 
 use std::cell::RefCell;
+use std::ffi::OsString;
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -17,6 +18,9 @@ use crate::vm::lang;
 
 /// Folder name under `%APPDATA%` (data) and `%LOCALAPPDATA%` (logs).
 const APP_DIR: &str = "TimeTracker";
+/// Command-line flag: open the database file named by the next argument instead of the
+/// default one (measurements and manual checks on a seed database, see `examples/seed.rs`).
+pub const DB_ARG: &str = "--db";
 
 pub struct AppContext {
     pub db: Db,
@@ -85,14 +89,8 @@ impl AppEvents {
 pub type Ctx = Rc<RefCell<AppContext>>;
 
 impl AppContext {
-    /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`. Debug builds use
-    /// the file named by the `TT_DB_PATH` environment variable instead when it is set
-    /// (manual checks on a seed database, see `examples/seed.rs`).
+    /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`.
     pub fn open_default() -> anyhow::Result<AppContext> {
-        #[cfg(debug_assertions)]
-        if let Some(path) = std::env::var_os("TT_DB_PATH").filter(|p| !p.is_empty()) {
-            return Self::open(PathBuf::from(path));
-        }
         let dirs = BaseDirs::new().context("no user profile folders")?;
         Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))
     }
@@ -129,6 +127,31 @@ impl AppContext {
         }
         Ok(lang)
     }
+}
+
+/// The database chosen instead of the default one: the path after [`DB_ARG`] in `args`,
+/// else (debug builds only) the `TT_DB_PATH` environment variable.
+pub fn db_override(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
+    db_arg(args).or_else(env_db)
+}
+
+#[cfg(debug_assertions)]
+fn env_db() -> Option<PathBuf> {
+    std::env::var_os("TT_DB_PATH")
+        .filter(|p| !p.is_empty())
+        .map(PathBuf::from)
+}
+
+#[cfg(not(debug_assertions))]
+fn env_db() -> Option<PathBuf> {
+    None
+}
+
+/// The non-empty argument after [`DB_ARG`].
+fn db_arg(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
+    let mut args = args.into_iter();
+    args.position(|a| a == DB_ARG)?;
+    args.next().filter(|p| !p.is_empty()).map(PathBuf::from)
 }
 
 /// `%LOCALAPPDATA%\TimeTracker\logs`.
@@ -207,6 +230,24 @@ mod tests {
         assert_eq!((entries.get(), settings.get(), both.get()), (0, 1, 1));
         events.emit_entries_changed();
         assert_eq!((entries.get(), settings.get(), both.get()), (1, 1, 2));
+    }
+
+    #[test]
+    fn db_flag_takes_the_next_argument() {
+        let args = |a: &[&str]| a.iter().map(OsString::from).collect::<Vec<_>>();
+        assert_eq!(
+            db_arg(args(&[
+                "tt-app.exe",
+                "--minimized",
+                "--db",
+                r"C:\t\seed.db"
+            ])),
+            Some(PathBuf::from(r"C:\t\seed.db"))
+        );
+        assert_eq!(db_arg(args(&["tt-app.exe", "--minimized"])), None);
+        // A flag without a value, or with an empty one, is ignored.
+        assert_eq!(db_arg(args(&["tt-app.exe", "--db"])), None);
+        assert_eq!(db_arg(args(&["tt-app.exe", "--db", ""])), None);
     }
 
     #[test]

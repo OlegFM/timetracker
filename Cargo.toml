@@ -17,7 +17,7 @@ tt-domain = { path = "crates/tt-domain" }
 tt-storage = { path = "crates/tt-storage" }
 tt-services = { path = "crates/tt-services" }
 # UI
-slint = "1.18.1"
+slint = { version = "1.18.1", default-features = false }
 slint-build = "1.18.1"
 # storage / time / ids
 rusqlite = { version = "0.41", features = ["bundled"] }
@@ -52,3 +52,10 @@ log = "0.4"
 simplelog = "0.12"
 # dev
 tempfile = "3"
+
+# Small binary and memory footprint; see docs/perf.md for the opt-level comparison.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+opt-level = "s"

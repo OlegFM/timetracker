@@ -118,6 +118,11 @@ msgstr "Duración"
 
 #: ui/strings.slint
 msgctxt "export"
+msgid "Duration (h)"
+msgstr "Duración (h)"
+
+#: ui/strings.slint
+msgctxt "export"
 msgid "Cost"
 msgstr "Coste"
 

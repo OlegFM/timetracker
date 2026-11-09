@@ -18,6 +18,8 @@ pub struct ExportLabels {
     pub group: String,
     pub subgroup: String,
     pub duration: String,
+    /// Header of the XLSX columns holding the duration as a number of hours.
+    pub hours: String,
     pub cost: String,
     pub total: String,
     pub no_project: String,
@@ -108,6 +110,18 @@ fn entry_headers(l: &ExportLabels) -> [&str; 10] {
         &l.tags,
         &l.billable,
     ]
+}
+
+/// The XLSX entry columns: like [`entry_headers`], with the duration in hours.
+fn entry_xlsx_headers(l: &ExportLabels) -> [&str; 10] {
+    let mut h = entry_headers(l);
+    h[3] = &l.hours;
+    h
+}
+
+/// The XLSX summary columns: name, hours (number), duration (text), cost.
+fn summary_xlsx_headers(l: &ExportLabels) -> [&str; 4] {
+    [&l.group, &l.hours, &l.duration, &l.cost]
 }
 
 /// Rows of the closed entries; running ones are skipped.
@@ -257,16 +271,7 @@ pub fn export_report_xlsx(
 
     let sheet = book.add_worksheet();
     sheet.set_name("Summary").map_err(io_err)?;
-    header(
-        sheet,
-        &[
-            &labels.group,
-            &labels.duration,
-            &labels.duration,
-            &labels.cost,
-        ],
-        &bold,
-    )?;
+    header(sheet, &summary_xlsx_headers(labels), &bold)?;
     for (i, l) in summary_lines(r, names, labels).iter().enumerate() {
         let row = i as u32 + 1;
         let name = if l.sub.is_empty() {
@@ -288,7 +293,7 @@ pub fn export_report_xlsx(
 
     let sheet = book.add_worksheet();
     sheet.set_name("Entries").map_err(io_err)?;
-    header(sheet, &entry_headers(labels), &bold)?;
+    header(sheet, &entry_xlsx_headers(labels), &bold)?;
     for (i, r) in entry_rows(entries, lookup, labels, prefs)
         .iter()
         .enumerate()
@@ -320,6 +325,7 @@ mod tests {
             group: s("Group"),
             subgroup: s("Subgroup"),
             duration: s("Duration"),
+            hours: s("Duration (h)"),
             cost: s("Cost"),
             total: s("Total"),
             no_project: s("No project"),
@@ -489,6 +495,18 @@ mod tests {
         assert_eq!(&recs[0][3], "1:00");
         assert_eq!(&recs[0][5], "No project");
         assert_eq!(&recs[0][9], "Yes");
+    }
+
+    #[test]
+    fn xlsx_hours_columns_have_their_own_header() {
+        let l = labels();
+        assert_eq!(
+            summary_xlsx_headers(&l),
+            ["Group", "Duration (h)", "Duration", "Cost"]
+        );
+        let entries = entry_xlsx_headers(&l);
+        assert_eq!(entries[3], "Duration (h)");
+        assert_eq!(entries[..3], ["Date", "Start", "End"]);
     }
 
     #[test]

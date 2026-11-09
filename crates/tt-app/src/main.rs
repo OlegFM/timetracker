@@ -14,6 +14,7 @@ use tt_app::platform::{autostart, fatal, single_instance, window_ext};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
+    destroy_windows_on_hide();
     logging::init();
     let result = run();
     if let Err(e) = &result {
@@ -27,6 +28,15 @@ fn main() -> anyhow::Result<()> {
     result
 }
 
+/// Makes Slint's winit backend destroy a window when it is hidden (and create it again on
+/// `show()`). A window hidden in the tray otherwise keeps its native window and frame
+/// buffer and is still repainted on every 1 s timer tick (docs/perf.md).
+#[allow(unsafe_code)]
+fn destroy_windows_on_hide() {
+    // SAFETY: the first statement of `main`, before any other thread exists.
+    unsafe { std::env::set_var("SLINT_DESTROY_WINDOW_ON_HIDE", "1") };
+}
+
 fn run() -> anyhow::Result<()> {
     // A second launch only activates the running instance and exits with code 0.
     let Some(mut instance) = single_instance::acquire()? else {
@@ -35,7 +45,13 @@ fn run() -> anyhow::Result<()> {
     };
     let minimized = autostart::start_minimized(std::env::args());
 
-    let ctx: Ctx = Rc::new(RefCell::new(AppContext::open_default()?));
+    // A test database (`--db`) leaves the real autostart entry alone.
+    let db_override = app::db_override(std::env::args_os());
+    let opened = match &db_override {
+        Some(path) => AppContext::open(path.clone())?,
+        None => AppContext::open_default()?,
+    };
+    let ctx: Ctx = Rc::new(RefCell::new(opened));
     let ui = MainWindow::new().context("create main window")?;
 
     let lang = ctx
@@ -66,7 +82,9 @@ fn run() -> anyhow::Result<()> {
     }
     // The Run entry follows the setting, unless Task Manager disabled it (the user's
     // choice: then the setting turns off).
-    sync_autostart(&ctx);
+    if db_override.is_none() {
+        sync_autostart(&ctx);
+    }
 
     // Shown after the main window when the settings say so.
     let mini = mini::install(&ui, &ctx, &timer);

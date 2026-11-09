@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
 
 permissions:
@@ -28,3 +29,41 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
       - run: cargo deny check licenses
+
+  # Release build, per-user NSIS installer and a portable zip for tags `v*`.
+  installer:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: windows-latest
+    env:
+      # Update check (docs: README "Updates"); empty = disabled.
+      TT_UPDATE_URL: ${{ vars.TT_UPDATE_URL }}
+      TT_UPDATE_PUBKEY: ${{ vars.TT_UPDATE_PUBKEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release -p tt-app
+      - name: Installer
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            if (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe") {
+              $env:PATH += ";${env:ProgramFiles(x86)}\NSIS"
+            } else {
+              choco install nsis -y --no-progress
+              $env:PATH += ";${env:ProgramFiles(x86)}\NSIS"
+            }
+          }
+          makensis /V2 "/DVERSION=$version" crates/tt-app/installer/timetracker.nsi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Compress-Archive -Path target/release/tt-app.exe `
+            -DestinationPath "target/installer/TimeTracker-$version-portable.zip"
+          Get-ChildItem target/installer | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimeTracker-${{ github.ref_name }}
+          path: target/installer/*

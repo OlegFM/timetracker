@@ -17,7 +17,16 @@ chrono-tz.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 rfd.workspace = true
-slint = { workspace = true, features = ["unstable-winit-030"] }
+# Only the software renderer: no OpenGL driver in the process (docs/perf.md).
+slint = { workspace = true, features = [
+    "std",
+    "compat-1-2",
+    "accessibility",
+    "backend-winit",
+    "renderer-software",
+    "software-renderer-path",
+    "unstable-winit-030",
+] }
 sys-locale.workspace = true
 directories.workspace = true
 log.workspace = true
@@ -35,6 +44,7 @@ windows-sys = { workspace = true, features = [
 
 [build-dependencies]
 slint-build.workspace = true
+winresource.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

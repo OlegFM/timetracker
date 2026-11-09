@@ -92,11 +92,12 @@ export component Sidebar inherits Rectangle {
             padding-bottom: 14px;
             spacing: Theme.gap-2;
 
-            Rectangle {
+            // Rounded gradient square, drawn by tools/gen_icon.py (the software renderer
+            // ignores the border radius of a gradient Rectangle).
+            Image {
                 width: 18px;
                 height: 18px;
-                border-radius: 5px;
-                background: @linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                source: @image-url("../../assets/logo.png");
             }
             Text {
                 text: "TimeTracker";
