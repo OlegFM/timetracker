@@ -24,6 +24,9 @@ use crate::{MainWindow, TimerBridge, TimerView, ToastKind, Tr};
 /// Runs a function with one window's `TimerBridge`; false once that window is gone.
 type Sink = Rc<dyn Fn(&dyn Fn(&TimerBridge<'_>)) -> bool>;
 
+/// A closure sink without a window (the tray).
+type ViewSink = Rc<dyn Fn(&TimerView)>;
+
 type Reporter = Rc<dyn Fn(&ServiceError)>;
 
 pub struct TimerHub {
@@ -33,6 +36,8 @@ pub struct TimerHub {
     draft: RefCell<EntryTemplate>,
     catalog: RefCell<Catalog>,
     windows: RefCell<Vec<Sink>>,
+    /// Closure sinks without a window (the tray): get every view pushed to the windows.
+    view_sinks: RefCell<Vec<ViewSink>>,
     report: Reporter,
     /// Localized (hour, minute) duration suffixes.
     suffixes: Box<dyn Fn() -> (SharedString, SharedString)>,
@@ -81,6 +86,7 @@ impl TimerHub {
             draft: RefCell::default(),
             catalog: RefCell::default(),
             windows: RefCell::default(),
+            view_sinks: RefCell::default(),
             report,
             suffixes,
             ticker: Timer::default(),
@@ -134,6 +140,12 @@ impl TimerHub {
         self.push_all();
     }
 
+    /// `f` gets the current view now and after every update (including the 1 s tick).
+    pub fn on_view(&self, f: impl Fn(&TimerView) + 'static) {
+        self.view_sinks.borrow_mut().push(Rc::new(f));
+        self.push_view();
+    }
+
     /// Reloads projects, tasks and tags (after catalog changes) and updates the windows.
     pub fn refresh_catalog(&self) {
         self.reload_catalog();
@@ -174,7 +186,7 @@ impl TimerHub {
         }
     }
 
-    fn pause(&self) {
+    pub fn pause(&self) {
         if self
             .run("pause", |c, tz| c.timer.pause(&mut c.db, tz))
             .is_some()
@@ -183,7 +195,7 @@ impl TimerHub {
         }
     }
 
-    fn resume(&self) {
+    pub fn resume(&self) {
         if self
             .run("resume", |c, tz| c.timer.resume(&mut c.db, tz))
             .is_some()
@@ -192,7 +204,7 @@ impl TimerHub {
         }
     }
 
-    fn stop(&self) {
+    pub fn stop(&self) {
         if self
             .run("stop", |c, tz| c.timer.stop(&mut c.db, tz))
             .is_some()
@@ -400,6 +412,10 @@ impl TimerHub {
             }
         };
         self.each_window(&|b| b.set_view(view.clone()));
+        let sinks = self.view_sinks.borrow().clone();
+        for f in sinks {
+            f(&view);
+        }
         let running = status
             .session
             .is_some_and(|s| s.state == SessionState::Running);
@@ -501,6 +517,24 @@ mod tests {
             closed_calls,
             "the closed one is not asked again"
         );
+    }
+
+    #[test]
+    fn view_sinks_get_the_current_view_and_every_change() {
+        let dir = tempfile::tempdir().unwrap();
+        let hub = hub(&dir);
+        let states = Rc::new(RefCell::new(Vec::new()));
+        let s = states.clone();
+        hub.on_view(move |v| s.borrow_mut().push(v.state));
+        assert_eq!(*states.borrow(), [0], "current view right away");
+
+        hub.start();
+        hub.pause();
+        hub.resume();
+        hub.stop();
+        let mut seen = states.borrow().clone();
+        seen.dedup();
+        assert_eq!(seen, [0, 1, 2, 1, 0]);
     }
 
     #[test]

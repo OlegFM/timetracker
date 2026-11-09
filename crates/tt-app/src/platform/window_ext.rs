@@ -66,6 +66,16 @@ pub fn focus(w: &slint::Window) {
     w.with_winit_window(|win| win.focus_window());
 }
 
+/// Shows `ui` (restoring it if minimized or hidden) and brings it to the front.
+pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
+    ui.window().set_minimized(false);
+    if let Err(e) = ui.show() {
+        log::warn!("window not shown: {e}");
+        return;
+    }
+    when_created(ui, |ui: &C| focus(ui.window()));
+}
+
 /// All monitors, the primary one first.
 fn monitors(win: &winit::window::Window) -> Vec<Rect> {
     let mut list: Vec<_> = win.available_monitors().collect();

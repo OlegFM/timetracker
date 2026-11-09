@@ -20,6 +20,8 @@ const POLL: Duration = Duration::from_millis(250);
 /// Polls with an unchanged position before it is saved (≈ 500 ms).
 const STABLE_POLLS: u32 = 2;
 
+type VisibleListener = Box<dyn Fn(bool)>;
+
 pub struct MiniController {
     ctx: Ctx,
     hub: Rc<TimerHub>,
@@ -30,6 +32,8 @@ pub struct MiniController {
     poll: Timer,
     last_pos: Cell<Option<(i32, i32)>>,
     stable_polls: Cell<u32>,
+    /// Told about every [`MiniController::set_visible`] (the tray menu text).
+    on_visible: RefCell<Option<VisibleListener>>,
 }
 
 /// Connects the timer bar toggle of `main` and shows the mini timer if the settings say so.
@@ -50,6 +54,7 @@ pub fn install(main: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<MiniContr
             poll: Timer::default(),
             last_pos: Cell::default(),
             stable_polls: Cell::default(),
+            on_visible: RefCell::default(),
         }
     });
     let visible = ctx.borrow().settings.mini_timer_visible;
@@ -68,13 +73,23 @@ impl MiniController {
         if let Some(ui) = self.main.upgrade() {
             ui.global::<MiniBridge>().set_visible(on);
         }
-        let mut c = self.ctx.borrow_mut();
-        if c.settings.mini_timer_visible != on {
-            c.settings.mini_timer_visible = on;
-            if let Err(e) = c.save_settings() {
-                log::warn!("mini timer visibility not saved: {e}");
+        {
+            let mut c = self.ctx.borrow_mut();
+            if c.settings.mini_timer_visible != on {
+                c.settings.mini_timer_visible = on;
+                if let Err(e) = c.save_settings() {
+                    log::warn!("mini timer visibility not saved: {e}");
+                }
             }
         }
+        if let Some(f) = self.on_visible.borrow().as_ref() {
+            f(on);
+        }
+    }
+
+    /// `f` runs after every [`MiniController::set_visible`] (replaces an earlier one).
+    pub fn on_visibility_changed(&self, f: impl Fn(bool) + 'static) {
+        self.on_visible.replace(Some(Box::new(f)));
     }
 
     pub fn is_visible(&self) -> bool {
@@ -172,17 +187,10 @@ impl MiniController {
         Some(w)
     }
 
-    /// Shows the main window (restoring it if minimized or hidden) and brings it to the front.
     fn open_main(&self) {
-        let Some(ui) = self.main.upgrade() else {
-            return;
-        };
-        ui.window().set_minimized(false);
-        if let Err(e) = ui.show() {
-            log::warn!("main window not shown: {e}");
-            return;
+        if let Some(ui) = self.main.upgrade() {
+            window_ext::show_and_focus(&ui);
         }
-        window_ext::when_created(&ui, |ui: &MainWindow| window_ext::focus(ui.window()));
     }
 
     fn drag_started(&self) {

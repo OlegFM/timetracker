@@ -18,6 +18,7 @@ pub mod entries;
 pub mod mini;
 pub mod pickers;
 pub mod timer;
+pub mod tray;
 
 use slint::{Model, SharedString, VecModel};
 use tt_services::ServiceError;
