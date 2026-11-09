@@ -75,7 +75,7 @@ pub fn install(ui: &MainWindow, ctx: &Ctx) -> Rc<TimerHub> {
 }
 
 impl TimerHub {
-    fn new(
+    pub(crate) fn new(
         ctx: Ctx,
         report: Reporter,
         suffixes: Box<dyn Fn() -> (SharedString, SharedString)>,

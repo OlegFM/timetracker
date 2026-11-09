@@ -199,6 +199,9 @@ fn entry_round_trip_with_tags() {
     assert_eq!(catalog::count_entries_for_task(c, t.id).unwrap(), 1);
     assert_eq!(catalog::count_entries_for_tag(c, g1.id).unwrap(), 1);
     assert_eq!(catalog::count_entries_for_tag(c, g2.id).unwrap(), 0);
+    let counts = entries::entry_counts_by_tag(c).unwrap();
+    assert_eq!(counts.get(&g1.id), Some(&1));
+    assert_eq!(counts.get(&g2.id), None);
 
     // deleting a tag cascades to the link table
     catalog::delete_tag(c, g1.id).unwrap();
@@ -316,6 +319,18 @@ fn recent_and_session_entries_and_spent() {
     assert_eq!(entries::spent_ms_for_project(c, p.id, 250).unwrap(), 150);
     assert_eq!(entries::spent_ms_for_task(c, t.id, 250).unwrap(), 50);
     assert_eq!(entries::spent_ms_for_task(c, new_id(), 250).unwrap(), 0);
+
+    // grouped variants agree with the single-id ones (incl. a running entry up to `now`)
+    let by_project = entries::spent_ms_by_project(c, 250).unwrap();
+    assert_eq!(by_project[&p.id], 150);
+    assert_eq!(by_project.len(), 1);
+    let by_task = entries::spent_ms_by_task(c, p.id, 250).unwrap();
+    assert_eq!(by_task[&t.id], 50);
+    assert!(
+        entries::spent_ms_by_task(c, new_id(), 250)
+            .unwrap()
+            .is_empty()
+    );
 
     // deleting the session detaches entries (SET NULL)
     c.execute("DELETE FROM timer_sessions", []).unwrap();

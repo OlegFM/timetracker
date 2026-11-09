@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rusqlite::{Connection, OptionalExtension, Row, params};
 use tt_domain::{EntryTemplate, Id, Millis, SessionState, TimeEntry, TimerSession};
 
@@ -223,6 +225,48 @@ pub fn spent_ms_for_project(conn: &Connection, id: Id, now: Millis) -> Result<i6
 
 pub fn spent_ms_for_task(conn: &Connection, id: Id, now: Millis) -> Result<i64> {
     spent_ms(conn, "task_id", id, now)
+}
+
+/// Tracked ms per id of `column` (grouped; a running entry counts up to `now`).
+fn spent_grouped(
+    conn: &Connection,
+    sql: &str,
+    params: impl rusqlite::Params,
+) -> Result<HashMap<Id, i64>> {
+    let mut stmt = conn.prepare(sql)?;
+    let rows = stmt.query_map(params, |r| Ok((col_id(r, 0)?, r.get::<_, i64>(1)?)))?;
+    Ok(rows.collect::<rusqlite::Result<_>>()?)
+}
+
+/// Tracked ms of every project that has entries.
+pub fn spent_ms_by_project(conn: &Connection, now: Millis) -> Result<HashMap<Id, i64>> {
+    spent_grouped(
+        conn,
+        "SELECT project_id, SUM(COALESCE(\"end\", ?1) - start) FROM time_entries          WHERE project_id IS NOT NULL GROUP BY project_id",
+        params![now],
+    )
+}
+
+/// Tracked ms of every task of `project_id` that has entries.
+pub fn spent_ms_by_task(
+    conn: &Connection,
+    project_id: Id,
+    now: Millis,
+) -> Result<HashMap<Id, i64>> {
+    spent_grouped(
+        conn,
+        "SELECT task_id, SUM(COALESCE(\"end\", ?2) - start) FROM time_entries          WHERE project_id = ?1 AND task_id IS NOT NULL GROUP BY task_id",
+        params![text(project_id), now],
+    )
+}
+
+/// Number of time entries per tag (tags without entries are absent).
+pub fn entry_counts_by_tag(conn: &Connection) -> Result<HashMap<Id, i64>> {
+    spent_grouped(
+        conn,
+        "SELECT tag_id, COUNT(*) FROM time_entry_tags GROUP BY tag_id",
+        [],
+    )
 }
 
 // ---- sessions ----

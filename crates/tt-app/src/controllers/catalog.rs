@@ -5,14 +5,14 @@
 //! (R23) and tells the other listeners (labels in the entries list). Starting a task goes
 //! through the [`TimerHub`].
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
 use tt_domain::{Client, EntryTemplate, Id, Millis, Project, Tag, Task};
 use tt_services::{Clock, NewProject, Result, ServiceError, default_billable};
-use tt_storage::{catalog, entries};
+use tt_storage::entries;
 
 use crate::app::{AppContext, Ctx};
 use crate::controllers::timer::TimerHub;
@@ -56,6 +56,10 @@ pub struct CatalogController {
     clients: Rc<VecModel<ClientRowView>>,
     tags: Rc<VecModel<TagRowView>>,
     client_options: Rc<VecModel<ProjectOption>>,
+    /// The shown data may be older than the stored one (entries changed meanwhile).
+    dirty: Cell<bool>,
+    /// Number of database reloads (tests).
+    reloads: Cell<u32>,
 }
 
 /// Wires `CatalogBridge` of the main window and loads the catalog.
@@ -71,6 +75,8 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<CatalogCont
         clients: Rc::default(),
         tags: Rc::default(),
         client_options: Rc::default(),
+        dirty: Cell::new(true),
+        reloads: Cell::new(0),
     });
     let b = ui.global::<CatalogBridge>();
     b.set_projects(ModelRc::from(ctl.projects.clone()));
@@ -81,7 +87,7 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<CatalogCont
     b.set_palette(model(PALETTE.iter().map(|c| (*c).into()).collect()));
 
     let c = ctl.clone();
-    b.on_refresh(move || c.reload());
+    b.on_refresh(move || c.reload_if_dirty());
     let c = ctl.clone();
     b.on_filter_changed(move || c.show());
     b.on_hex_color(|s| hex_color(s.trim()));
@@ -128,21 +134,44 @@ pub fn install(ui: &MainWindow, ctx: &Ctx, hub: &Rc<TimerHub>) -> Rc<CatalogCont
     let c = ctl.clone();
     b.on_delete_tag(move |id| c.delete_tag(&id));
 
-    // Tracked times change with the entries.
-    let me = Rc::downgrade(&ctl);
-    let events = ctx.borrow().events.clone();
-    events.on_entries_changed(move || {
-        if let Some(c) = me.upgrade() {
-            c.reload();
-        }
-    });
+    ctl.listen_to_entries();
     ctl.reload();
     ctl
 }
 
 impl CatalogController {
+    /// Tracked times change with the entries: reload now if a catalog page is shown, else
+    /// when one is shown next.
+    fn listen_to_entries(self: &Rc<Self>) {
+        let me = Rc::downgrade(self);
+        let events = self.ctx.borrow().events.clone();
+        events.on_entries_changed(move || {
+            if let Some(c) = me.upgrade() {
+                c.dirty.set(true);
+                if c.page_visible() {
+                    c.reload();
+                }
+            }
+        });
+    }
+
+    /// A catalog page (projects, project, clients, tags) is shown.
+    fn page_visible(&self) -> bool {
+        self.ui
+            .upgrade()
+            .is_some_and(|ui| (2..=5).contains(&ui.get_page()))
+    }
+
+    fn reload_if_dirty(&self) {
+        if self.dirty.get() {
+            self.reload();
+        }
+    }
+
     /// Loads the catalog from the database and shows it.
     fn reload(&self) {
+        self.dirty.set(false);
+        self.reloads.set(self.reloads.get() + 1);
         let open = *self.open.borrow();
         let res = self.with_ctx(|c, now| load(c, open, now));
         match res {
@@ -508,10 +537,12 @@ impl CatalogController {
     /// After a successful change: reload, then the timer pickers and the other lists show
     /// the stored state (R23).
     fn changed(&self) {
-        self.reload();
+        self.dirty.set(true);
         self.hub.refresh_catalog();
         let events = self.ctx.borrow().events.clone();
         events.emit_entries_changed();
+        // The event reloads when a catalog page is shown; otherwise do it here (once).
+        self.reload_if_dirty();
     }
 
     /// `true` after a successful change, else the error has been shown.
@@ -583,20 +614,11 @@ fn load(c: &AppContext, open: Option<Id>, now: Millis) -> Result<Data> {
         clients: c.catalog.list_clients(&c.db)?,
         ..Data::default()
     };
-    for p in &projects {
-        d.spent
-            .insert(p.id, entries::spent_ms_for_project(conn, p.id, now)?);
-    }
-    for t in &tags {
-        d.tag_entries
-            .insert(t.id, catalog::count_entries_for_tag(conn, t.id)?);
-    }
+    d.spent = entries::spent_ms_by_project(conn, now)?;
+    d.tag_entries = entries::entry_counts_by_tag(conn)?;
     if let Some(id) = open.filter(|id| projects.iter().any(|p| p.id == *id)) {
         d.tasks = c.catalog.list_tasks(&c.db, id)?;
-        for t in &d.tasks {
-            d.task_spent
-                .insert(t.id, entries::spent_ms_for_task(conn, t.id, now)?);
-        }
+        d.task_spent = entries::spent_ms_by_task(conn, id, now)?;
     }
     d.projects = projects;
     d.tags = tags;
@@ -661,12 +683,61 @@ mod tests {
         assert_eq!(d.projects.len(), 2);
         assert_eq!(d.clients.len(), 1);
         assert_eq!(d.spent[&project.id], 3_600_000);
-        assert_eq!(d.spent[&other.id], 0);
+        assert_eq!(
+            d.spent.get(&other.id),
+            None,
+            "no entries: absent, shown as 0"
+        );
         assert_eq!(d.tag_entries[&tag.id], 1);
         assert_eq!(d.tasks.len(), 1);
         assert_eq!(d.task_spent[&task.id], 3_600_000);
 
         // Without an open project no tasks are loaded.
         assert!(load(c, None, 10_000_000).unwrap().tasks.is_empty());
+    }
+
+    fn controller(dir: &tempfile::TempDir) -> Rc<CatalogController> {
+        let ctx: Ctx = Rc::new(RefCell::new(
+            AppContext::open(dir.path().join("tt.db")).unwrap(),
+        ));
+        let hub = TimerHub::new(ctx.clone(), Rc::new(|_| {}), Box::new(Default::default));
+        let ctl = Rc::new(CatalogController {
+            ctx,
+            hub,
+            ui: slint::Weak::default(),
+            data: RefCell::default(),
+            open: RefCell::new(None),
+            projects: Rc::default(),
+            tasks: Rc::default(),
+            clients: Rc::default(),
+            tags: Rc::default(),
+            client_options: Rc::default(),
+            dirty: Cell::new(true),
+            reloads: Cell::new(0),
+        });
+        ctl.listen_to_entries();
+        ctl
+    }
+
+    #[test]
+    fn a_change_reloads_once_and_entry_events_only_mark_dirty() {
+        let dir = tempfile::tempdir().unwrap();
+        let ctl = controller(&dir);
+
+        // No catalog page is shown (no window): the mutation reloads exactly once.
+        assert!(!ctl.create_tag("urgent").is_empty());
+        assert_eq!(ctl.reloads.get(), 1);
+        assert_eq!(ctl.data.borrow().tags.len(), 1);
+
+        // Entry changes elsewhere do not reload; the next screen appearance does.
+        let events = ctl.ctx.borrow().events.clone();
+        events.emit_entries_changed();
+        events.emit_entries_changed();
+        assert_eq!(ctl.reloads.get(), 1);
+        assert!(ctl.dirty.get());
+        ctl.reload_if_dirty();
+        assert_eq!(ctl.reloads.get(), 2);
+        ctl.reload_if_dirty();
+        assert_eq!(ctl.reloads.get(), 2, "clean data is not reloaded");
     }
 }
