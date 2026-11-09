@@ -1,0 +1,6 @@
+target/
+.superpowers/
+*.db
+*.db-wal
+*.db-shm
+.remember/
