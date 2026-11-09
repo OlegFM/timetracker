@@ -30,7 +30,7 @@ pub struct Manifest {
 }
 
 fn parse_update_config(url: Option<&str>, key_hex: Option<&str>) -> Option<UpdateConfig> {
-    let url = url.map(str::trim).filter(|u| !u.is_empty())?;
+    let url = url.map(str::trim).filter(|u| u.starts_with("https://"))?;
     let public_key: [u8; 32] = hex::decode(key_hex?.trim()).ok()?.try_into().ok()?;
     Some(UpdateConfig {
         manifest_url: url.to_owned(),
@@ -94,27 +94,53 @@ pub fn verify_bytes(pubkey: &[u8; 32], bytes: &[u8], sig_b64: &str) -> Result<()
     key.verify_strict(bytes, &sig).map_err(|_| bad())
 }
 
-fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
-    let mut resp = agent().get(&m.url).call().map_err(upd)?;
+/// Upper bound for a downloaded installer.
+const MAX_INSTALLER_BYTES: u64 = 512 * 1024 * 1024;
+
+fn read_capped(reader: impl Read, max: u64) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
-    resp.body_mut()
-        .as_reader()
-        .read_to_end(&mut bytes)
-        .map_err(upd)?;
-    std::fs::write(dest, &bytes).map_err(ServiceError::Io)?;
-    if hex::encode(Sha256::digest(&bytes)) != m.sha256.to_ascii_lowercase() {
-        return Err(ServiceError::Update("checksum".into()));
+    reader.take(max + 1).read_to_end(&mut bytes).map_err(upd)?;
+    if bytes.len() as u64 > max {
+        return Err(ServiceError::Update("too large".into()));
     }
-    verify_bytes(pubkey, &bytes, &m.signature)
+    Ok(bytes)
 }
 
-/// Downloads the installer to `dest`; removes it unless checksum and signature match.
-pub fn download_and_verify(cfg: &UpdateConfig, m: &Manifest, dest: &Path) -> Result<()> {
-    let res = download(m, dest, &cfg.public_key);
-    if res.is_err() {
-        let _ = std::fs::remove_file(dest);
+/// Checks the installer bytes against the manifest checksum, then its signature.
+pub fn verify_download(bytes: &[u8], m: &Manifest, pubkey: &[u8; 32]) -> Result<()> {
+    if hex::encode(Sha256::digest(bytes)) != m.sha256.to_ascii_lowercase() {
+        return Err(ServiceError::Update("checksum".into()));
     }
-    res
+    verify_bytes(pubkey, bytes, &m.signature)
+}
+
+fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
+    if !m.url.starts_with("https://") {
+        return Err(ServiceError::Update("insecure url".into()));
+    }
+    let mut resp = agent().get(&m.url).call().map_err(upd)?;
+    if resp
+        .body()
+        .content_length()
+        .is_some_and(|n| n > MAX_INSTALLER_BYTES)
+    {
+        return Err(ServiceError::Update("too large".into()));
+    }
+    let bytes = read_capped(resp.body_mut().as_reader(), MAX_INSTALLER_BYTES)?;
+    verify_download(&bytes, m, pubkey)?;
+    let mut part = dest.as_os_str().to_owned();
+    part.push(".part");
+    let part = std::path::PathBuf::from(part);
+    let res = std::fs::write(&part, &bytes).and_then(|_| std::fs::rename(&part, dest));
+    if res.is_err() {
+        let _ = std::fs::remove_file(&part);
+    }
+    res.map_err(ServiceError::Io)
+}
+
+/// Downloads and verifies the installer in memory; `dest` is only created once it is valid.
+pub fn download_and_verify(cfg: &UpdateConfig, m: &Manifest, dest: &Path) -> Result<()> {
+    download(m, dest, &cfg.public_key)
 }
 
 #[cfg(test)]
@@ -165,5 +191,63 @@ mod tests {
             Err(ServiceError::Update(s)) if s == "signature"
         ));
         assert!(verify_bytes(&pk, &data, "!!notbase64").is_err());
+    }
+
+    fn signed_manifest(data: &[u8]) -> (Manifest, [u8; 32]) {
+        let sk = SigningKey::from_bytes(&[7u8; 32]);
+        let m = Manifest {
+            version: "2.0.0".into(),
+            url: "https://x/i.exe".into(),
+            sha256: hex::encode(Sha256::digest(data)),
+            signature: STANDARD.encode(sk.sign(data).to_bytes()),
+            notes: None,
+        };
+        (m, sk.verifying_key().to_bytes())
+    }
+
+    #[test]
+    fn verify_download_cases() {
+        let data = b"installer";
+        let (m, pk) = signed_manifest(data);
+        verify_download(data, &m, &pk).unwrap();
+        let bad_sha = Manifest {
+            sha256: "0".repeat(64),
+            ..m.clone()
+        };
+        assert!(matches!(verify_download(data, &bad_sha, &pk),
+            Err(ServiceError::Update(s)) if s == "checksum"));
+        let other = SigningKey::from_bytes(&[8u8; 32]);
+        let bad_sig = Manifest {
+            signature: STANDARD.encode(other.sign(data).to_bytes()),
+            ..m
+        };
+        assert!(matches!(verify_download(data, &bad_sig, &pk),
+            Err(ServiceError::Update(s)) if s == "signature"));
+    }
+
+    #[test]
+    fn read_capped_enforces_limit() {
+        assert_eq!(read_capped(&b"abc"[..], 3).unwrap(), b"abc");
+        assert!(matches!(read_capped(&b"abcd"[..], 3),
+            Err(ServiceError::Update(s)) if s == "too large"));
+    }
+
+    #[test]
+    fn rejects_insecure_urls() {
+        let key = "ab".repeat(32);
+        assert!(parse_update_config(Some("http://x/m.json"), Some(&key)).is_none());
+        let (m, pk) = signed_manifest(b"d");
+        let m = Manifest {
+            url: "http://x/i.exe".into(),
+            ..m
+        };
+        let cfg = UpdateConfig {
+            manifest_url: "https://x/m.json".into(),
+            public_key: pk,
+        };
+        let dest = std::env::temp_dir().join("tt-insecure-test.exe");
+        assert!(matches!(download_and_verify(&cfg, &m, &dest),
+            Err(ServiceError::Update(s)) if s == "insecure url"));
+        assert!(!dest.exists());
     }
 }
