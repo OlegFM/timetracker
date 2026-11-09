@@ -1,5 +1,6 @@
 //! Application services over `tt-storage`: timer, catalog, entries and settings.
 
+pub mod backup;
 pub mod catalog;
 pub mod clock;
 pub mod entries;
@@ -9,6 +10,7 @@ pub mod reports;
 pub mod settings;
 pub mod timer;
 mod tx;
+pub mod update;
 
 #[cfg(any(test, feature = "test-util"))]
 pub use clock::FixedClock;
