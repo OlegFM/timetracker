@@ -64,11 +64,28 @@ pub fn is_newer(current: &str, latest: &str) -> bool {
     b > a
 }
 
-fn agent() -> ureq::Agent {
+/// Budget for connecting and for the response headers (and the small manifest body).
+const SHORT_TIMEOUT: Duration = Duration::from_secs(10);
+/// Budget for reading the installer body (slow connections).
+const INSTALLER_BODY_TIMEOUT: Duration = Duration::from_secs(10 * 60);
+
+/// HTTPS only (also after redirects); `body` limits reading the response body.
+fn agent(body: Duration) -> ureq::Agent {
     ureq::Agent::config_builder()
-        .timeout_global(Some(Duration::from_secs(10)))
+        .https_only(true)
+        .timeout_connect(Some(SHORT_TIMEOUT))
+        .timeout_recv_response(Some(SHORT_TIMEOUT))
+        .timeout_recv_body(Some(body))
         .build()
         .into()
+}
+
+fn manifest_agent() -> ureq::Agent {
+    agent(SHORT_TIMEOUT)
+}
+
+fn installer_agent() -> ureq::Agent {
+    agent(INSTALLER_BODY_TIMEOUT)
 }
 
 fn upd(e: impl std::fmt::Display) -> ServiceError {
@@ -76,7 +93,7 @@ fn upd(e: impl std::fmt::Display) -> ServiceError {
 }
 
 pub fn check_for_update(cfg: &UpdateConfig, current: &str) -> Result<Option<Manifest>> {
-    let m: Manifest = agent()
+    let m: Manifest = manifest_agent()
         .get(&cfg.manifest_url)
         .call()
         .map_err(upd)?
@@ -118,7 +135,7 @@ fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
     if !m.url.starts_with("https://") {
         return Err(ServiceError::Update("insecure url".into()));
     }
-    let mut resp = agent().get(&m.url).call().map_err(upd)?;
+    let mut resp = installer_agent().get(&m.url).call().map_err(upd)?;
     if resp
         .body()
         .content_length()
@@ -230,6 +247,22 @@ mod tests {
         assert_eq!(read_capped(&b"abc"[..], 3).unwrap(), b"abc");
         assert!(matches!(read_capped(&b"abcd"[..], 3),
             Err(ServiceError::Update(s)) if s == "too large"));
+    }
+
+    #[test]
+    fn agents_are_https_only_and_the_installer_body_may_take_minutes() {
+        for (agent, body) in [
+            (manifest_agent(), Duration::from_secs(10)),
+            (installer_agent(), Duration::from_secs(600)),
+        ] {
+            let cfg = agent.config();
+            assert!(cfg.https_only());
+            let t = cfg.timeouts();
+            assert_eq!(t.global, None, "no cap over the whole download");
+            assert_eq!(t.connect, Some(Duration::from_secs(10)));
+            assert_eq!(t.recv_response, Some(Duration::from_secs(10)));
+            assert_eq!(t.recv_body, Some(body));
+        }
     }
 
     #[test]

@@ -415,7 +415,10 @@ impl SettingsController {
         else {
             return;
         };
-        let res = backup_to(&self.ctx.borrow().db, &path);
+        let res = {
+            let c = self.ctx.borrow();
+            backup_to(&c.db, &path, c.timer.clock().now(), c.settings.format.tz)
+        };
         match res {
             Ok(()) => self.toast_with(|tr| tr.get_backup_saved(), ToastKind::Success),
             Err(e) => self.fail("backup", &e),
@@ -472,7 +475,12 @@ impl SettingsController {
             Err(e) => {
                 // Writing on into the placeholder would lose data silently.
                 log::error!("database not reopened: {e}");
-                fatal::show_error("TimeTracker could not reopen its database and will close.");
+                let text = self
+                    .ui
+                    .upgrade()
+                    .map(|ui| ui.global::<Tr>().get_db_reopen_failed())
+                    .unwrap_or_default();
+                fatal::show_error(&text);
                 let _ = slint::quit_event_loop();
                 return Err(e.into());
             }

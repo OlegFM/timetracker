@@ -41,6 +41,9 @@ export global Tr {
     out property <string> export-start: @tr("export" => "Start");
     out property <string> export-end: @tr("export" => "End");
     out property <string> export-date: @tr("export" => "Date");
+    // XLSX sheet names
+    out property <string> export-sheet-summary: @tr("export" => "Summary");
+    out property <string> export-sheet-entries: @tr("export" => "Entries");
 
     // Day titles of the time entries list
     out property <string> day-today: @tr("Today");
@@ -92,6 +95,8 @@ export global Tr {
     out property <string> update-latest: @tr("You have the latest version.");
     out property <string> update-available: @tr("A new version is available.");
     out property <string> update-failed: @tr("Couldn't check for updates.");
+    // Error box before quitting when the database could not be opened again after a restore
+    out property <string> db-reopen-failed: @tr("TimeTracker could not reopen its database and will close.");
 
     // Service errors (tt_services::ServiceError)
     out property <string> err-in-use-projects: @tr("Can't delete: it still has projects. Archive it instead.");

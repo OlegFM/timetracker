@@ -1,6 +1,7 @@
 //! Clients, projects, tasks and tags: validation, usage checks on delete, stats.
 
-use tt_domain::{Client, Id, Millis, Project, Tag, Task, new_id};
+use rusqlite::Connection;
+use tt_domain::{Client, EntryTemplate, Id, Millis, Project, Tag, Task, new_id};
 use tt_storage::{Db, catalog, entries};
 
 use crate::clock::Clock;
@@ -152,7 +153,13 @@ impl<C: Clock> CatalogService<C> {
                     what: "time_entries",
                 });
             }
-            found(catalog::delete_project(c, id)?)
+            found(catalog::delete_project(c, id)?)?;
+            strip_templates(c, |t| {
+                if t.project_id == Some(id) {
+                    t.project_id = None;
+                    t.task_id = None;
+                }
+            })
         })
     }
 
@@ -235,7 +242,12 @@ impl<C: Clock> CatalogService<C> {
                     what: "time_entries",
                 });
             }
-            found(catalog::delete_task(c, id)?)
+            found(catalog::delete_task(c, id)?)?;
+            strip_templates(c, |t| {
+                if t.task_id == Some(id) {
+                    t.task_id = None;
+                }
+            })
         })
     }
 
@@ -270,14 +282,30 @@ impl<C: Clock> CatalogService<C> {
         })
     }
 
-    /// Removes the tag; entries lose it.
+    /// Removes the tag; entries and the active session's template lose it.
     pub fn delete_tag(&self, db: &mut Db, id: Id) -> Result<()> {
-        in_tx(db, |c| found(catalog::delete_tag(c, id)?))
+        in_tx(db, |c| {
+            found(catalog::delete_tag(c, id)?)?;
+            strip_templates(c, |t| t.tag_ids.retain(|&tag| tag != id))
+        })
     }
 
     pub fn list_tags(&self, db: &Db) -> Result<Vec<Tag>> {
         Ok(catalog::list_tags(db.conn())?)
     }
+}
+
+/// Applies `f` to the templates of the sessions that are not stopped, so that a resume
+/// does not name a deleted project, task or tag.
+fn strip_templates(c: &Connection, f: impl Fn(&mut EntryTemplate)) -> Result<()> {
+    for (id, mut t) in entries::open_session_templates(c)? {
+        let before = t.clone();
+        f(&mut t);
+        if t != before {
+            entries::set_session_template(c, id, &t)?;
+        }
+    }
+    Ok(())
 }
 
 /// Repo "affected rows" flag to `NotFound`.
@@ -581,6 +609,122 @@ mod tests {
         let got = entries::get_entry(db.conn(), e.id).unwrap().unwrap();
         assert!(got.tag_ids.is_empty());
         assert!(svc.list_tags(&db).unwrap().is_empty());
+    }
+
+    // ---- deletes vs the timer session template ----
+
+    const UTC: tt_domain::Tz = tt_domain::Tz::UTC;
+
+    fn timer() -> crate::TimerService<FixedClock> {
+        crate::TimerService::new(FixedClock::new(10_000))
+    }
+
+    fn tpl(project_id: Option<Id>, task_id: Option<Id>, tag_ids: Vec<Id>) -> EntryTemplate {
+        EntryTemplate {
+            description: "work".into(),
+            project_id,
+            task_id,
+            tag_ids,
+            billable: false,
+        }
+    }
+
+    /// Runs `f` on a paused session, then resumes 1 s later; returns the resumed entry
+    /// and the stored template.
+    fn resume_after(
+        timer: &crate::TimerService<FixedClock>,
+        db: &mut Db,
+        f: impl FnOnce(&mut Db),
+    ) -> (TimeEntry, EntryTemplate) {
+        f(db);
+        timer.clock().advance(1_000);
+        let st = timer.resume(db, UTC).expect("resume after the delete");
+        (st.current.unwrap(), st.template.unwrap())
+    }
+
+    #[test]
+    fn delete_tag_while_paused_then_resume() {
+        let (svc, mut db) = setup();
+        let (keep, gone) = (
+            svc.create_tag(&mut db, "keep").unwrap(),
+            svc.create_tag(&mut db, "gone").unwrap(),
+        );
+        let timer = timer();
+        timer
+            .start(&mut db, tpl(None, None, vec![keep.id, gone.id]), UTC)
+            .unwrap();
+        timer.clock().advance(1_000);
+        timer.pause(&mut db, UTC).unwrap();
+        let (cur, t) = resume_after(&timer, &mut db, |db| {
+            svc.delete_tag(db, gone.id).unwrap();
+        });
+        assert_eq!(cur.tag_ids, vec![keep.id]);
+        assert_eq!(t.tag_ids, vec![keep.id]);
+    }
+
+    #[test]
+    fn delete_project_only_in_template_then_resume() {
+        let (svc, mut db) = setup();
+        let p = svc.create_project(&mut db, np("p")).unwrap();
+        let timer = timer();
+        timer.start(&mut db, tpl(None, None, vec![]), UTC).unwrap();
+        timer.clock().advance(1_000);
+        timer.pause(&mut db, UTC).unwrap();
+        // Picked while paused: only the template names the project.
+        timer
+            .update_template(&mut db, tpl(Some(p.id), None, vec![]), UTC)
+            .unwrap();
+        let (cur, t) = resume_after(&timer, &mut db, |db| {
+            svc.delete_project(db, p.id).unwrap();
+        });
+        assert_eq!((cur.project_id, cur.task_id), (None, None));
+        assert_eq!((t.project_id, t.task_id), (None, None));
+        assert!(svc.list_projects(&db).unwrap().is_empty());
+    }
+
+    #[test]
+    fn delete_task_only_in_template_then_resume() {
+        let (svc, mut db) = setup();
+        let p = svc.create_project(&mut db, np("p")).unwrap();
+        let task = svc.create_task(&mut db, p.id, "t", None).unwrap();
+        let timer = timer();
+        timer.start(&mut db, tpl(None, None, vec![]), UTC).unwrap();
+        timer.clock().advance(1_000);
+        timer.pause(&mut db, UTC).unwrap();
+        timer
+            .update_template(&mut db, tpl(Some(p.id), Some(task.id), vec![]), UTC)
+            .unwrap();
+        let (cur, t) = resume_after(&timer, &mut db, |db| {
+            svc.delete_task(db, task.id).unwrap();
+        });
+        assert_eq!((cur.project_id, cur.task_id), (Some(p.id), None));
+        assert_eq!((t.project_id, t.task_id), (Some(p.id), None));
+    }
+
+    #[test]
+    fn delete_tag_while_running_then_stop() {
+        let (svc, mut db) = setup();
+        let tag = svc.create_tag(&mut db, "x").unwrap();
+        let timer = timer();
+        let st = timer
+            .start(&mut db, tpl(None, None, vec![tag.id]), UTC)
+            .unwrap();
+        svc.delete_tag(&mut db, tag.id).unwrap();
+        timer.clock().advance(1_000);
+        timer.stop(&mut db, UTC).expect("stop after the delete");
+        let e = entries::get_entry(db.conn(), st.current.unwrap().id)
+            .unwrap()
+            .unwrap();
+        assert_eq!((e.end, e.tag_ids), (Some(11_000), vec![]));
+    }
+
+    #[test]
+    fn stale_tag_ids_are_skipped_when_writing_an_entry() {
+        let (_, db) = setup();
+        let e = entry(None, None, vec![new_id()]);
+        entries::insert_entry(db.conn(), &e).expect("unknown tag is ignored");
+        let got = entries::get_entry(db.conn(), e.id).unwrap().unwrap();
+        assert!(got.tag_ids.is_empty());
     }
 
     #[test]

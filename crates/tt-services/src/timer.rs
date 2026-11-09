@@ -177,6 +177,17 @@ fn stop_session(c: &Connection, mut s: TimerSession, now: Millis, tz: Tz) -> Res
     Ok(())
 }
 
+/// Pauses a running session at `now` (as [`TimerService::pause`]); a paused or stopped
+/// timer is left as it is. Used on the copy written by a backup.
+pub(crate) fn pause_running_in(c: &Connection, now: Millis, tz: Tz) -> Result<()> {
+    close_running(c, now, tz)?;
+    if let Some(mut s) = entries::active_session(c)?.filter(|s| s.state == SessionState::Running) {
+        s.state = SessionState::Paused;
+        entries::update_session(c, &s)?;
+    }
+    Ok(())
+}
+
 fn close_running(c: &Connection, now: Millis, tz: Tz) -> Result<()> {
     if let Some(e) = entries::running_entry(c)? {
         close_at(c, &e, now, now, tz)?;
@@ -184,10 +195,15 @@ fn close_running(c: &Connection, now: Millis, tz: Tz) -> Result<()> {
     Ok(())
 }
 
-/// Closes `e` at `end` (not before its start), split at local midnights: `e` keeps
-/// the first piece, every further piece becomes a new entry with the same attributes.
+/// Closes `e` at `end`, split at local midnights: `e` keeps the first piece, every
+/// further piece becomes a new entry with the same attributes. An `end` not after the
+/// start (stopped at once, or the clock was moved back) would leave an empty entry: `e`
+/// is deleted instead.
 fn close_at(c: &Connection, e: &TimeEntry, end: Millis, now: Millis, tz: Tz) -> Result<()> {
-    let end = end.max(e.start);
+    if end <= e.start {
+        entries::delete_entry(c, e.id)?;
+        return Ok(());
+    }
     let pieces = split_at_local_midnights(e.start, end, tz);
     let first_end = pieces.first().map_or(end, |p| p.1);
     update_existing(
@@ -736,16 +752,38 @@ mod tests {
     }
 
     #[test]
-    fn clock_going_backwards_closes_at_start() {
-        let (svc, mut db) = setup(at(9, 10, 0));
+    fn clock_going_backwards_drops_the_empty_entry() {
+        let (svc, mut db) = setup(at(9, 9, 0));
         let sid = session_id(&svc.start(&mut db, tpl("a"), MSK).unwrap());
+        svc.clock().set(at(9, 9, 30));
+        svc.pause(&mut db, MSK).unwrap();
+        svc.clock().set(at(9, 10, 0));
+        svc.resume(&mut db, MSK).unwrap();
+        // The clock is moved back before the running entry's start.
         svc.clock().set(at(9, 9, 50));
         assert!(!svc.rollover(&mut db, MSK).unwrap());
-        svc.pause(&mut db, MSK).unwrap();
+        let st = svc.pause(&mut db, MSK).unwrap();
         assert_eq!(
             spans(&session_entries(&db, sid)),
-            vec![(at(9, 10, 0), Some(at(9, 10, 0)))]
+            vec![(at(9, 9, 0), Some(at(9, 9, 30)))]
         );
+        assert_eq!(st.session_ms, 30 * MIN);
+        // The session goes on from its template.
+        svc.clock().set(at(9, 10, 30));
+        let cur = svc.resume(&mut db, MSK).unwrap().current.unwrap();
+        assert_eq!(
+            (cur.start, cur.end, cur.description.as_str()),
+            (at(9, 10, 30), None, "a")
+        );
+    }
+
+    #[test]
+    fn stop_at_the_start_instant_leaves_no_entry() {
+        let (svc, mut db) = setup(at(9, 10, 0));
+        let sid = session_id(&svc.start(&mut db, tpl("a"), MSK).unwrap());
+        svc.stop(&mut db, MSK).unwrap();
+        assert!(session_entries(&db, sid).is_empty());
+        assert_eq!(session_row(&db, sid).0, "stopped");
     }
 
     #[test]

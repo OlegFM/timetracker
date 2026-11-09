@@ -36,7 +36,7 @@ pub enum SyncPlan {
     Keep,
     /// Write the entry (missing, or it launches another executable).
     Register,
-    /// Remove the entry.
+    /// Remove the entry (only when it starts this executable).
     Unregister,
     /// The setting is on but Task Manager disabled the entry: the setting becomes off.
     DisabledByUser,
@@ -55,9 +55,26 @@ pub fn plan_sync(want: bool, run: Option<&str>, disabled: bool, expected: &str) 
         (true, None) => SyncPlan::Register,
         (true, Some(_)) if disabled => SyncPlan::DisabledByUser,
         (true, Some(cmd)) if !cmd.trim().eq_ignore_ascii_case(expected) => SyncPlan::Register,
-        (true, Some(_)) | (false, None) => SyncPlan::Keep,
-        (false, Some(_)) => SyncPlan::Unregister,
+        (false, Some(cmd)) if runs_same_exe(cmd, expected) => SyncPlan::Unregister,
+        // Off: an entry of another executable under our name is not ours to remove.
+        (true, Some(_)) | (false, _) => SyncPlan::Keep,
     }
+}
+
+/// The executable a Run command starts: the quoted first part, else up to the first space.
+fn command_exe(cmd: &str) -> &str {
+    let cmd = cmd.trim_start();
+    match cmd.strip_prefix('"') {
+        Some(rest) => rest.split('"').next().unwrap_or(rest),
+        None => cmd.split_whitespace().next().unwrap_or(""),
+    }
+}
+
+/// Whether two Run commands start the same executable (paths compared ignoring case;
+/// arguments ignored).
+pub fn runs_same_exe(cmd: &str, other: &str) -> bool {
+    let exe = command_exe(cmd);
+    !exe.is_empty() && exe.eq_ignore_ascii_case(command_exe(other))
 }
 
 /// Makes the registry match the setting and returns the setting to keep: `false` when
@@ -127,7 +144,7 @@ mod tests {
         assert!(!start_minimized(args(&["tt-app.exe", "--minimized=no"])));
     }
 
-    const EXPECTED: &str = r#""C:\Apps	t-app.exe" --minimized"#;
+    const EXPECTED: &str = r#""C:\Apps\tt-app.exe" --minimized"#;
 
     #[test]
     fn startup_approved_values() {
@@ -153,7 +170,7 @@ mod tests {
         );
         // Missing, or pointing at another executable (the app was moved): write it again.
         assert_eq!(plan_sync(true, None, false, EXPECTED), SyncPlan::Register);
-        let moved = Some(r#""D:\Old	t-app.exe" --minimized"#);
+        let moved = Some(r#""D:\Old\tt-app.exe" --minimized"#);
         assert_eq!(plan_sync(true, moved, false, EXPECTED), SyncPlan::Register);
         // Not wanted: remove a leftover entry.
         assert_eq!(
@@ -161,6 +178,37 @@ mod tests {
             SyncPlan::Unregister
         );
         assert_eq!(plan_sync(false, None, false, EXPECTED), SyncPlan::Keep);
+    }
+
+    #[test]
+    fn the_exe_of_a_command_is_compared_without_args_and_case() {
+        assert!(runs_same_exe(EXPECTED, EXPECTED));
+        assert!(runs_same_exe(&EXPECTED.to_lowercase(), EXPECTED));
+        // Without the flag, or unquoted: still our executable.
+        assert!(runs_same_exe(
+            r#" "C:\Apps\tt-app.exe""#,
+            r#""C:\Apps\tt-app.exe" --minimized"#
+        ));
+        assert!(runs_same_exe(
+            r"C:\Apps\tt-app.exe --minimized",
+            r#""C:\Apps\tt-app.exe" --minimized"#
+        ));
+        assert!(!runs_same_exe(
+            r#""D:\Other\tt-app.exe" --minimized"#,
+            r#""C:\Apps\tt-app.exe" --minimized"#
+        ));
+        assert!(!runs_same_exe("", EXPECTED));
+    }
+
+    #[test]
+    fn setting_off_removes_only_our_own_entry() {
+        assert_eq!(
+            plan_sync(false, Some(EXPECTED), false, EXPECTED),
+            SyncPlan::Unregister
+        );
+        // Another copy of the app (or another program under the same name) keeps its entry.
+        let other = Some(r#""D:\Other\tt-app.exe" --minimized"#);
+        assert_eq!(plan_sync(false, other, false, EXPECTED), SyncPlan::Keep);
     }
 
     #[test]

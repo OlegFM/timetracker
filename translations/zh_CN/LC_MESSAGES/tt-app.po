@@ -1164,8 +1164,8 @@ msgid "Restore from backup?"
 msgstr "从备份恢复？"
 
 #: ui/main.slint
-msgid "All current data will be replaced by the contents of the backup. This can't be undone."
-msgstr "当前所有数据将被备份中的内容替换。此操作无法撤销。"
+msgid "All current data will be replaced by the contents of the backup. A copy of the current data is kept next to the database (.before-restore)."
+msgstr "当前所有数据将被备份中的内容替换。当前数据的副本会保存在数据库旁边（.before-restore）。"
 
 #: ui/main.slint
 msgctxt "backup"
@@ -1188,3 +1188,17 @@ msgstr "有可用的新版本。"
 msgctxt "font"
 msgid "Segoe UI"
 msgstr "Microsoft YaHei UI"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Summary"
+msgstr "汇总"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Entries"
+msgstr "记录"
+
+#: ui/strings.slint
+msgid "TimeTracker could not reopen its database and will close."
+msgstr "TimeTracker 无法重新打开其数据库，即将关闭。"

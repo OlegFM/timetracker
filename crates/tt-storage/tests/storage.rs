@@ -451,25 +451,27 @@ fn recover_running_entry_from_file() {
 }
 
 #[test]
-fn entry_writes_are_atomic_on_unknown_tag() {
+fn entry_writes_skip_unknown_tags() {
     let db = Db::open_in_memory().unwrap();
     let c = db.conn();
     let g = tag("g");
     catalog::insert_tag(c, &g).unwrap();
 
-    let mut bad = entry(1, Some(2));
-    bad.tag_ids = vec![g.id, new_id()];
-    assert!(entries::insert_entry(c, &bad).is_err());
-    assert!(entries::get_entry(c, bad.id).unwrap().is_none());
-
-    let mut e = entry(10, Some(20));
-    e.tag_ids = vec![g.id];
+    // A tag deleted meanwhile (stale template or draft) is dropped, not an error.
+    let mut e = entry(1, Some(2));
+    e.tag_ids = vec![g.id, new_id()];
     entries::insert_entry(c, &e).unwrap();
+    assert_eq!(
+        entries::get_entry(c, e.id).unwrap().unwrap().tag_ids,
+        [g.id]
+    );
+
     let mut changed = e.clone();
     changed.description = "changed".into();
     changed.tag_ids = vec![new_id()];
-    assert!(entries::update_entry(c, &changed).is_err());
-    assert_eq!(entries::get_entry(c, e.id).unwrap().unwrap(), e);
+    assert!(entries::update_entry(c, &changed).unwrap());
+    let got = entries::get_entry(c, e.id).unwrap().unwrap();
+    assert_eq!((got.description.as_str(), got.tag_ids), ("changed", vec![]));
 }
 
 #[test]

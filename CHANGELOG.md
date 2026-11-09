@@ -47,3 +47,19 @@ of solidtime (not affiliated; the code is our own).
   entry); `seed` example `--running` option.
 - Release profile tuned for size and memory; Slint software renderer only
   ([docs/perf.md](docs/perf.md)).
+- A restore keeps the replaced database as `timetracker.db.before-restore`.
+
+### Fixed
+
+- Deleting a tag, project or task named by the paused (or running) timer no longer makes
+  Resume, Stop or Start fail; the timer and the timer bar draft simply drop it.
+- A backup taken while the timer runs stores it paused at the backup moment: restoring it
+  later no longer counts the time in between.
+- Duplicate is disabled while overlapping entries are not allowed (the copy always
+  overlaps its original).
+- An entry closed at or before its start (stopped at once, or the clock was moved back)
+  is dropped instead of stored with zero length.
+- Turning "Start with Windows" off removes the Run entry only when it starts this copy of
+  the app.
+- XLSX sheet names and the restore error box are translated; the updater uses HTTPS only
+  (also after redirects) and a slow installer download is no longer cut after 10 s.

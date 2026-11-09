@@ -451,6 +451,8 @@ fn export_labels(tr: &Tr<'_>) -> ExportLabels {
         start: tr.get_export_start().into(),
         end: tr.get_export_end().into(),
         date: tr.get_export_date().into(),
+        summary_sheet: tr.get_export_sheet_summary().into(),
+        entries_sheet: tr.get_export_sheet_entries().into(),
     }
 }
 
@@ -747,6 +749,8 @@ mod tests {
             start: s("Start"),
             end: s("End"),
             date: s("Date"),
+            summary_sheet: s("Summary"),
+            entries_sheet: s("Entries"),
         }
     }
 

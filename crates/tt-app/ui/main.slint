@@ -147,7 +147,7 @@ export component MainWindow inherits Window {
 
     if SettingsBridge.restore-pending: ConfirmDialog {
         title: @tr("Restore from backup?");
-        message: @tr("All current data will be replaced by the contents of the backup. This can't be undone.");
+        message: @tr("All current data will be replaced by the contents of the backup. A copy of the current data is kept next to the database (.before-restore).");
         confirm-text: @tr("backup" => "Restore");
         confirmed => { SettingsBridge.confirm-restore(); }
         cancelled => { SettingsBridge.cancel-restore(); }

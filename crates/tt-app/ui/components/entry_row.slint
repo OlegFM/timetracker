@@ -3,10 +3,12 @@ import { Icon, Icons } from "icon.slint";
 import { Activator, Button, ButtonVariant, FocusRing } from "button.slint";
 import { ColorDot } from "color_dot.slint";
 import { DayView, EntryRowView } from "../bridges/entries.slint";
+import { SettingsBridge } from "../bridges/settings.slint";
 
 // One time entry: description, project, tags, billable mark, range, duration and the
 // continue / duplicate / delete buttons. Clicking (or Enter on) the row opens it.
-// Continue, duplicate and delete are disabled for the running entry.
+// Continue, duplicate and delete are disabled for the running entry; duplicate also while
+// overlapping entries are not allowed (the copy would always overlap its original).
 export component EntryRow inherits Rectangle {
     in property <EntryRowView> entry;
     callback open();
@@ -138,7 +140,7 @@ export component EntryRow inherits Rectangle {
                     variant: ButtonVariant.ghost;
                     icon: Icons.copy;
                     icon-color: Theme.muted;
-                    enabled: !root.entry.running;
+                    enabled: !root.entry.running && !SettingsBridge.prevent-overlap;
                     accessible-label: @tr("Duplicate");
                     clicked => { root.duplicate(); }
                 }

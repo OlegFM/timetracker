@@ -55,8 +55,10 @@ fn write_tags(conn: &Connection, e: &TimeEntry) -> Result<()> {
         "DELETE FROM time_entry_tags WHERE time_entry_id = ?1",
         [text(e.id)],
     )?;
-    let mut st = conn
-        .prepare("INSERT OR IGNORE INTO time_entry_tags(time_entry_id, tag_id) VALUES (?1, ?2)")?;
+    // Ids of tags deleted meanwhile (a stale template or draft) are skipped.
+    let mut st = conn.prepare(
+        "INSERT OR IGNORE INTO time_entry_tags(time_entry_id, tag_id) SELECT ?1, id FROM tags WHERE id = ?2",
+    )?;
     for tag in &e.tag_ids {
         st.execute([text(e.id), text(*tag)])?;
     }
@@ -342,6 +344,20 @@ pub fn set_session_template(conn: &Connection, id: Id, t: &EntryTemplate) -> Res
         params![text(id), serde_json::to_string(t)?],
     )?;
     Ok(())
+}
+
+/// Templates of the sessions that are not stopped.
+pub fn open_session_templates(conn: &Connection) -> Result<Vec<(Id, EntryTemplate)>> {
+    let mut st = conn.prepare(
+        "SELECT id, template_json FROM timer_sessions
+         WHERE state != 'stopped' AND template_json IS NOT NULL",
+    )?;
+    let rows = st.query_map([], |r| Ok((col_id(r, 0)?, r.get::<_, String>(1)?)))?;
+    rows.map(|row| {
+        let (id, json) = row?;
+        Ok((id, serde_json::from_str(&json)?))
+    })
+    .collect()
 }
 
 pub fn session_template(conn: &Connection, id: Id) -> Result<Option<EntryTemplate>> {

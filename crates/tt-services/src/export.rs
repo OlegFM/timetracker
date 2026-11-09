@@ -37,6 +37,9 @@ pub struct ExportLabels {
     pub start: String,
     pub end: String,
     pub date: String,
+    /// XLSX sheet names (made valid with [`sheet_name`]).
+    pub summary_sheet: String,
+    pub entries_sheet: String,
 }
 
 pub struct Lookup<'a> {
@@ -247,6 +250,38 @@ fn hours(seconds: i64) -> f64 {
     seconds as f64 / 3600.0
 }
 
+/// `label` as a valid Excel sheet name: without `[]:*?/\`, no leading or trailing
+/// apostrophe, at most 31 UTF-16 units. Empty when nothing is left.
+fn sheet_name(label: &str) -> String {
+    let trim = |s: &str| {
+        s.trim_matches(|c: char| c.is_whitespace() || c == '\'')
+            .to_owned()
+    };
+    let clean: String = label
+        .chars()
+        .filter(|c| !matches!(c, '[' | ']' | ':' | '*' | '?' | '/' | '\\'))
+        .collect();
+    let mut units = 0;
+    let cut: String = trim(&clean)
+        .chars()
+        .take_while(|c| {
+            units += c.len_utf16();
+            units <= 31
+        })
+        .collect();
+    trim(&cut)
+}
+
+/// Names `sheet` after `label`; an unusable label (empty, or the name of `taken`) keeps
+/// the default name.
+fn name_sheet(sheet: &mut Worksheet, label: &str, taken: &str) -> Result<String> {
+    let name = sheet_name(label);
+    if !name.is_empty() && name.to_lowercase() != taken.to_lowercase() {
+        sheet.set_name(&name).map_err(io_err)?;
+    }
+    Ok(name)
+}
+
 fn header(sheet: &mut Worksheet, cells: &[&str], bold: &Format) -> Result<()> {
     for (c, text) in cells.iter().enumerate() {
         sheet
@@ -270,7 +305,7 @@ pub fn export_report_xlsx(
     let mut book = Workbook::new();
 
     let sheet = book.add_worksheet();
-    sheet.set_name("Summary").map_err(io_err)?;
+    let summary = name_sheet(sheet, &labels.summary_sheet, "")?;
     header(sheet, &summary_xlsx_headers(labels), &bold)?;
     for (i, l) in summary_lines(r, names, labels).iter().enumerate() {
         let row = i as u32 + 1;
@@ -292,7 +327,7 @@ pub fn export_report_xlsx(
     }
 
     let sheet = book.add_worksheet();
-    sheet.set_name("Entries").map_err(io_err)?;
+    name_sheet(sheet, &labels.entries_sheet, &summary)?;
     header(sheet, &entry_xlsx_headers(labels), &bold)?;
     for (i, r) in entry_rows(entries, lookup, labels, prefs)
         .iter()
@@ -343,7 +378,49 @@ mod tests {
             start: s("Start"),
             end: s("End"),
             date: s("Date"),
+            summary_sheet: s("Summary"),
+            entries_sheet: s("Entries"),
         }
+    }
+
+    #[test]
+    fn sheet_names_follow_excel_rules() {
+        assert_eq!(sheet_name("Summary"), "Summary");
+        assert_eq!(sheet_name(r" [Q1]: a/b\c*?' "), "Q1 abc");
+        assert_eq!(sheet_name("'quoted'"), "quoted");
+        let long = sheet_name(&"Сводка ".repeat(10));
+        assert_eq!(long.encode_utf16().count(), 31);
+        assert!(long.starts_with("Сводка Сводка"));
+        // Not cut inside a surrogate pair.
+        assert_eq!(sheet_name(&"😀".repeat(20)).encode_utf16().count(), 30);
+        assert_eq!(sheet_name(r"[]:*?/\"), "");
+    }
+
+    #[test]
+    fn xlsx_accepts_any_sheet_labels() {
+        let (a, b) = (new_id(), new_id());
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("report.xlsx");
+        let save = |summary: &str, entries: &str| {
+            let mut l = labels();
+            l.summary_sheet = summary.into();
+            l.entries_sheet = entries.into();
+            empty_lookup(|lk| {
+                export_report_xlsx(
+                    &path,
+                    &report(a, b),
+                    &names(a, b),
+                    &[entry("work", Some(1_800_000))],
+                    lk,
+                    &l,
+                    &FormatPrefs::default(),
+                )
+            })
+        };
+        // Invalid characters, an empty name and two equal names still give a workbook.
+        save("Сводка: [итог]", "").unwrap();
+        save("Same", "same").unwrap();
+        assert!(path.exists());
     }
 
     fn row(key: GroupKey, seconds: i64, cost: i64, children: Vec<GroupRow>) -> GroupRow {

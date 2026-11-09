@@ -1165,7 +1165,7 @@ msgid "Restore from backup?"
 msgstr ""
 
 #: ui/main.slint
-msgid "All current data will be replaced by the contents of the backup. This can't be undone."
+msgid "All current data will be replaced by the contents of the backup. A copy of the current data is kept next to the database (.before-restore)."
 msgstr ""
 
 #: ui/main.slint
@@ -1188,4 +1188,18 @@ msgstr ""
 #: ui/strings.slint
 msgctxt "font"
 msgid "Segoe UI"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Summary"
+msgstr ""
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Entries"
+msgstr ""
+
+#: ui/strings.slint
+msgid "TimeTracker could not reopen its database and will close."
 msgstr ""

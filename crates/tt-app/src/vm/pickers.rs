@@ -1,12 +1,26 @@
 //! Picker rows (project/task and tags), search and selection helpers.
 
 use slint::{Color, SharedString};
-use tt_domain::{Id, Project, Tag, Task};
+use tt_domain::{EntryTemplate, Id, Project, Tag, Task};
 
 use crate::{ProjectOption, TagOption};
 
 /// Between project and task in option labels.
 pub const SEPARATOR: &str = " › ";
+
+/// Drops the project, task and tags of `t` that are not in `catalog` (deleted meanwhile);
+/// without its project the task goes too.
+pub fn retain_known(t: &mut EntryTemplate, catalog: &Catalog) {
+    if t.project_id.is_some_and(|id| catalog.project(id).is_none()) {
+        t.project_id = None;
+        t.task_id = None;
+    }
+    if t.task_id.is_some_and(|id| catalog.task(id).is_none()) {
+        t.task_id = None;
+    }
+    t.tag_ids
+        .retain(|id| catalog.tags.iter().any(|tag| tag.id == *id));
+}
 
 /// Colors given to projects created from the picker, in turn.
 pub const PALETTE: [&str; 12] = [
@@ -244,6 +258,40 @@ pub(crate) mod tests {
             created_at: 0,
             updated_at: 0,
         }
+    }
+
+    #[test]
+    fn template_keeps_only_ids_of_the_catalog() {
+        let p = project("p", "#000000");
+        let t = task(&p, "t");
+        let keep = tag("keep");
+        let catalog = Catalog {
+            projects: vec![p.clone()],
+            tasks: vec![t.clone()],
+            tags: vec![keep.clone()],
+        };
+        let mut draft = EntryTemplate {
+            description: "d".into(),
+            project_id: Some(p.id),
+            task_id: Some(t.id),
+            tag_ids: vec![new_id(), keep.id],
+            billable: true,
+        };
+        retain_known(&mut draft, &catalog);
+        assert_eq!((draft.project_id, draft.task_id), (Some(p.id), Some(t.id)));
+        assert_eq!(draft.tag_ids, vec![keep.id]);
+
+        // A deleted task: the project stays.
+        draft.task_id = Some(new_id());
+        retain_known(&mut draft, &catalog);
+        assert_eq!((draft.project_id, draft.task_id), (Some(p.id), None));
+
+        // A deleted project takes its task along.
+        draft.project_id = Some(new_id());
+        draft.task_id = Some(t.id);
+        retain_known(&mut draft, &catalog);
+        assert_eq!((draft.project_id, draft.task_id), (None, None));
+        assert_eq!((draft.description.as_str(), draft.billable), ("d", true));
     }
 
     fn labels(items: &[ProjectOption]) -> Vec<&str> {

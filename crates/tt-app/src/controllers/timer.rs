@@ -17,7 +17,9 @@ use crate::app::{AppContext, Ctx};
 use crate::controllers::{error_message, pickers::model};
 use crate::vm::error::error_code;
 use crate::vm::format::prefs_from;
-use crate::vm::pickers::{Catalog, palette_color, parse_id, project_options, tag_options};
+use crate::vm::pickers::{
+    Catalog, palette_color, parse_id, project_options, retain_known, tag_options,
+};
 use crate::vm::timer::{active_template, timer_view};
 use crate::{MainWindow, TimerBridge, TimerView, ToastKind, Tr};
 
@@ -340,6 +342,8 @@ impl TimerHub {
         });
         match res {
             Ok(catalog) => {
+                // The draft must not name what was just deleted (Start would fail).
+                retain_known(&mut self.draft.borrow_mut(), &catalog);
                 self.catalog.replace(catalog);
             }
             Err(e) => self.fail("load catalog", &e),
@@ -584,6 +588,8 @@ mod tests {
             let c = &mut *c;
             let tz = c.settings.format.tz;
             c.timer.start(&mut c.db, t, tz).unwrap();
+            // An entry stopped in the millisecond it started is dropped as empty.
+            std::thread::sleep(Duration::from_millis(5));
             c.timer.stop(&mut c.db, tz).unwrap();
         }
         assert_eq!(last_template(&hub.ctx.borrow()).unwrap(), Some(second));

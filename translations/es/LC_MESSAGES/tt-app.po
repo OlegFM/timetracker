@@ -1167,8 +1167,8 @@ msgid "Restore from backup?"
 msgstr "¿Restaurar desde la copia de seguridad?"
 
 #: ui/main.slint
-msgid "All current data will be replaced by the contents of the backup. This can't be undone."
-msgstr "Todos los datos actuales se reemplazarán por el contenido de la copia. No se puede deshacer."
+msgid "All current data will be replaced by the contents of the backup. A copy of the current data is kept next to the database (.before-restore)."
+msgstr "Todos los datos actuales se reemplazarán por el contenido de la copia. Se guarda una copia de los datos actuales junto a la base de datos (.before-restore)."
 
 #: ui/main.slint
 msgctxt "backup"
@@ -1191,3 +1191,17 @@ msgstr "Hay una nueva versión disponible."
 msgctxt "font"
 msgid "Segoe UI"
 msgstr "Segoe UI"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Summary"
+msgstr "Resumen"
+
+#: ui/strings.slint
+msgctxt "export"
+msgid "Entries"
+msgstr "Registros"
+
+#: ui/strings.slint
+msgid "TimeTracker could not reopen its database and will close."
+msgstr "TimeTracker no pudo volver a abrir su base de datos y se cerrará."

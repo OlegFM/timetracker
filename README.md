@@ -51,7 +51,14 @@ The executable is not signed yet, so SmartScreen may warn on the first start.
 | Database (SQLite, WAL) | `%APPDATA%\TimeTracker\timetracker.db` |
 | Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` |
 
-Settings › Data makes a backup copy of the database and restores one.
+Settings › Data makes a backup copy of the database and restores one. A timer running at
+the time of the backup is saved as paused at that moment, so a restore does not count the
+time in between. Before a restore the current database is kept next to it as
+`timetracker.db.before-restore` (replacing an older one), so a wrong restore can be undone by
+copying that file back while the app is closed.
+
+The XLSX report export has two sheets: the summary (the running entry counted up to now,
+rounding applied) and the entries (closed entries only, raw times without rounding).
 
 Command-line flags: `--minimized` starts in the tray (used by autostart); `--db <file>`
 opens another database file instead (for trying things out): then nothing writes the
