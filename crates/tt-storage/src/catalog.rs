@@ -26,8 +26,8 @@ pub fn insert_client(conn: &Connection, c: &Client) -> Result<()> {
     Ok(())
 }
 
-pub fn update_client(conn: &Connection, c: &Client) -> Result<()> {
-    conn.execute(
+pub fn update_client(conn: &Connection, c: &Client) -> Result<bool> {
+    let n = conn.execute(
         "UPDATE clients SET name=?2, archived_at=?3, created_at=?4, updated_at=?5 WHERE id=?1",
         params![
             text(c.id),
@@ -37,12 +37,12 @@ pub fn update_client(conn: &Connection, c: &Client) -> Result<()> {
             c.updated_at
         ],
     )?;
-    Ok(())
+    Ok(n > 0)
 }
 
-pub fn delete_client(conn: &Connection, id: Id) -> Result<()> {
-    conn.execute("DELETE FROM clients WHERE id = ?1", [text(id)])?;
-    Ok(())
+pub fn delete_client(conn: &Connection, id: Id) -> Result<bool> {
+    let n = conn.execute("DELETE FROM clients WHERE id = ?1", [text(id)])?;
+    Ok(n > 0)
 }
 
 pub fn get_client(conn: &Connection, id: Id) -> Result<Option<Client>> {
@@ -102,8 +102,8 @@ pub fn insert_project(conn: &Connection, p: &Project) -> Result<()> {
     Ok(())
 }
 
-pub fn update_project(conn: &Connection, p: &Project) -> Result<()> {
-    conn.execute(
+pub fn update_project(conn: &Connection, p: &Project) -> Result<bool> {
+    let n = conn.execute(
         "UPDATE projects SET name=?2, color=?3, client_id=?4, is_billable=?5, billable_rate=?6,
          estimated_time=?7, archived_at=?8, created_at=?9, updated_at=?10 WHERE id=?1",
         params![
@@ -119,12 +119,12 @@ pub fn update_project(conn: &Connection, p: &Project) -> Result<()> {
             p.updated_at
         ],
     )?;
-    Ok(())
+    Ok(n > 0)
 }
 
-pub fn delete_project(conn: &Connection, id: Id) -> Result<()> {
-    conn.execute("DELETE FROM projects WHERE id = ?1", [text(id)])?;
-    Ok(())
+pub fn delete_project(conn: &Connection, id: Id) -> Result<bool> {
+    let n = conn.execute("DELETE FROM projects WHERE id = ?1", [text(id)])?;
+    Ok(n > 0)
 }
 
 pub fn get_project(conn: &Connection, id: Id) -> Result<Option<Project>> {
@@ -177,8 +177,8 @@ pub fn insert_task(conn: &Connection, t: &Task) -> Result<()> {
     Ok(())
 }
 
-pub fn update_task(conn: &Connection, t: &Task) -> Result<()> {
-    conn.execute(
+pub fn update_task(conn: &Connection, t: &Task) -> Result<bool> {
+    let n = conn.execute(
         "UPDATE tasks SET project_id=?2, name=?3, estimated_time=?4, done_at=?5,
          created_at=?6, updated_at=?7 WHERE id=?1",
         params![
@@ -191,12 +191,12 @@ pub fn update_task(conn: &Connection, t: &Task) -> Result<()> {
             t.updated_at
         ],
     )?;
-    Ok(())
+    Ok(n > 0)
 }
 
-pub fn delete_task(conn: &Connection, id: Id) -> Result<()> {
-    conn.execute("DELETE FROM tasks WHERE id = ?1", [text(id)])?;
-    Ok(())
+pub fn delete_task(conn: &Connection, id: Id) -> Result<bool> {
+    let n = conn.execute("DELETE FROM tasks WHERE id = ?1", [text(id)])?;
+    Ok(n > 0)
 }
 
 pub fn get_task(conn: &Connection, id: Id) -> Result<Option<Task>> {
@@ -238,18 +238,18 @@ pub fn insert_tag(conn: &Connection, t: &Tag) -> Result<()> {
     Ok(())
 }
 
-pub fn update_tag(conn: &Connection, t: &Tag) -> Result<()> {
-    conn.execute(
+pub fn update_tag(conn: &Connection, t: &Tag) -> Result<bool> {
+    let n = conn.execute(
         "UPDATE tags SET name=?2, created_at=?3, updated_at=?4 WHERE id=?1",
         params![text(t.id), t.name, t.created_at, t.updated_at],
     )?;
-    Ok(())
+    Ok(n > 0)
 }
 
 /// Cascades to `time_entry_tags`.
-pub fn delete_tag(conn: &Connection, id: Id) -> Result<()> {
-    conn.execute("DELETE FROM tags WHERE id = ?1", [text(id)])?;
-    Ok(())
+pub fn delete_tag(conn: &Connection, id: Id) -> Result<bool> {
+    let n = conn.execute("DELETE FROM tags WHERE id = ?1", [text(id)])?;
+    Ok(n > 0)
 }
 
 pub fn get_tag(conn: &Connection, id: Id) -> Result<Option<Tag>> {

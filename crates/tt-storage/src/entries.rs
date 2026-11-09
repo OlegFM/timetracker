@@ -26,6 +26,21 @@ fn entry_row(r: &Row) -> rusqlite::Result<TimeEntry> {
     })
 }
 
+/// Runs `f` inside a savepoint (nests safely in `Db::transaction`): all or nothing.
+fn atomically<T>(conn: &Connection, f: impl FnOnce() -> Result<T>) -> Result<T> {
+    conn.execute_batch("SAVEPOINT repo_op")?;
+    match f() {
+        Ok(v) => {
+            conn.execute_batch("RELEASE repo_op")?;
+            Ok(v)
+        }
+        Err(e) => {
+            conn.execute_batch("ROLLBACK TO repo_op; RELEASE repo_op")?;
+            Err(e)
+        }
+    }
+}
+
 fn load_tags(conn: &Connection, entry_id: Id) -> Result<Vec<Id>> {
     let mut st = conn
         .prepare("SELECT tag_id FROM time_entry_tags WHERE time_entry_id = ?1 ORDER BY tag_id")?;
@@ -61,27 +76,32 @@ fn query_entries(
 }
 
 pub fn insert_entry(conn: &Connection, e: &TimeEntry) -> Result<()> {
-    conn.execute(
-        &format!("INSERT INTO time_entries({ENTRY_COLS}) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)"),
-        params![
-            text(e.id),
-            opt_text(e.session_id),
-            e.description,
-            e.start,
-            e.end,
-            e.billable,
-            opt_text(e.project_id),
-            opt_text(e.task_id),
-            e.created_at,
-            e.updated_at
-        ],
-    )?;
-    write_tags(conn, e)
+    atomically(conn, || {
+        conn.execute(
+            &format!(
+                "INSERT INTO time_entries({ENTRY_COLS}) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)"
+            ),
+            params![
+                text(e.id),
+                opt_text(e.session_id),
+                e.description,
+                e.start,
+                e.end,
+                e.billable,
+                opt_text(e.project_id),
+                opt_text(e.task_id),
+                e.created_at,
+                e.updated_at
+            ],
+        )?;
+        write_tags(conn, e)
+    })
 }
 
 /// Overwrites all fields and the tag set.
-pub fn update_entry(conn: &Connection, e: &TimeEntry) -> Result<()> {
-    conn.execute(
+pub fn update_entry(conn: &Connection, e: &TimeEntry) -> Result<bool> {
+    atomically(conn, || {
+        let n = conn.execute(
         "UPDATE time_entries SET session_id=?2, description=?3, start=?4, \"end\"=?5, billable=?6,
          project_id=?7, task_id=?8, created_at=?9, updated_at=?10 WHERE id=?1",
         params![
@@ -97,12 +117,17 @@ pub fn update_entry(conn: &Connection, e: &TimeEntry) -> Result<()> {
             e.updated_at
         ],
     )?;
-    write_tags(conn, e)
+        if n == 0 {
+            return Ok(false);
+        }
+        write_tags(conn, e)?;
+        Ok(true)
+    })
 }
 
-pub fn delete_entry(conn: &Connection, id: Id) -> Result<()> {
-    conn.execute("DELETE FROM time_entries WHERE id = ?1", [text(id)])?;
-    Ok(())
+pub fn delete_entry(conn: &Connection, id: Id) -> Result<bool> {
+    let n = conn.execute("DELETE FROM time_entries WHERE id = ?1", [text(id)])?;
+    Ok(n > 0)
 }
 
 pub fn get_entry(conn: &Connection, id: Id) -> Result<Option<TimeEntry>> {
@@ -215,12 +240,12 @@ pub fn insert_session(conn: &Connection, s: &TimerSession) -> Result<()> {
 }
 
 /// Does not touch the stored template.
-pub fn update_session(conn: &Connection, s: &TimerSession) -> Result<()> {
-    conn.execute(
+pub fn update_session(conn: &Connection, s: &TimerSession) -> Result<bool> {
+    let n = conn.execute(
         "UPDATE timer_sessions SET started_at=?2, ended_at=?3, state=?4 WHERE id=?1",
         params![text(s.id), s.started_at, s.ended_at, state_text(s.state)],
     )?;
-    Ok(())
+    Ok(n > 0)
 }
 
 /// The session that is not stopped (latest `started_at` if there are several).

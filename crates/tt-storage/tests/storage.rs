@@ -432,3 +432,51 @@ fn recover_running_entry_from_file() {
     let db = Db::open(&path).unwrap();
     assert_eq!(entries::running_entry(db.conn()).unwrap().unwrap(), e);
 }
+
+#[test]
+fn entry_writes_are_atomic_on_unknown_tag() {
+    let db = Db::open_in_memory().unwrap();
+    let c = db.conn();
+    let g = tag("g");
+    catalog::insert_tag(c, &g).unwrap();
+
+    let mut bad = entry(1, Some(2));
+    bad.tag_ids = vec![g.id, new_id()];
+    assert!(entries::insert_entry(c, &bad).is_err());
+    assert!(entries::get_entry(c, bad.id).unwrap().is_none());
+
+    let mut e = entry(10, Some(20));
+    e.tag_ids = vec![g.id];
+    entries::insert_entry(c, &e).unwrap();
+    let mut changed = e.clone();
+    changed.description = "changed".into();
+    changed.tag_ids = vec![new_id()];
+    assert!(entries::update_entry(c, &changed).is_err());
+    assert_eq!(entries::get_entry(c, e.id).unwrap().unwrap(), e);
+}
+
+#[test]
+fn update_and_delete_report_whether_a_row_changed() {
+    let mut db = Db::open_in_memory().unwrap();
+    let missing = new_id();
+    let c = db.conn();
+    assert!(!catalog::delete_client(c, missing).unwrap());
+    assert!(!catalog::update_client(c, &client("x")).unwrap());
+    assert!(!catalog::delete_project(c, missing).unwrap());
+    assert!(!catalog::delete_task(c, missing).unwrap());
+    assert!(!catalog::delete_tag(c, missing).unwrap());
+    assert!(!entries::delete_entry(c, missing).unwrap());
+    assert!(!entries::update_entry(c, &entry(1, Some(2))).unwrap());
+    let cl = client("c");
+    catalog::insert_client(c, &cl).unwrap();
+    assert!(catalog::update_client(c, &cl).unwrap());
+    assert!(catalog::delete_client(c, cl.id).unwrap());
+    // savepoints nest inside Db::transaction
+    let e = entry(1, Some(2));
+    db.transaction(|tx| {
+        entries::insert_entry(tx, &e)?;
+        assert!(entries::update_entry(tx, &e)?);
+        Ok(())
+    })
+    .unwrap();
+}
