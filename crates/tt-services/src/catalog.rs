@@ -113,13 +113,16 @@ impl<C: Clock> CatalogService<C> {
         Ok(project)
     }
 
-    /// Saves all editable fields; returns the stored project.
+    /// Saves the editable fields; `created_at` and `archived_at` stay as stored.
     pub fn update_project(&self, db: &mut Db, p: &Project) -> Result<Project> {
         let mut p = p.clone();
         p.name = valid_name(&p.name)?;
         valid_color(&p.color)?;
         p.updated_at = self.clock.now();
         in_tx(db, |c| {
+            let stored = catalog::get_project(c, p.id)?.ok_or(ServiceError::NotFound)?;
+            p.created_at = stored.created_at;
+            p.archived_at = stored.archived_at;
             if let Some(cid) = p.client_id {
                 catalog::get_client(c, cid)?.ok_or(ServiceError::NotFound)?;
             }
@@ -191,13 +194,24 @@ impl<C: Clock> CatalogService<C> {
         Ok(task)
     }
 
-    /// Saves name, estimate, done state and project; returns the stored task.
+    /// Saves name, estimate and project; `created_at` and `done_at` stay as stored.
+    /// Moving a task that has entries to another project is refused.
     pub fn update_task(&self, db: &mut Db, t: &Task) -> Result<Task> {
         let mut t = t.clone();
         t.name = valid_name(&t.name)?;
         t.updated_at = self.clock.now();
         in_tx(db, |c| {
-            catalog::get_project(c, t.project_id)?.ok_or(ServiceError::NotFound)?;
+            let stored = catalog::get_task(c, t.id)?.ok_or(ServiceError::NotFound)?;
+            t.created_at = stored.created_at;
+            t.done_at = stored.done_at;
+            if t.project_id != stored.project_id {
+                catalog::get_project(c, t.project_id)?.ok_or(ServiceError::NotFound)?;
+                if catalog::count_entries_for_task(c, t.id)? > 0 {
+                    return Err(ServiceError::InUse {
+                        what: "time_entries",
+                    });
+                }
+            }
             found(catalog::update_task(c, &t)?)
         })?;
         Ok(t)
@@ -414,6 +428,56 @@ mod tests {
         let t = svc.set_task_done(&mut db, t.id, true).unwrap();
         assert_eq!(t.done_at, Some(2_000));
         assert_eq!(svc.list_tasks(&db, p.id).unwrap(), vec![t]);
+    }
+
+    #[test]
+    fn stale_update_does_not_unarchive_or_reopen() {
+        let (svc, mut db) = setup();
+        let p = svc.create_project(&mut db, np("p")).unwrap();
+        let t = svc.create_task(&mut db, p.id, "t", None).unwrap();
+        svc.clock.set(2_000);
+        svc.set_project_archived(&mut db, p.id, true).unwrap();
+        svc.set_task_done(&mut db, t.id, true).unwrap();
+        svc.clock.set(3_000);
+        let mut stale_p = p.clone();
+        stale_p.name = "renamed".into();
+        stale_p.created_at = 42;
+        let saved = svc.update_project(&mut db, &stale_p).unwrap();
+        assert_eq!((saved.archived_at, saved.created_at), (Some(2_000), 1_000));
+        let mut stale_t = t.clone();
+        stale_t.name = "renamed".into();
+        let saved = svc.update_task(&mut db, &stale_t).unwrap();
+        assert_eq!((saved.done_at, saved.created_at), (Some(2_000), 1_000));
+        let stored = catalog::get_task(db.conn(), t.id).unwrap().unwrap();
+        assert_eq!(stored, saved);
+        let sp = catalog::get_project(db.conn(), p.id).unwrap().unwrap();
+        assert_eq!((sp.name.as_str(), sp.archived_at), ("renamed", Some(2_000)));
+    }
+
+    #[test]
+    fn moving_task_with_entries_is_refused() {
+        let (svc, mut db) = setup();
+        let p1 = svc.create_project(&mut db, np("a")).unwrap();
+        let p2 = svc.create_project(&mut db, np("b")).unwrap();
+        let t = svc.create_task(&mut db, p1.id, "t", None).unwrap();
+        let mut moved = t.clone();
+        moved.project_id = p2.id;
+        assert_eq!(svc.update_task(&mut db, &moved).unwrap().project_id, p2.id);
+        moved.project_id = p1.id;
+        entries::insert_entry(db.conn(), &entry(Some(p2.id), Some(t.id), vec![])).unwrap();
+        assert!(matches!(
+            svc.update_task(&mut db, &moved),
+            Err(ServiceError::InUse {
+                what: "time_entries"
+            })
+        ));
+        moved.project_id = new_id();
+        assert!(matches!(
+            svc.update_task(&mut db, &moved),
+            Err(ServiceError::NotFound)
+        ));
+        let stored = catalog::get_task(db.conn(), t.id).unwrap().unwrap();
+        assert_eq!(stored.project_id, p2.id);
     }
 
     #[test]

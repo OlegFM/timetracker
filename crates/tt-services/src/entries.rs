@@ -447,8 +447,13 @@ mod tests {
     #[test]
     fn update_entry_extending_past_midnight_splits() {
         let (svc, mut db) = setup(at(12, 12, 0));
-        let mut e = manual(&svc, &mut db, at(9, 22, 0), at(9, 23, 0));
-        e.session_id = Some(new_id());
+        let timer = TimerService::new(FixedClock::new(at(9, 22, 0)));
+        timer.start(&mut db, tpl("s"), MSK).unwrap();
+        timer.clock().set(at(9, 23, 0));
+        timer.stop(&mut db, MSK).unwrap();
+        let mut e = all(&db).remove(0);
+        let sid = e.session_id;
+        assert!(sid.is_some());
         e.end = Some(at(11, 2, 0));
         let out = svc.update(&mut db, e.clone(), MSK, true).unwrap();
         assert_eq!(
@@ -460,7 +465,8 @@ mod tests {
             ]
         );
         assert_eq!(out[0].id, e.id);
-        assert!(out.iter().all(|x| x.session_id.is_none()));
+        assert_eq!(out[0].session_id, sid);
+        assert!(out[1..].iter().all(|x| x.session_id.is_none()));
         assert_ne!(out[1].id, e.id);
         assert_eq!(all(&db), out);
     }
