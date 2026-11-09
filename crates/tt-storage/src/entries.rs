@@ -176,6 +176,21 @@ pub fn recent_entries(conn: &Connection, limit: u32) -> Result<Vec<TimeEntry>> {
     )
 }
 
+/// Entries that started before `before`, latest first, at most `limit`.
+pub fn entries_started_before(
+    conn: &Connection,
+    before: Millis,
+    limit: u32,
+) -> Result<Vec<TimeEntry>> {
+    query_entries(
+        conn,
+        &format!(
+            "SELECT {ENTRY_COLS} FROM time_entries WHERE start < ?1              ORDER BY start DESC, id DESC LIMIT ?2"
+        ),
+        params![before, limit],
+    )
+}
+
 /// Whether any entry other than `exclude` intersects `[start, end)`.
 pub fn overlapping(
     conn: &Connection,

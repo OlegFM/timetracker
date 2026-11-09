@@ -5,10 +5,11 @@ use tt_domain::{
     EntryTemplate, Id, Millis, SessionState, TimeEntry, TimerSession, Tz, day_total, local_date,
     new_id, session_total, split_at_local_midnights, start_of_local_day,
 };
-use tt_storage::{Db, StorageError, entries};
+use tt_storage::{Db, entries};
 
 use crate::clock::Clock;
 use crate::error::{Result, ServiceError};
+use crate::tx::in_tx;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TimerStatus {
@@ -99,12 +100,15 @@ impl<C: Clock> TimerService<C> {
         })
     }
 
-    /// Stores the template and applies it to the running entry; closed entries stay as is.
+    /// Stores the template and applies it to the running entry (after the midnight
+    /// rollover); closed entries stay as is.
     pub fn update_template(&self, db: &mut Db, t: EntryTemplate, tz: Tz) -> Result<TimerStatus> {
         let now = self.clock.now();
         in_tx(db, |c| {
             let s = entries::active_session(c)?.ok_or(ServiceError::Invalid("not active"))?;
             entries::set_session_template(c, s.id, &t)?;
+            // The part before today's midnight keeps the old attributes.
+            rollover_in(c, now, tz)?;
             let running = entries::running_entry(c)?.filter(|e| e.session_id == Some(s.id));
             if let Some(mut e) = running {
                 e.description = t.description.clone();
@@ -123,34 +127,21 @@ impl<C: Clock> TimerService<C> {
     /// from today's start stays running. Returns whether anything changed.
     pub fn rollover(&self, db: &mut Db, tz: Tz) -> Result<bool> {
         let now = self.clock.now();
-        in_tx(db, |c| {
-            let Some(e) = entries::running_entry(c)? else {
-                return Ok(false);
-            };
-            let day_start = start_of_local_day(local_date(now, tz), tz);
-            if e.start >= day_start {
-                return Ok(false);
-            }
-            close_at(c, &e, day_start, now, tz)?;
-            entries::insert_entry(c, &piece(&e, day_start, None, now))?;
-            Ok(true)
-        })
+        in_tx(db, |c| rollover_in(c, now, tz))
     }
 }
 
-/// Runs `f` in one `Db::transaction`; any error (storage or service) rolls back.
-fn in_tx<T>(db: &mut Db, f: impl FnOnce(&Connection) -> Result<T>) -> Result<T> {
-    let mut failure = None;
-    let out = db.transaction(|tx| {
-        f(tx).map_err(|e| match e {
-            ServiceError::Storage(e) => e,
-            other => {
-                failure = Some(other);
-                StorageError::Corrupt("aborted by service error".into())
-            }
-        })
-    });
-    out.map_err(|e| failure.unwrap_or(ServiceError::Storage(e)))
+fn rollover_in(c: &Connection, now: Millis, tz: Tz) -> Result<bool> {
+    let Some(e) = entries::running_entry(c)? else {
+        return Ok(false);
+    };
+    let day_start = start_of_local_day(local_date(now, tz), tz);
+    if e.start >= day_start {
+        return Ok(false);
+    }
+    close_at(c, &e, day_start, now, tz)?;
+    entries::insert_entry(c, &piece(&e, day_start, None, now))?;
+    Ok(true)
 }
 
 fn status_of(c: &Connection, now: Millis, tz: Tz) -> tt_storage::Result<TimerStatus> {
@@ -548,6 +539,52 @@ mod tests {
         assert_eq!(st.current.unwrap().id, list[1].id);
         assert_eq!(st.today_ms, 10 * MIN);
         assert_eq!(st.session_ms, 40 * MIN);
+    }
+
+    #[test]
+    fn update_template_after_midnight_without_tick_keeps_past_piece() {
+        let (svc, mut db) = setup(at(9, 23, 30));
+        let sid = session_id(&svc.start(&mut db, tpl("a"), MSK).unwrap());
+        svc.clock().set(at(10, 0, 10));
+        svc.update_template(&mut db, tpl("b"), MSK).unwrap();
+
+        let list = session_entries(&db, sid);
+        assert_eq!(
+            spans(&list),
+            vec![(at(9, 23, 30), Some(at(10, 0, 0))), (at(10, 0, 0), None)]
+        );
+        assert_eq!(list[0].description, "a");
+        assert_eq!(list[1].description, "b");
+    }
+
+    #[test]
+    fn rollover_across_dst_gap_midnight() {
+        let sp = Tz::America__Sao_Paulo;
+        let start = at_tz(sp, 2018, 11, 3, 22, 0);
+        let now = at_tz(sp, 2018, 11, 4, 2, 0);
+        let (svc, mut db) = setup(start);
+        let sid = session_id(&svc.start(&mut db, tpl("a"), sp).unwrap());
+        svc.clock().set(now);
+        assert!(svc.rollover(&mut db, sp).unwrap());
+        // 2018-11-04 00:00 does not exist; the day starts at 01:00 local = 03:00 UTC.
+        let day_start = at_tz(sp, 2018, 11, 4, 1, 0);
+        assert_eq!(day_start, 1_541_300_400_000);
+        assert_eq!(
+            spans(&session_entries(&db, sid)),
+            vec![(start, Some(day_start)), (day_start, None)]
+        );
+    }
+
+    #[test]
+    fn rollover_at_exact_midnight() {
+        let (svc, mut db) = setup(at(9, 23, 30));
+        let sid = session_id(&svc.start(&mut db, tpl("a"), MSK).unwrap());
+        svc.clock().set(at(10, 0, 0));
+        assert!(svc.rollover(&mut db, MSK).unwrap());
+        assert_eq!(
+            spans(&session_entries(&db, sid)),
+            vec![(at(9, 23, 30), Some(at(10, 0, 0))), (at(10, 0, 0), None)]
+        );
     }
 
     #[test]
