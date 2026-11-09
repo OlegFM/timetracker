@@ -23,7 +23,7 @@ export component TagSelect inherits Rectangle {
     private property <int> create-rows: Pickers.tag-creatable(root.items, root.query) ? 1 : 0;
     private property <int> row-count: root.shown.length + root.create-rows;
     // Row index; -1 = none.
-    private property <int> highlighted;
+    private property <int> highlighted: -1;
 
     function open() {
         root.query = "";
@@ -43,7 +43,7 @@ export component TagSelect inherits Rectangle {
         if id != "" {
             root.selection-changed(Pickers.toggle-tag(root.items, id));
             root.query = "";
-            root.highlighted = 0;
+            root.highlighted = -1;
         }
     }
 
@@ -106,7 +106,8 @@ export component TagSelect inherits Rectangle {
                     search := Input {
                         text <=> root.query;
                         placeholder: @tr("Search");
-                        edited => { root.highlighted = 0; }
+                        // First match while searching; nothing for an empty (or blank) query.
+                        edited(text) => { root.highlighted = text.replace-all(" ", "") == "" ? -1 : 0; }
                     }
                     PickerList {
                         row-count: root.row-count;

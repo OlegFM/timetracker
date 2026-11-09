@@ -235,7 +235,7 @@ export component ComboBox inherits Rectangle {
     private property <[string]> creates: Pickers.option-creatable(root.items, root.query) ? root.create-texts : [];
     private property <int> row-count: root.none-rows + root.shown.length + root.creates.length;
     // Row index; -1 = none.
-    private property <int> highlighted;
+    private property <int> highlighted: -1;
 
     function open() {
         root.query = "";
@@ -318,7 +318,8 @@ export component ComboBox inherits Rectangle {
                     search := Input {
                         text <=> root.query;
                         placeholder: @tr("Search");
-                        edited => { root.highlighted = 0; }
+                        // First match while searching; nothing for an empty (or blank) query.
+                        edited(text) => { root.highlighted = text.replace-all(" ", "") == "" ? -1 : 0; }
                     }
                     PickerList {
                         row-count: root.row-count;
