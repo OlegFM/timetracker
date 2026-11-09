@@ -1,4 +1,4 @@
-; Per-user installer of TimeTracker (NSIS 3, no administrator rights).
+﻿; Per-user installer of TimeTracker (NSIS 3, no administrator rights).
 ;
 ;   makensis /DVERSION=0.1.0 crates\tt-app\installer\timetracker.nsi
 ;
@@ -31,7 +31,9 @@ InstallDir "$LOCALAPPDATA\Programs\${APP}"
 InstallDirRegKey HKCU "${UNINST_KEY}" "InstallLocation"
 !system 'mkdir "${ROOT}\target\installer" 2>nul'
 
-VIProductVersion "${VERSION}.0"
+; Windows version resources take numbers only: 0.2.0-beta.1 -> 0.2.0.0.
+!searchparse "${VERSION}-" "" VERSION_NUM "-"
+VIProductVersion "${VERSION_NUM}.0"
 VIAddVersionKey /LANG=0 "ProductName" "${APP}"
 VIAddVersionKey /LANG=0 "FileDescription" "${APP} setup"
 VIAddVersionKey /LANG=0 "FileVersion" "${VERSION}"
@@ -39,6 +41,7 @@ VIAddVersionKey /LANG=0 "ProductVersion" "${VERSION}"
 VIAddVersionKey /LANG=0 "LegalCopyright" "All rights reserved"
 
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
 !define MUI_ICON "..\assets\app.ico"
 !define MUI_UNICON "..\assets\app.ico"
 !define MUI_ABORTWARNING
@@ -56,12 +59,45 @@ VIAddVersionKey /LANG=0 "LegalCopyright" "All rights reserved"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 !insertmacro MUI_LANGUAGE "Spanish"
 
-; A running copy locks the executable. Closing it is safe: a running timer is kept in
-; the database and continues on the next start.
-!macro CLOSE_APP
-  nsExec::Exec 'taskkill /IM ${EXE} /F'
+LangString APP_RUNNING ${LANG_ENGLISH} "${APP} is running. Close it and continue?$\r$\n$\r$\nA running timer is kept and continues on the next start."
+LangString APP_RUNNING ${LANG_RUSSIAN} "${APP} запущен. Закрыть его и продолжить?$\r$\n$\r$\nИдущий таймер сохранится и продолжится при следующем запуске."
+LangString APP_RUNNING ${LANG_SIMPCHINESE} "${APP} 正在运行。关闭它并继续吗？$\r$\n$\r$\n正在进行的计时会保留，下次启动时继续。"
+LangString APP_RUNNING ${LANG_SPANISH} "${APP} está en ejecución. ¿Cerrarlo y continuar?$\r$\n$\r$\nEl temporizador en curso se conserva y continúa en el próximo inicio."
+
+; Sets $0 to 0 when tt-app.exe runs.
+!macro APP_RUNNING
+  nsExec::Exec 'cmd /c tasklist /FI "IMAGENAME eq ${EXE}" /NH | find /I "${EXE}"'
   Pop $0
-  Sleep 500
+!macroend
+
+; A running copy locks the executable. First a polite close (WM_CLOSE, up to 3 s); if it
+; is still there, the user confirms (Cancel aborts) and it is ended. Ending it is safe: a
+; running timer is kept in the database. Silent mode (/S) skips the question.
+!macro CLOSE_APP
+  !insertmacro APP_RUNNING
+  ${If} $0 == 0
+    nsExec::Exec 'taskkill /IM ${EXE}'
+    Pop $0
+    StrCpy $1 0
+    ${Do}
+      Sleep 500
+      IntOp $1 $1 + 1
+      !insertmacro APP_RUNNING
+      ${If} $0 != 0
+      ${OrIf} $1 >= 6
+        ${ExitDo}
+      ${EndIf}
+    ${Loop}
+    ${If} $0 == 0
+      ${IfNot} ${Silent}
+        MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "$(APP_RUNNING)" IDOK +2
+        Abort
+      ${EndIf}
+      nsExec::Exec 'taskkill /IM ${EXE} /F'
+      Pop $0
+      Sleep 500
+    ${EndIf}
+  ${EndIf}
 !macroend
 
 Section "Install"

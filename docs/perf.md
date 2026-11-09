@@ -85,6 +85,11 @@ process (row 1: the main window was never created).
    10: 4–5× the CPU of the tray scenario). Spec §9.1 says a hidden window is not
    rendered, so the main window (and the mini timer, when hidden) is now destroyed on
    hide and created again on `show()` (Slint keeps its size and position).
+   Window attributes that Slint caches are **lost on re-create**: Slint applies the
+   window level and the icon only when they differ from its cached value, which is not
+   reset when the window is destroyed. So they are set in `when_created` after every
+   `show()` — `window_ext::keep_on_top` for the mini timer, `window_ext::set_app_icon`
+   for the main window (not Slint's `always-on-top` / `icon` alone).
 4. **`opt-level = "s"`** (with `lto = "thin"`, `codegen-units = 1`, `strip = true`):
    21.7 MB executable instead of 29.4 MB with `opt-level = 3`, same memory (rows 7–10).
    The extra CPU of Os in row 10 came from repainting the hidden window, which decision 3

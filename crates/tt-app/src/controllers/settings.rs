@@ -287,7 +287,12 @@ impl SettingsController {
     }
 
     fn set_autostart(&self, on: bool) {
-        match autostart::set_autostart(on) {
+        let registry = if self.ctx.borrow().manages_autostart {
+            autostart::set_autostart(on)
+        } else {
+            Ok(()) // `--db`: the setting only
+        };
+        match registry {
             Ok(()) => self.change(|s| s.autostart = on),
             Err(e) => {
                 log::warn!("autostart not changed: {e:#}");
@@ -509,6 +514,9 @@ impl SettingsController {
         self.mini.apply_appearance();
         if self.mini.is_visible() != mini_visible {
             self.mini.set_visible(mini_visible);
+        }
+        if !self.ctx.borrow().manages_autostart {
+            return; // `--db`: the registry is left alone
         }
         match autostart::sync(autostart_wanted) {
             Ok(effective) if effective != autostart_wanted => {

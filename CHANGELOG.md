@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-11-09
 
-First version: the core of solidtime as a standalone Windows app.
+First version: a standalone Windows time tracker whose behaviour is modelled on the core
+of solidtime (not affiliated; the code is our own).
 
 ### Added
 
@@ -40,7 +41,9 @@ First version: the core of solidtime as a standalone Windows app.
   `TT_UPDATE_URL` and `TT_UPDATE_PUBKEY` are set at build time.
 - Translations: English, Russian, Simplified Chinese, Spanish.
 - Per-user NSIS installer (no administrator rights, Start menu shortcut, uninstall keeps
-  the data), portable zip, application icon and version resource.
-- `--db <file>` flag to open another database file; `seed` example `--running` option.
+  the data, asks before closing a running copy), portable zip, application icon (file,
+  title bar, taskbar) and version resource.
+- `--db <file>` flag to open another database file (it never writes the autostart
+  entry); `seed` example `--running` option.
 - Release profile tuned for size and memory; Slint software renderer only
   ([docs/perf.md](docs/perf.md)).

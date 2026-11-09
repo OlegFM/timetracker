@@ -36,6 +36,41 @@ pub fn hide_from_taskbar(w: &slint::Window) {
     });
 }
 
+/// Keeps the window above all others. Call after every `show()`: hidden windows are
+/// destroyed (`main.rs`) and Slint does not apply its cached level to the new one.
+pub fn keep_on_top(w: &slint::Window) {
+    w.with_winit_window(|win| win.set_window_level(winit::window::WindowLevel::AlwaysOnTop));
+}
+
+/// Puts the application icon (icon resource 1 of the executable, see `build.rs`) in the
+/// title bar and on the taskbar button. Call after every `show()`, like [`keep_on_top`]:
+/// a Slint `icon` would not come back on a re-created window either.
+pub fn set_app_icon(w: &slint::Window) {
+    w.with_winit_window(|_win| {
+        #[cfg(target_os = "windows")]
+        {
+            use winit::dpi::PhysicalSize;
+            use winit::platform::windows::{IconExtWindows, WindowExtWindows};
+            use winit::window::Icon;
+
+            let px = |logical: f64| {
+                let n = (logical * _win.scale_factor()).round() as u32;
+                Some(PhysicalSize::new(n, n))
+            };
+            match (
+                Icon::from_resource(1, px(16.0)),
+                Icon::from_resource(1, px(32.0)),
+            ) {
+                (Ok(small), Ok(big)) => {
+                    _win.set_window_icon(Some(small));
+                    _win.set_taskbar_icon(Some(big));
+                }
+                (Err(e), _) | (_, Err(e)) => log::warn!("window icon not set: {e}"),
+            }
+        }
+    });
+}
+
 /// Hands the window to the OS to be moved with the mouse; call while the left button is
 /// down. The OS ends the move when the button is released (no event is sent for that).
 pub fn start_drag(w: &slint::Window) {
@@ -73,7 +108,10 @@ pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
         log::warn!("window not shown: {e}");
         return;
     }
-    when_created(ui, |ui: &C| focus(ui.window()));
+    when_created(ui, |ui: &C| {
+        set_app_icon(ui.window());
+        focus(ui.window());
+    });
 }
 
 /// All monitors, the primary one first.

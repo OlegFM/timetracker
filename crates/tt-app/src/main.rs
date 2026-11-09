@@ -46,9 +46,8 @@ fn run() -> anyhow::Result<()> {
     let minimized = autostart::start_minimized(std::env::args());
 
     // A test database (`--db`) leaves the real autostart entry alone.
-    let db_override = app::db_override(std::env::args_os());
-    let opened = match &db_override {
-        Some(path) => AppContext::open(path.clone())?,
+    let opened = match app::db_override(std::env::args_os()) {
+        Some(path) => AppContext::open(path)?,
         None => AppContext::open_default()?,
     };
     let ctx: Ctx = Rc::new(RefCell::new(opened));
@@ -79,10 +78,11 @@ fn run() -> anyhow::Result<()> {
 
     if !minimized {
         ui.show().context("show main window")?;
+        window_ext::when_created(&ui, |ui: &MainWindow| window_ext::set_app_icon(ui.window()));
     }
     // The Run entry follows the setting, unless Task Manager disabled it (the user's
     // choice: then the setting turns off).
-    if db_override.is_none() {
+    if ctx.borrow().manages_autostart {
         sync_autostart(&ctx);
     }
 

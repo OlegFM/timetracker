@@ -147,6 +147,7 @@ impl MiniController {
         window_ext::when_created(w, move |w: &MiniTimer| {
             let win = w.window();
             window_ext::hide_from_taskbar(win);
+            window_ext::keep_on_top(win);
             window_ext::set_position(win, saved.unwrap_or((i32::MIN, i32::MIN)));
         });
     }

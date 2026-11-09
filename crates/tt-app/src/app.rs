@@ -30,6 +30,10 @@ pub struct AppContext {
     pub settings: Settings,
     pub db_path: PathBuf,
     pub events: Rc<AppEvents>,
+    /// Whether the autostart entry in the registry follows the setting. Only for the
+    /// default database: with `--db` the "Start with Windows" toggle changes the setting
+    /// alone and nothing writes the real entry.
+    pub manages_autostart: bool,
 }
 
 /// Callbacks of one kind of event.
@@ -92,10 +96,13 @@ impl AppContext {
     /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`.
     pub fn open_default() -> anyhow::Result<AppContext> {
         let dirs = BaseDirs::new().context("no user profile folders")?;
-        Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))
+        let mut ctx = Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))?;
+        ctx.manages_autostart = true;
+        Ok(ctx)
     }
 
-    /// Opens the database at `db_path` (creating its folder) and loads the settings.
+    /// Opens the database at `db_path` (creating its folder) and loads the settings. The
+    /// autostart entry is left alone ([`Self::manages_autostart`]).
     pub fn open(db_path: PathBuf) -> anyhow::Result<AppContext> {
         if let Some(dir) = db_path.parent() {
             std::fs::create_dir_all(dir).context("create data folder")?;
@@ -110,6 +117,7 @@ impl AppContext {
             settings,
             db_path,
             events: Rc::default(),
+            manages_autostart: false,
         })
     }
 
@@ -147,11 +155,13 @@ fn env_db() -> Option<PathBuf> {
     None
 }
 
-/// The non-empty argument after [`DB_ARG`].
+/// The argument after [`DB_ARG`], unless it is empty or another flag.
 fn db_arg(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
     let mut args = args.into_iter();
     args.position(|a| a == DB_ARG)?;
-    args.next().filter(|p| !p.is_empty()).map(PathBuf::from)
+    args.next()
+        .filter(|p| !p.is_empty() && !p.to_string_lossy().starts_with("--"))
+        .map(PathBuf::from)
 }
 
 /// `%LOCALAPPDATA%\TimeTracker\logs`.
@@ -189,6 +199,8 @@ mod tests {
         assert!(path.exists());
         assert_eq!(ctx.db_path, path);
         assert_eq!(ctx.settings, Settings::default());
+        // Only the default database may write the autostart entry in the registry.
+        assert!(!ctx.manages_autostart);
     }
 
     #[test]
@@ -248,6 +260,8 @@ mod tests {
         // A flag without a value, or with an empty one, is ignored.
         assert_eq!(db_arg(args(&["tt-app.exe", "--db"])), None);
         assert_eq!(db_arg(args(&["tt-app.exe", "--db", ""])), None);
+        // The next flag is not a path.
+        assert_eq!(db_arg(args(&["tt-app.exe", "--db", "--minimized"])), None);
     }
 
     #[test]

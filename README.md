@@ -2,8 +2,8 @@
 
 A lightweight time tracker for Windows: a native window, a floating mini timer and a
 tray icon. Everything stays on your computer in one SQLite file — no account, no cloud.
-The behaviour follows [solidtime](https://www.solidtime.io/) (core features only); the
-code is our own.
+Its behaviour is modelled on [solidtime](https://www.solidtime.io/) (core features only);
+it is not affiliated with solidtime, and the code is our own.
 
 Written in Rust with [Slint](https://slint.dev). In the tray with the timer running it
 uses about 5–6 MB of memory and practically no CPU (see [docs/perf.md](docs/perf.md)).
@@ -35,7 +35,8 @@ uses about 5–6 MB of memory and practically no CPU (see [docs/perf.md](docs/pe
 
 ## Install
 
-Download `TimeTracker-<version>-setup.exe` from the release artifacts and run it. It
+Get `TimeTracker-<version>-setup.exe` from the artifacts of the CI run for a version tag
+(GitHub Actions › the `v*` run › Artifacts), or build it yourself (below), and run it. It
 installs for the current user only (no administrator rights) into
 `%LOCALAPPDATA%\Programs\TimeTracker` and adds a Start menu shortcut. Uninstall it from
 Settings › Apps; your data is kept. A portable zip with just `tt-app.exe` is published
@@ -53,7 +54,9 @@ The executable is not signed yet, so SmartScreen may warn on the first start.
 Settings › Data makes a backup copy of the database and restores one.
 
 Command-line flags: `--minimized` starts in the tray (used by autostart); `--db <file>`
-opens another database file instead (for trying things out; autostart is left alone).
+opens another database file instead (for trying things out): then nothing writes the
+autostart entry in the registry, and the "Start with Windows" switch changes only the
+setting in that file.
 
 ## Build, test, run
 
@@ -79,7 +82,8 @@ cargo build --release -p tt-app
 makensis /DVERSION=0.1.0 crates\tt-app\installer\timetracker.nsi   # target\installer\
 ```
 
-CI builds the installer and the portable zip for tags `v*`.
+CI builds the installer and the portable zip for tags `v*` and keeps them as workflow
+artifacts of that run (no GitHub Release is created).
 
 Workspace: `tt-domain` (rules, no I/O) → `tt-storage` (SQLite) → `tt-services`
 (use cases, export, backup, updates) → `tt-app` (Slint UI, tray, platform code).
