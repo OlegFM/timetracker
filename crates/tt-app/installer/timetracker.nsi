@@ -38,7 +38,7 @@ VIAddVersionKey /LANG=0 "ProductName" "${APP}"
 VIAddVersionKey /LANG=0 "FileDescription" "${APP} setup"
 VIAddVersionKey /LANG=0 "FileVersion" "${VERSION}"
 VIAddVersionKey /LANG=0 "ProductVersion" "${VERSION}"
-VIAddVersionKey /LANG=0 "LegalCopyright" "All rights reserved"
+VIAddVersionKey /LANG=0 "LegalCopyright" "AGPL-3.0-only"
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"

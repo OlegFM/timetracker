@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The project is licensed under AGPL-3.0-only (`LICENSE`, Cargo `license` fields, installer version info).
+
 ## [0.1.0] - 2026-11-09
 
 First version: a standalone Windows time tracker whose behaviour is modelled on the core

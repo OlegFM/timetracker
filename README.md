@@ -111,7 +111,7 @@ In CI, set the repository variables `TT_UPDATE_URL` and `TT_UPDATE_PUBKEY`.
 
 ## License
 
-Not chosen yet — all rights reserved for now.
+[GNU AGPL-3.0-only](LICENSE).
 
 The UI is built with [Slint](https://slint.dev) under the Slint Royalty-free License
 2.0 (attribution in Settings › About). Third-party crate licenses are checked with
