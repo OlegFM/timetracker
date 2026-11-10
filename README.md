@@ -109,11 +109,13 @@ database is kept as `timetracker.db.before-restore`, so a wrong restore can be u
 TimeTracker is free. If it saves you time, you can support its development:
 
 - **In rubles** (cards of Russian banks, SBP): [CloudTips](https://pay.cloudtips.ru/p/96e84e4f)
-- **In crypto:** USDT on the **TON** network only:
+- **In crypto (USDT).** Send only on the network shown next to the address; USDT sent on
+  another network is lost.
 
-  ```
-  UQC2hp29_K1erL9o_bv-c9ws0bj_VUfiYwLO3B108UF5MIPa
-  ```
+  | Network | Address |
+  |---|---|
+  | **TON** | `UQC2hp29_K1erL9o_bv-c9ws0bj_VUfiYwLO3B108UF5MIPa` |
+  | **Tron (TRC-20)** | `TJ4EjQgUrhLEwbHwoNEmr4Hh11jwumPv1h` |
 
 ## Contributing
 
