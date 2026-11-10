@@ -45,3 +45,5 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
 ## Planned after v0.1.0
 
 - **Sync between devices through a cloud folder.** See [ideas/cloud-sync.md](ideas/cloud-sync.md).
+- **Microsoft Store (MSIX) release**, so users get no SmartScreen warning. See [ideas/msix-store.md](ideas/msix-store.md).
+- **macOS and Linux builds.** See [ideas/cross-platform.md](ideas/cross-platform.md).
