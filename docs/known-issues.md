@@ -41,3 +41,7 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
   - the XLSX workbook contents;
   - controllers;
   - the `--db` → no-autostart wiring.
+
+## Planned after v0.1.0
+
+- **Sync between devices through a cloud folder.** See [ideas/cloud-sync.md](ideas/cloud-sync.md).
