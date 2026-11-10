@@ -108,7 +108,7 @@ database is kept as `timetracker.db.before-restore`, so a wrong restore can be u
 
 TimeTracker is free. If it saves you time, you can support its development:
 
-- **In rubles** (cards of Russian banks, SBP): *CloudTips link coming soon*
+- **In rubles** (cards of Russian banks, SBP): [CloudTips](https://pay.cloudtips.ru/p/96e84e4f)
 - **In crypto:** *wallet addresses coming soon*
 
 ## Contributing
