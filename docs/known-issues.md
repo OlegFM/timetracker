@@ -18,7 +18,7 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
 - **The two XLSX sheets give different totals.**
   - The Summary sheet is rounded and includes the running entry.
   - The Entries sheet is raw and skips running entries.
-  - This is documented in the README, not resolved.
+  - This is documented in [development.md](development.md), not resolved.
 - **Manual QA before release** ([qa-checklist.md](qa-checklist.md)).
   - Light theme, es/zh_CN screens and zh IME input.
   - 150 % DPI and multiple monitors.

@@ -1,118 +1,128 @@
 # TimeTracker
 
-A lightweight time tracker for Windows: a native window, a floating mini timer and a
-tray icon. Everything stays on your computer in one SQLite file — no account, no cloud.
-Its behaviour is modelled on [solidtime](https://www.solidtime.io/) (core features only);
-it is not affiliated with solidtime, and the code is our own.
+**An offline time tracker. No account, no server, no subscription. Your data stays on
+your computer.**
 
-Written in Rust with [Slint](https://slint.dev). In the tray with the timer running it
-uses about 5–6 MB of memory and practically no CPU (see [docs/perf.md](docs/perf.md)).
+[![Release](https://img.shields.io/github/v/release/OlegFM/timetracker)](https://github.com/OlegFM/timetracker/releases/latest)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%26%20Linux%20soon-lightgrey)
 
-## Features (v1)
+English · [Русский](README.ru.md)
 
-- **Timer** on every screen: description, project › task (search, create on the fly),
-  tags, billable flag; Start / Pause·Resume / Stop. A pause writes nothing: it is the gap
-  between the entries of one session, and it may last overnight.
-- **Days are exact:** an entry never crosses local midnight. A running entry is cut at
-  00:00 (also after sleep or a restart), a manual entry across midnight is split.
-- **Time entries** by day with day totals: continue, edit, duplicate, delete, add
-  manually (start/end or duration); optional "prevent overlapping entries".
-- **Mini timer:** frameless, always on top, draggable, translucent until hovered;
-  shows the session time, pause/resume and stop.
-- **Tray:** icon shows running / paused / stopped; menu with pause, stop, mini timer,
-  open, quit. Close (✕) hides to the tray; one instance only; start with Windows.
-- **Dashboard:** recent tasks (quick start), last 7 days, activity heatmap, this week,
-  time by project.
-- **Projects, tasks, clients, tags:** colors, billable rates, time estimates with
-  progress, archive, search and sort.
-- **Summary report:** period presets, filters (projects, tasks, clients, tags,
-  billable), two grouping levels (project, task, client, tag, billable, description, day),
-  bar and pie charts, rounding; export to **CSV and XLSX**.
-- **Settings:** language, date/time/duration/number/currency formats, first day of the
-  week, time zone, dark/light theme, mini timer, backup and restore of the database.
-- **Languages:** English, Russian, Simplified Chinese, Spanish
+![Time entries in the dark theme, with the mini timer on top](docs/screenshots/hero.png)
+
+Track time per client, project and task. Pause the timer and resume it later, even the
+next day. At the end of the month, export a report with hours and money per client.
+Everything runs locally in a small native app.
+
+## Why TimeTracker
+
+- **Works offline, with no account.** Nothing to sign up for, nothing sent anywhere. The
+  data is one SQLite file on your disk. You can back it up, restore it and export it.
+- **Light and native.** No browser engine inside.
+  - It starts in about 0.2 s.
+  - In the tray with the timer running it uses about 4–6 MB of memory and practically no
+    CPU ([measurements](docs/perf.md)).
+- **A mini timer on top of other windows.** It is translucent until you move the mouse over
+  it, and has pause and stop right there.
+- **Honest days.** A pause may last overnight. An entry never crosses midnight, so every
+  day gets exactly its own time.
+- **Billing built in.** Hourly rates per project, with a default rate. Reports show time
+  and cost and export to CSV and XLSX.
+- **Four languages:** English, Russian, Spanish, Simplified Chinese
   ([add yours](docs/translating.md)).
+
+## For freelancers
+
+You work for several clients and need to bill each one exactly.
+
+1. **Set up once.** Add a client, a project with its hourly rate, and a few tasks.
+2. **Track.** Start the timer from the timer bar, the tray, the mini timer or the
+   dashboard's recent tasks, and pause it for a break.
+   - Forgot to start it? Add the entry by hand afterwards.
+3. **Bill.**
+   - Open Reports and pick the month.
+   - Filter by client and group by project and task.
+   - The total cost is there; export it to XLSX for the invoice.
+
+## Leaving a cloud tracker
+
+| | TimeTracker | Typical cloud tracker |
+|---|---|---|
+| Account | not needed | required |
+| Works offline | always | limited or not at all |
+| Where your data is | a file on your computer | the vendor's servers |
+| Price | free, open source | free tier, paid plans |
+| Teams, shared workspaces | no, it is a personal tool | yes |
+| Sync between devices | planned, through a cloud folder of your choice | yes |
+| Mobile app | no | usually |
+
+Its behaviour is modelled on the core of [solidtime](https://www.solidtime.io/). It is not
+affiliated with solidtime, and the code is our own.
+
+## A quick tour
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | **Dashboard.** Recent tasks to start in one click, the last 7 days, an activity heatmap, this week, and time by project. |
+| ![Reports in the light theme](docs/screenshots/reports.png) | **Reports** (here in the light theme). Period presets, filters, two grouping levels, bar and pie charts, rounding, and CSV and XLSX export. |
+| ![Projects](docs/screenshots/projects.png) | **Projects, tasks, clients, tags.** Colors, hourly rates, time estimates with progress, and an archive. |
+| ![Mini timer](docs/screenshots/mini-timer.png) | **Mini timer.** Always on top, draggable, translucent until the mouse is over it. |
+
+The tray icon shows whether the timer is running, paused or stopped. Its menu can pause,
+stop, show the mini timer or open the window. Closing the window hides it to the tray.
 
 ## Install
 
-Get `TimeTracker-<version>-setup.exe` from the artifacts of the CI run for a version tag
-(GitHub Actions › the `v*` run › Artifacts), or build it yourself (below), and run it. It
-installs for the current user only (no administrator rights) into
-`%LOCALAPPDATA%\Programs\TimeTracker` and adds a Start menu shortcut. Uninstall it from
-Settings › Apps; your data is kept. A portable zip with just `tt-app.exe` is published
-too.
+**Windows 10/11, 64-bit.** Download from the [latest release](https://github.com/OlegFM/timetracker/releases/latest):
 
-The executable is not signed yet, so SmartScreen may warn on the first start.
+- **`TimeTracker-<version>-setup.exe`** installs for the current user only, without
+  administrator rights.
+  - It adds a Start menu shortcut.
+  - Uninstalling keeps your data.
+- **`TimeTracker-<version>-portable.zip`** contains just `tt-app.exe`, with no installation.
+
+The files are not signed yet, so Windows SmartScreen may warn on the first start. Choose
+**More info** → **Run anyway**.
+
+**macOS and Linux** builds are coming soon ([plan](docs/ideas/cross-platform.md)).
 
 ## Your data
 
 | What | Where |
 |---|---|
-| Database (SQLite, WAL) | `%APPDATA%\TimeTracker\timetracker.db` |
+| Database | `%APPDATA%\TimeTracker\timetracker.db` |
 | Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` |
 
-Settings › Data makes a backup copy of the database and restores one. A timer running at
-the time of the backup is saved as paused at that moment, so a restore does not count the
-time in between. Before a restore the current database is kept next to it as
-`timetracker.db.before-restore` (replacing an older one), so a wrong restore can be undone by
-copying that file back while the app is closed.
+**Settings › Data** makes a backup copy and restores one. Before a restore, the current
+database is kept as `timetracker.db.before-restore`, so a wrong restore can be undone.
 
-The XLSX report export has two sheets: the summary (the running entry counted up to now,
-rounding applied) and the entries (closed entries only, raw times without rounding).
+## Roadmap
 
-Command-line flags: `--minimized` starts in the tray (used by autostart); `--db <file>`
-opens another database file instead (for trying things out): then nothing writes the
-autostart entry in the registry, and the "Start with Windows" switch changes only the
-setting in that file.
+- Sync between devices through a cloud folder (OneDrive, Dropbox, Google Drive…), with no
+  server ([idea](docs/ideas/cloud-sync.md)).
+- macOS and Linux builds ([idea](docs/ideas/cross-platform.md)).
+- Microsoft Store release, signed by Microsoft ([idea](docs/ideas/msix-store.md)).
 
-## Build, test, run
+## Support the project
 
-Requirements: Windows 10/11, Rust 1.95 (MSVC toolchain, pinned in
-`rust-toolchain.toml`).
+TimeTracker is free. If it saves you time, you can support its development:
 
-```powershell
-cargo run -p tt-app                     # debug build
-cargo build --release -p tt-app         # target\release\tt-app.exe
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test --workspace
-cargo deny check licenses advisories    # needs cargo-deny
-```
+- **In rubles** (cards of Russian banks, SBP): *CloudTips link coming soon*
+- **In crypto:** *wallet addresses coming soon*
 
-Demo data: `cargo run -p tt-app --example seed -- demo.db [--running]`, then
-`cargo run -p tt-app -- --db demo.db`.
+## Contributing
 
-Installer (NSIS 3 with `makensis` on `PATH`):
+Bug reports and ideas are welcome in [Issues](https://github.com/OlegFM/timetracker/issues).
+To build from source, run the tests or add a translation, see
+[docs/development.md](docs/development.md).
 
-```powershell
-cargo build --release -p tt-app
-makensis /DVERSION=0.1.0 crates\tt-app\installer\timetracker.nsi   # target\installer\
-```
-
-CI builds the installer and the portable zip for tags `v*` and keeps them as workflow
-artifacts of that run (no GitHub Release is created).
-
-Workspace: `tt-domain` (rules, no I/O) → `tt-storage` (SQLite) → `tt-services`
-(use cases, export, backup, updates) → `tt-app` (Slint UI, tray, platform code).
-
-## Updates
-
-The update check (signed manifest, verified installer) is built in but **off**: it is
-compiled in only when both build-time variables are set, otherwise the Updates section
-of the settings is hidden.
-
-```powershell
-$env:TT_UPDATE_URL = "https://example.com/timetracker/manifest.json"   # https only
-$env:TT_UPDATE_PUBKEY = "<ed25519 public key, 64 hex digits>"
-cargo build --release -p tt-app
-```
-
-In CI, set the repository variables `TT_UPDATE_URL` and `TT_UPDATE_PUBKEY`.
+Written in Rust with [Slint](https://slint.dev).
 
 ## License
 
 [GNU AGPL-3.0-only](LICENSE).
 
-The UI is built with [Slint](https://slint.dev) under the Slint Royalty-free License
-2.0 (attribution in Settings › About). Third-party crate licenses are checked with
+The UI is built with [Slint](https://slint.dev) under the Slint Royalty-free License 2.0
+(attribution in Settings › About). Third-party crate licenses are checked with
 `cargo deny` (`deny.toml`).
