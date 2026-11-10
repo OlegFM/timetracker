@@ -7,23 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- The project is licensed under AGPL-3.0-only (`LICENSE`, Cargo `license` fields, installer version info).
-
-### Fixed
-
-- Entries with a future date (for example a mistyped year) are listed again, at the top; before they were hidden from the entries list.
-- The `timetracker.db.before-restore` safety copy keeps changes that were still in the `-wal` file after an unclean close, and is one self-contained file.
-
-### Added
-
-- CI checks dependencies for known vulnerabilities (`cargo deny check advisories`).
-
-## [0.1.0] - 2026-11-09
+## [0.1.0] - 2026-11-10
 
 First version: a standalone Windows time tracker whose behaviour is modelled on the core
-of solidtime (not affiliated; the code is our own).
+of solidtime (not affiliated; the code is our own). Licensed under AGPL-3.0-only.
 
 ### Added
 
@@ -61,6 +48,7 @@ of solidtime (not affiliated; the code is our own).
 - Release profile tuned for size and memory; Slint software renderer only
   ([docs/perf.md](docs/perf.md)).
 - A restore keeps the replaced database as `timetracker.db.before-restore`.
+- CI checks dependency licenses and known vulnerabilities (`cargo deny`).
 
 ### Fixed
 
@@ -76,3 +64,10 @@ of solidtime (not affiliated; the code is our own).
   the app.
 - XLSX sheet names and the restore error box are translated; the updater uses HTTPS only
   (also after redirects) and a slow installer download is no longer cut after 10 s.
+- Entries with a future date (for example a mistyped year) are listed, at the top,
+  instead of being hidden from the entries list.
+- The `timetracker.db.before-restore` safety copy keeps changes that were still in the
+  `-wal` file after an unclean close, and is one self-contained file.
+
+[Unreleased]: https://github.com/OlegFM/timetracker/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/OlegFM/timetracker/releases/tag/v0.1.0
