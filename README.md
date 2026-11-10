@@ -76,7 +76,7 @@ cargo build --release -p tt-app         # target\release\tt-app.exe
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test --workspace
-cargo deny check licenses               # needs cargo-deny
+cargo deny check licenses advisories    # needs cargo-deny
 ```
 
 Demo data: `cargo run -p tt-app --example seed -- demo.db [--running]`, then

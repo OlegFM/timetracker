@@ -71,6 +71,30 @@ fn validate(src: &Path) -> std::result::Result<(), rusqlite::Error> {
     Ok(())
 }
 
+/// Copies `live` to `<live>.before-restore` as one self-contained file. After an unclean
+/// close recent changes are only in `-wal`: it is copied under the name SQLite looks for
+/// (`<copy>-wal`) and folded into the copy, so restoring the copy later keeps them.
+fn keep_safety_copy(live: &Path) -> Result<()> {
+    let safety = sibling(live, ".before-restore");
+    let (wal, safety_wal) = (sibling(live, "-wal"), sibling(&safety, "-wal"));
+    remove_if_exists(&safety_wal)?;
+    remove_if_exists(&sibling(&safety, "-shm"))?;
+    std::fs::copy(live, &safety).map_err(ServiceError::Io)?;
+    if wal.exists() {
+        std::fs::copy(&wal, &safety_wal).map_err(ServiceError::Io)?;
+        // Best effort: if folding fails, the copy and its `-wal` stay side by side.
+        let _ = fold_wal(&safety);
+    }
+    Ok(())
+}
+
+/// Checkpoints the WAL of the database at `path` into it; closing removes the `-wal`.
+fn fold_wal(path: &Path) -> std::result::Result<(), rusqlite::Error> {
+    let conn = Connection::open(path)?;
+    conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))?;
+    conn.close().map_err(|(_, e)| e)
+}
+
 /// Replaces `live_path` with the backup at `src` after validating it. The replaced file
 /// is kept as `<live>.before-restore` (an older one is overwritten).
 /// The caller must have closed its `Db` and re-opens it afterwards.
@@ -80,8 +104,7 @@ pub fn restore_from(src: &Path, live_path: &Path) -> Result<()> {
     std::fs::copy(src, &tmp).map_err(ServiceError::Io)?;
     let res = (|| {
         if live_path.exists() {
-            std::fs::copy(live_path, sibling(live_path, ".before-restore"))
-                .map_err(ServiceError::Io)?;
+            keep_safety_copy(live_path)?;
         }
         remove_if_exists(&sibling(live_path, "-wal"))?;
         remove_if_exists(&sibling(live_path, "-shm"))?;
@@ -198,6 +221,33 @@ mod tests {
         assert_eq!(count(&Db::open(&live).unwrap()), 0);
         // The data from before the restore is still there, the older copy replaced.
         assert_eq!(count(&Db::open(&safety).unwrap()), 1);
+    }
+
+    #[test]
+    fn safety_copy_keeps_data_still_in_the_wal_after_a_crash() {
+        let dir = tempfile::tempdir().unwrap();
+        let bak = dir.path().join("bak.db");
+        let crashed = dir.path().join("timetracker.db");
+        {
+            let src = dir.path().join("running.db");
+            let db = Db::open(&src).unwrap();
+            backup_to(&db, &bak, 0, tt_domain::Tz::UTC).unwrap();
+            add_client(&db);
+            // Snapshot the files while the connection is open: the insert is only in
+            // `-wal`, as after a crash.
+            std::fs::copy(&src, &crashed).unwrap();
+            std::fs::copy(sibling(&src, "-wal"), sibling(&crashed, "-wal")).unwrap();
+        }
+        let safety = sibling(&crashed, ".before-restore");
+        std::fs::write(sibling(&safety, "-shm"), b"stale").unwrap();
+
+        restore_from(&bak, &crashed).unwrap();
+        assert_eq!(count(&Db::open(&crashed).unwrap()), 0);
+        // One self-contained file: restoring it as a backup keeps the WAL data too.
+        assert!(!sibling(&safety, "-wal").exists());
+        assert!(!sibling(&safety, "-shm").exists());
+        restore_from(&safety, &crashed).unwrap();
+        assert_eq!(count(&Db::open(&crashed).unwrap()), 1);
     }
 
     #[test]

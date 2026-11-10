@@ -26,5 +26,11 @@ allow = [
 # Workspace crates are `publish = false`.
 private = { ignore = true }
 
+[advisories]
+ignore = [
+    # Unmaintained, no fix upstream; only `spin_on` in Slint's build-time macros uses it.
+    { id = "RUSTSEC-2026-0441", reason = "pin-utils: build-time only, via slint-macros/slint-build" },
+]
+
 [bans]
 multiple-versions = "warn"

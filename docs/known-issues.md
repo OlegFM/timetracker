@@ -15,13 +15,10 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
 
 ## Worth fixing in v0.1.x
 
-- **Future-dated entries do not appear in the entries list.** An entry with a wrong date seems to vanish.
 - **The two XLSX sheets give different totals.**
   - The Summary sheet is rounded and includes the running entry.
   - The Entries sheet is raw and skips running entries.
   - This is documented in the README, not resolved.
-- **The safety copy can miss recent data after a crash.** `timetracker.db.before-restore` copies only the main file. After an unclean close, data still in `-wal` is missing from it. Fix: checkpoint before closing, or copy `-wal` too.
-- **Run `cargo deny check advisories` before the first public release.** This matters for the network stack: ureq and rustls.
 - **Manual QA before release.**
   - Light theme, es/zh_CN screens and zh IME input.
   - 150 % DPI and multiple monitors.

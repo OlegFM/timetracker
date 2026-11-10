@@ -1,6 +1,6 @@
 //! Time entries: manual creation, editing, deletion, duplication and day paging.
 
-use chrono::{Days, NaiveDate};
+use chrono::NaiveDate;
 use rusqlite::Connection;
 use tt_domain::{
     EntryTemplate, Id, Millis, Project, TimeEntry, Tz, local_date, new_id,
@@ -194,8 +194,9 @@ impl<C: Clock> EntryService<C> {
     }
 
     /// Up to `days` most recent local dates that have entries and lie strictly before
-    /// `before` (all dates up to today when `None`), newest first. Each item: the date,
-    /// its entries newest first, and their total (running entries count up to `now`).
+    /// `before` (all dates when `None`, future-dated ones included so a mistyped date
+    /// stays visible), newest first. Each item: the date, its entries newest first, and
+    /// their total (running entries count up to `now`).
     pub fn list_days(
         &self,
         db: &Db,
@@ -205,12 +206,7 @@ impl<C: Clock> EntryService<C> {
         now: Millis,
     ) -> Result<Vec<(NaiveDate, Vec<TimeEntry>, i64)>> {
         let c = db.conn();
-        let bound = before.unwrap_or_else(|| {
-            local_date(now, tz)
-                .checked_add_days(Days::new(1))
-                .expect("date in range")
-        });
-        let upper = start_of_local_day(bound, tz);
+        let upper = before.map_or(Millis::MAX, |d| start_of_local_day(d, tz));
         let want = days as usize;
         let mut limit = DAYS_BATCH;
         loop {
@@ -680,6 +676,24 @@ mod tests {
         );
         assert!(svc.list_days(&db, None, 0, MSK, now).unwrap().is_empty());
         assert_eq!(svc.list_days(&db, None, 99, MSK, now).unwrap().len(), 4);
+    }
+
+    #[test]
+    fn list_days_shows_future_dated_entries_first() {
+        // An entry saved with a wrong (future) date must not vanish from the list.
+        let (svc, mut db) = setup(at(12, 12, 0));
+        manual(&svc, &mut db, at(10, 10, 0), at(10, 11, 0));
+        manual(&svc, &mut db, at(20, 10, 0), at(20, 12, 0));
+        let now = at(12, 12, 0);
+
+        let page = svc.list_days(&db, None, 5, MSK, now).unwrap();
+        let dates: Vec<_> = page.iter().map(|d| d.0).collect();
+        assert_eq!(dates, vec![day(20), day(10)]);
+        assert_eq!(page[0].2, 2 * HOUR);
+
+        let next = svc.list_days(&db, Some(day(20)), 5, MSK, now).unwrap();
+        let dates: Vec<_> = next.iter().map(|d| d.0).collect();
+        assert_eq!(dates, vec![day(10)]);
     }
 
     #[test]

@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The project is licensed under AGPL-3.0-only (`LICENSE`, Cargo `license` fields, installer version info).
 
+### Fixed
+
+- Entries with a future date (for example a mistyped year) are listed again, at the top; before they were hidden from the entries list.
+- The `timetracker.db.before-restore` safety copy keeps changes that were still in the `-wal` file after an unclean close, and is one self-contained file.
+
+### Added
+
+- CI checks dependencies for known vulnerabilities (`cargo deny check advisories`).
+
 ## [0.1.0] - 2026-11-09
 
 First version: a standalone Windows time tracker whose behaviour is modelled on the core

@@ -28,7 +28,7 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
-      - run: cargo deny check licenses
+      - run: cargo deny check licenses advisories
 
   # Release build, per-user NSIS installer and a portable zip for tags `v*`.
   installer:
