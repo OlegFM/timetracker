@@ -85,11 +85,17 @@ impl InstanceGuard {
         let spawned = std::thread::Builder::new()
             .name("instance-activate".into())
             .spawn(move || {
-                while let Ok((_conn, _)) = listener.accept() {
-                    if stop.load(Ordering::Acquire) {
-                        break;
+                loop {
+                    match listener.accept() {
+                        Ok(_) if stop.load(Ordering::Acquire) => break,
+                        Ok(_) => notify(),
+                        Err(e) => {
+                            if !stop.load(Ordering::Acquire) {
+                                log::warn!("activation listener stopped: {:?}", e.kind());
+                            }
+                            break;
+                        }
                     }
-                    notify();
                 }
             });
         if let Err(e) = spawned {
