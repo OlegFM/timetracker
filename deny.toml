@@ -1,5 +1,8 @@
 [graph]
-targets = [{ triple = "x86_64-pc-windows-msvc" }]
+targets = [
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "x86_64-unknown-linux-gnu" },
+]
 
 [licenses]
 confidence-threshold = 0.8
@@ -22,6 +25,8 @@ allow = [
     # Slint is `GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR ...`;
     # we use the royalty-free option (AboutSlint attribution required).
     "LicenseRef-Slint-Royalty-free-2.0",
+    # ksni (Linux tray, via tray-icon); public-domain dedication.
+    "Unlicense",
 ]
 # Workspace crates are `publish = false`.
 private = { ignore = true }
@@ -30,6 +35,12 @@ private = { ignore = true }
 ignore = [
     # Unmaintained, no fix upstream; only `spin_on` in Slint's build-time macros uses it.
     { id = "RUSTSEC-2026-0441", reason = "pin-utils: build-time only, via slint-macros/slint-build" },
+    # Linux only; merged into zbus 6 / replaced by skrifa, no fix for the versions locked by
+    # winit, accesskit and ksni.
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser: unmaintained, Linux-only, via winit's sctk-adwaita" },
+    { id = "RUSTSEC-2026-0370", reason = "zvariant: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
 ]
 
 [bans]

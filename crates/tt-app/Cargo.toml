@@ -23,7 +23,7 @@ slint = { workspace = true, features = [
     "std",
     "compat-1-2",
     "accessibility",
-    "backend-winit",
+    "backend-winit-x11",
     "renderer-software",
     "software-renderer-path",
     "unstable-winit-030",
@@ -35,6 +35,8 @@ simplelog.workspace = true
 anyhow.workspace = true
 tray-icon.workspace = true
 auto-launch.workspace = true
+
+[target.'cfg(windows)'.dependencies]
 windows-registry.workspace = true
 windows-sys = { workspace = true, features = [
     "Win32_Foundation",

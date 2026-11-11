@@ -1,4 +1,4 @@
-//! Platform-specific code (Windows). Nothing outside this module uses platform APIs.
+//! Platform-specific code (Windows, Linux). Nothing outside this module uses platform APIs.
 
 pub mod autostart;
 pub mod fatal;

@@ -14,7 +14,11 @@ env:
 
 jobs:
   check:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -22,13 +26,19 @@ jobs:
           toolchain: "1.95"
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev
       - uses: taiki-e/install-action@v2
+        if: runner.os == 'Windows'
         with:
           tool: cargo-deny
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
+      # deny.toml lists both targets, so one run covers Windows and Linux.
       - run: cargo deny check licenses advisories
+        if: runner.os == 'Windows'
 
   # Release build, per-user NSIS installer and a portable zip for tags `v*`.
   installer:

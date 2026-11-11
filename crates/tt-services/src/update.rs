@@ -38,8 +38,12 @@ fn parse_update_config(url: Option<&str>, key_hex: Option<&str>) -> Option<Updat
     })
 }
 
-/// `None` unless both build-time variables are set and valid.
+/// `None` unless both build-time variables are set and valid. Always `None` outside
+/// Windows: the update downloads and runs the Windows installer.
 pub fn update_config() -> Option<UpdateConfig> {
+    if cfg!(not(windows)) {
+        return None;
+    }
     parse_update_config(
         option_env!("TT_UPDATE_URL"),
         option_env!("TT_UPDATE_PUBKEY"),
@@ -164,6 +168,12 @@ pub fn download_and_verify(cfg: &UpdateConfig, m: &Manifest, dest: &Path) -> Res
 mod tests {
     use super::*;
     use ed25519_dalek::{Signer, SigningKey};
+
+    #[cfg(not(windows))]
+    #[test]
+    fn updates_are_off_outside_windows() {
+        assert!(update_config().is_none());
+    }
 
     #[test]
     fn update_config_none_without_env() {
