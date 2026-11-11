@@ -1,4 +1,5 @@
-//! File log (`%LOCALAPPDATA%\TimeTracker\logs\tt.log`, level Warn) and panic hook.
+//! File log (`tt.log` in the log folder: `%LOCALAPPDATA%\TimeTracker\logs` on Windows,
+//! `~/.local/share/TimeTracker/logs` on Linux; level Warn) and panic hook.
 //!
 //! Log only ids and error codes: never descriptions, names or other user text.
 
@@ -55,13 +56,18 @@ mod tests {
 
     #[test]
     fn short_path_hides_user_profile() {
-        assert_eq!(
-            short_path(r"C:\Users\someone\.cargo\registry\src\idx\slint-1.18.1\src\lib.rs"),
-            "slint-1.18.1/src/lib.rs"
+        // Separators and absolute-path syntax differ per platform.
+        #[cfg(windows)]
+        let (abs, rel) = (
+            r"C:\Users\someone\.cargo\registry\src\idx\slint-1.18.1\src\lib.rs",
+            r"crates\tt-app\src\app.rs",
         );
-        assert_eq!(
-            short_path(r"crates\tt-app\src\app.rs"),
-            r"crates\tt-app\src\app.rs"
+        #[cfg(not(windows))]
+        let (abs, rel) = (
+            "/home/someone/.cargo/registry/src/idx/slint-1.18.1/src/lib.rs",
+            "crates/tt-app/src/app.rs",
         );
+        assert_eq!(short_path(abs), "slint-1.18.1/src/lib.rs");
+        assert_eq!(short_path(rel), rel);
     }
 }

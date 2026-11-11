@@ -33,6 +33,10 @@ export global SettingsBridge {
     in property <int> theme;
     // Mini timer transparency without the mouse over it, percent 0–90.
     in property <int> mini-transparency: 70;
+    // The tray icon exists (on Linux it needs a tray host). Without it "close to tray"
+    // cannot be on.
+    in property <bool> tray-available;
+    in property <bool> on-windows;
     in property <bool> close-to-tray;
     in property <bool> autostart;
     in property <bool> prevent-overlap;

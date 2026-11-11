@@ -6,9 +6,11 @@ import { Activator, FocusRing } from "button.slint";
 export component CheckBox inherits Rectangle {
     in property <bool> checked;
     in property <string> text;
+    in property <bool> enabled: true;
     callback toggled();
 
     height: 24px;
+    opacity: root.enabled ? 1 : 0.5;
     preferred-width: row.preferred-width;
     horizontal-stretch: 0;
     forward-focus: keys;
@@ -16,7 +18,8 @@ export component CheckBox inherits Rectangle {
     accessible-role: checkbox;
     accessible-label: root.text;
     accessible-checked: root.checked;
-    accessible-action-default => { root.toggled(); }
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if root.enabled { root.toggled(); } }
 
     row := HorizontalLayout {
         spacing: Theme.gap-2;
@@ -52,11 +55,11 @@ export component CheckBox inherits Rectangle {
     }
 
     keys := Activator {
-        activated => { root.toggled(); }
+        activated => { if root.enabled { root.toggled(); } }
 
         touch := TouchArea {
-            mouse-cursor: pointer;
-            clicked => { root.toggled(); }
+            mouse-cursor: root.enabled ? pointer : default;
+            clicked => { if root.enabled { root.toggled(); } }
         }
     }
 

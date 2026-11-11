@@ -107,6 +107,8 @@ pub fn install(
     b.set_timezones(model(timezone_options()));
     b.set_app_version(env!("CARGO_PKG_VERSION").into());
     b.set_updates_enabled(update_config().is_some());
+    b.set_tray_available(ctl.ctx.borrow().has_tray);
+    b.set_on_windows(cfg!(windows));
 
     let on_index = |f: fn(&SettingsController, i32)| {
         let c = ctl.clone();

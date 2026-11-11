@@ -9,6 +9,17 @@ use slint::{ComponentHandle, PhysicalPosition};
 
 use crate::controllers::mini::{Rect, clamp_to_monitors};
 
+/// Application id: the Wayland `app_id` and X11 `WM_CLASS`. Matches `StartupWMClass` and
+/// the name of the `.desktop` file.
+pub const APP_ID: &str = "timetracker";
+
+/// Window icon for Linux: raw RGBA, `APP_ICON_SIZE` x `APP_ICON_SIZE`, row by row
+/// (made by `tools/gen_icon.py`).
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub const APP_ICON_RGBA: &[u8] = include_bytes!("../../assets/app-64.rgba");
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub const APP_ICON_SIZE: u32 = 64;
+
 /// Runs `f` once the native window of `ui` exists (right away if it already does).
 pub fn when_created<C: ComponentHandle + 'static>(ui: &C, f: impl FnOnce(&C) + 'static) {
     let weak = ui.as_weak();
@@ -66,6 +77,17 @@ pub fn set_app_icon(w: &slint::Window) {
                     _win.set_taskbar_icon(Some(big));
                 }
                 (Err(e), _) | (_, Err(e)) => log::warn!("window icon not set: {e}"),
+            }
+        }
+        #[cfg(target_os = "linux")]
+        {
+            match winit::window::Icon::from_rgba(
+                APP_ICON_RGBA.to_vec(),
+                APP_ICON_SIZE,
+                APP_ICON_SIZE,
+            ) {
+                Ok(icon) => _win.set_window_icon(Some(icon)),
+                Err(e) => log::warn!("window icon not set: {e}"),
             }
         }
     });
@@ -134,4 +156,20 @@ fn monitors(win: &winit::window::Window) -> Vec<Rect> {
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn embedded_app_icon_is_64px_rgba_with_transparent_corners() {
+        assert_eq!(
+            APP_ICON_RGBA.len(),
+            (APP_ICON_SIZE * APP_ICON_SIZE * 4) as usize
+        );
+        let alpha = |x: u32, y: u32| APP_ICON_RGBA[((y * APP_ICON_SIZE + x) * 4 + 3) as usize];
+        assert_eq!(alpha(32, 32), 255);
+        assert_eq!(alpha(0, 0), 0);
+    }
 }

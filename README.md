@@ -5,7 +5,7 @@ your computer.**
 
 [![Release](https://img.shields.io/github/v/release/OlegFM/timetracker)](https://github.com/OlegFM/timetracker/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%26%20Linux%20soon-lightgrey)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20soon-lightgrey)
 
 English · [Русский](README.ru.md)
 
@@ -71,6 +71,7 @@ affiliated with solidtime, and the code is our own.
 
 The tray icon shows whether the timer is running, paused or stopped. Its menu can pause,
 stop, show the mini timer or open the window. Closing the window hides it to the tray.
+On Linux a left click on the icon shows or hides the window.
 
 ## Install
 
@@ -85,14 +86,34 @@ stop, show the mini timer or open the window. Closing the window hides it to the
 The files are not signed yet, so Windows SmartScreen may warn on the first start. Choose
 **More info** → **Run anyway**.
 
-**macOS and Linux** builds are coming soon ([plan](docs/ideas/cross-platform.md)).
+**Linux: Ubuntu 22.04 and 24.04 with GNOME, 64-bit (x86_64).** Download from the
+[latest release](https://github.com/OlegFM/timetracker/releases/latest). Two formats:
+
+- **`TimeTracker-<version>-x86_64.AppImage`** needs no installation.
+  - Make it executable: `chmod +x TimeTracker-*.AppImage`, or in the file manager open
+    **Properties** and allow running it as a program.
+  - Then double-click it, or run it from a terminal.
+- **`timetracker_<version>_amd64.deb`** installs system-wide and adds TimeTracker to the
+  applications menu: `sudo apt install ./timetracker_*_amd64.deb`.
+
+The tray icon works out of the box on Ubuntu, which ships GNOME's "AppIndicator and
+KStatusNotifierItem Support" extension turned on. On plain GNOME without that extension
+there is no icon: the app still works, but the close button quits it instead of hiding it
+(a running timer is stored in the database and keeps counting after you start the app
+again). The AppImage also needs `libxkbcommon-x11-0`, which Ubuntu Desktop already has.
+
+On Linux the app always runs through X11 or XWayland, also in a Wayland session, so the mini
+timer can stay on top of other windows. Known quirks are in
+[docs/known-issues.md](docs/known-issues.md).
+
+**macOS** is coming soon, planned for 0.3.0 ([plan](docs/ideas/cross-platform.md)).
 
 ## Your data
 
-| What | Where |
-|---|---|
-| Database | `%APPDATA%\TimeTracker\timetracker.db` |
-| Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` |
+| What | Windows | Linux |
+|---|---|---|
+| Database | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` |
+| Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` |
 
 **Settings › Data** makes a backup copy and restores one. Before a restore, the current
 database is kept as `timetracker.db.before-restore`, so a wrong restore can be undone.
@@ -101,7 +122,7 @@ database is kept as `timetracker.db.before-restore`, so a wrong restore can be u
 
 - Sync between devices through a cloud folder (OneDrive, Dropbox, Google Drive…), with no
   server ([idea](docs/ideas/cloud-sync.md)).
-- macOS and Linux builds ([idea](docs/ideas/cross-platform.md)).
+- A macOS build, planned for 0.3.0 ([idea](docs/ideas/cross-platform.md)).
 - Microsoft Store release, signed by Microsoft ([idea](docs/ideas/msix-store.md)).
 
 ## Support the project

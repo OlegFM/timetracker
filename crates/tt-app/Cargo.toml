@@ -35,6 +35,8 @@ simplelog.workspace = true
 anyhow.workspace = true
 tray-icon.workspace = true
 auto-launch.workspace = true
+
+[target.'cfg(windows)'.dependencies]
 windows-registry.workspace = true
 windows-sys = { workspace = true, features = [
     "Win32_Foundation",
@@ -43,9 +45,28 @@ windows-sys = { workspace = true, features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+tray-icon = { workspace = true, features = ["ksni"] }
+
 [build-dependencies]
 slint-build.workspace = true
 winresource.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+
+[package.metadata.deb]
+name = "timetracker"
+maintainer = "Oleg Fominsky <5587456+OlegFM@users.noreply.github.com>"
+section = "utils"
+priority = "optional"
+license-file = ["../../LICENSE", "0"]
+extended-description = "An offline time tracker. No account, no server, no subscription. Your data stays on your computer."
+# winit loads libxkbcommon-x11 with dlopen, so $auto does not see it.
+depends = "$auto, libxkbcommon-x11-0"
+assets = [
+    ["target/release/tt-app", "usr/bin/timetracker", "755"],
+    ["installer/linux/timetracker.desktop", "usr/share/applications/", "644"],
+    ["assets/app-256.png", "usr/share/icons/hicolor/256x256/apps/timetracker.png", "644"],
+]

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Linux (Ubuntu 22.04 and 24.04, GNOME, x86_64): an AppImage and a `.deb` package.
+  - Tray icon through StatusNotifierItem (the Ubuntu default; plain GNOME needs the
+    AppIndicator extension). Left click shows and hides the window, right click opens the
+    menu. Without a tray host the close button quits instead of hiding.
+  - The mini timer stays on top of other windows. The app always runs on X11 or XWayland.
+  - "Start when you sign in" writes `~/.config/autostart/TimeTracker.desktop`.
+  - Single instance through a Unix socket in `$XDG_RUNTIME_DIR`.
+  - Data in `~/.local/share/TimeTracker/`.
+  - The update check is off on Linux.
+- The mini timer now appears before the main window at startup (Windows).
+
 ## [0.1.0] - 2026-11-10
 
 First version: a standalone Windows time tracker whose behaviour is modelled on the core

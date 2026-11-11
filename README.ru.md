@@ -5,7 +5,7 @@
 
 [![Release](https://img.shields.io/github/v/release/OlegFM/timetracker)](https://github.com/OlegFM/timetracker/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%26%20Linux%20soon-lightgrey)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20soon-lightgrey)
 
 [English](README.md) · Русский
 
@@ -73,7 +73,7 @@
 
 Значок в трее показывает, идёт таймер, стоит на паузе или остановлен. Через его меню
 можно поставить паузу, остановить таймер, показать мини-таймер или открыть окно.
-Закрытое окно прячется в трей.
+Закрытое окно прячется в трей. В Linux левый щелчок по значку показывает или прячет окно.
 
 ## Установка
 
@@ -88,14 +88,34 @@
 Файлы пока не подписаны, поэтому при первом запуске Windows SmartScreen может показать
 предупреждение. Нажмите **Подробнее** → **Выполнить в любом случае**.
 
-**macOS и Linux** — сборки скоро ([план](docs/ideas/cross-platform.md)).
+**Linux: Ubuntu 22.04 и 24.04 с GNOME, 64 бита (x86_64).** Скачайте файлы из
+[последнего релиза](https://github.com/OlegFM/timetracker/releases/latest). Два формата:
+
+- **`TimeTracker-<версия>-x86_64.AppImage`** не требует установки.
+  - Сделайте файл исполняемым: `chmod +x TimeTracker-*.AppImage` или в файловом менеджере
+    откройте **Свойства** и разрешите запуск как программы.
+  - Затем запустите его двойным щелчком или из терминала.
+- **`timetracker_<версия>_amd64.deb`** устанавливается в систему и добавляет TimeTracker в
+  меню приложений: `sudo apt install ./timetracker_*_amd64.deb`.
+
+Значок в трее работает «из коробки» в Ubuntu: там включено расширение GNOME «AppIndicator
+and KStatusNotifierItem Support». В «голом» GNOME без этого расширения значка нет: программа
+работает, но крестик закрывает её, а не прячет (идущий таймер хранится в базе и продолжает
+считаться после нового запуска). Для AppImage нужен ещё пакет `libxkbcommon-x11-0`, в
+Ubuntu Desktop он уже есть.
+
+В Linux программа всегда работает через X11 или XWayland, в том числе в сессии Wayland, —
+так мини-таймер может оставаться поверх окон. Известные особенности — в
+[docs/known-issues.md](docs/known-issues.md).
+
+**macOS** — скоро, запланирован на 0.3.0 ([план](docs/ideas/cross-platform.md)).
 
 ## Ваши данные
 
-| Что | Где |
-|---|---|
-| База данных | `%APPDATA%\TimeTracker\timetracker.db` |
-| Логи (без описаний и названий) | `%LOCALAPPDATA%\TimeTracker\logs` |
+| Что | Windows | Linux |
+|---|---|---|
+| База данных | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` |
+| Логи (без описаний и названий) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` |
 
 **Настройки › Данные** создают резервную копию и восстанавливают её. Перед
 восстановлением текущая база сохраняется как `timetracker.db.before-restore`, так что
@@ -105,7 +125,7 @@
 
 - Синхронизация между устройствами через облачную папку (OneDrive, Dropbox, Google Drive…)
   без сервера ([идея](docs/ideas/cloud-sync.md)).
-- Сборки для macOS и Linux ([идея](docs/ideas/cross-platform.md)).
+- Сборка для macOS, запланирована на 0.3.0 ([идея](docs/ideas/cross-platform.md)).
 - Выпуск в Microsoft Store с подписью Microsoft ([идея](docs/ideas/msix-store.md)).
 
 ## Поддержать проект

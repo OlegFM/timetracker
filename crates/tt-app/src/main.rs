@@ -3,18 +3,20 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::Duration;
 
 use anyhow::Context;
 use slint::ComponentHandle;
-use tt_app::app::{self, AppContext, Ctx};
+use tt_app::app::{self, AppContext, Ctx, InitialWindow};
 use tt_app::controllers::{
     calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray,
 };
-use tt_app::platform::{autostart, fatal, single_instance, window_ext};
+use tt_app::platform::{autostart, fatal, single_instance, tray_host, window_ext};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
     destroy_windows_on_hide();
+    force_x11();
     logging::init();
     let result = run();
     if let Err(e) = &result {
@@ -37,6 +39,19 @@ fn destroy_windows_on_hide() {
     unsafe { std::env::set_var("SLINT_DESTROY_WINDOW_ON_HIDE", "1") };
 }
 
+/// Linux: always run through X11 (XWayland on Wayland sessions). winit 0.30 picks Wayland
+/// only when `WAYLAND_DISPLAY` is set, and Wayland forbids always-on-top and window
+/// positioning, which the mini window needs (spec section 5.2).
+#[cfg(target_os = "linux")]
+#[allow(unsafe_code)]
+fn force_x11() {
+    // SAFETY: called right after `destroy_windows_on_hide`, before any other thread exists.
+    unsafe { std::env::remove_var("WAYLAND_DISPLAY") };
+}
+
+#[cfg(not(target_os = "linux"))]
+fn force_x11() {}
+
 fn run() -> anyhow::Result<()> {
     // A second launch only activates the running instance and exits with code 0.
     let Some(mut instance) = single_instance::acquire()? else {
@@ -52,6 +67,9 @@ fn run() -> anyhow::Result<()> {
     };
     let ctx: Ctx = Rc::new(RefCell::new(opened));
     let ui = MainWindow::new().context("create main window")?;
+    if let Err(e) = slint::set_xdg_app_id(window_ext::APP_ID) {
+        log::warn!("app id not set: {e}");
+    }
 
     let lang = ctx
         .borrow_mut()
@@ -67,30 +85,61 @@ fn run() -> anyhow::Result<()> {
     let _dashboard = dashboard::install(&ui, &ctx, &timer);
     let _reports = reports::install(&ui, &ctx);
 
-    // ✕ hides the window to the tray (setting "close to tray"), else quits.
+    // A login start waits a while for the tray host (it may start after us).
+    let tray_host = tray_host::available(if minimized {
+        tray_host::TRAY_WAIT_AT_LOGIN
+    } else {
+        Duration::ZERO
+    });
+
+    // The Run entry follows the setting, unless Task Manager disabled it (the user's
+    // choice: then the setting turns off). Before the settings screen reads it.
+    if ctx.borrow().manages_autostart {
+        sync_autostart(&ctx);
+    }
+
+    // The mini timer is shown here when the settings say so, before the main window.
+    let mini = mini::install(&ui, &ctx, &timer);
+    let tray = if tray_host {
+        tray::install(&ui, &ctx, &timer, &mini)
+    } else {
+        None
+    };
+    // The settings screen needs to know whether a tray exists.
+    ctx.borrow_mut().has_tray = tray.is_some();
+    let _settings = settings::install(&ui, &ctx, &timer, &mini);
+
+    // The close button hides the window to the tray (setting "close to tray", needs a
+    // tray), else quits.
     let close_ctx = ctx.clone();
     ui.window().on_close_requested(move || {
-        if !close_ctx.borrow().settings.close_to_tray {
+        let c = close_ctx.borrow();
+        // The tray host is probed again: it may have gone since start-up, and a hidden
+        // window without an icon would leave the timer unreachable.
+        if !(c.settings.close_to_tray && c.has_tray && tray_host::host_present_now()) {
             let _ = slint::quit_event_loop();
         }
         slint::CloseRequestResponse::HideWindow
     });
 
-    if !minimized {
-        ui.show().context("show main window")?;
-        window_ext::when_created(&ui, |ui: &MainWindow| window_ext::set_app_icon(ui.window()));
+    // Never leave the timer invisible: a `--minimized` start without a tray shows a
+    // minimized window instead.
+    match app::initial_window(minimized, tray.is_some()) {
+        InitialWindow::Shown => {
+            ui.show().context("show main window")?;
+            window_ext::when_created(&ui, |ui: &MainWindow| {
+                window_ext::set_app_icon(ui.window());
+            });
+        }
+        InitialWindow::Hidden => {}
+        InitialWindow::Minimized => {
+            ui.show().context("show main window")?;
+            window_ext::when_created(&ui, |ui: &MainWindow| {
+                window_ext::set_app_icon(ui.window());
+                ui.window().set_minimized(true);
+            });
+        }
     }
-    // The Run entry follows the setting, unless Task Manager disabled it (the user's
-    // choice: then the setting turns off).
-    if ctx.borrow().manages_autostart {
-        sync_autostart(&ctx);
-    }
-
-    // Shown after the main window when the settings say so.
-    let mini = mini::install(&ui, &ctx, &timer);
-    let _settings = settings::install(&ui, &ctx, &timer, &mini);
-    let _tray = tray::install(&ui, &ctx, &timer, &mini)?;
-
     let main = ui.as_weak();
     instance.on_activate(move || {
         if let Some(ui) = main.upgrade() {

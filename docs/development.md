@@ -2,8 +2,9 @@
 
 ## Build, test, run
 
-Requirements: Windows 10/11 and Rust 1.95 (MSVC toolchain, pinned in `rust-toolchain.toml`).
-macOS and Linux builds are planned ([ideas/cross-platform.md](ideas/cross-platform.md)).
+Requirements: Rust 1.95 (pinned in `rust-toolchain.toml`) on Windows 10/11 (MSVC
+toolchain) or on Linux (Ubuntu 22.04 / 24.04, see [Linux](#linux) below). A macOS build is
+planned for 0.3.0 ([ideas/cross-platform.md](ideas/cross-platform.md)).
 
 ```powershell
 cargo run -p tt-app                     # debug build
@@ -20,17 +21,20 @@ so quit an installed copy first.
 
 Workspace: `tt-domain` (rules, no I/O) → `tt-storage` (SQLite) → `tt-services`
 (use cases, export, backup, updates) → `tt-app` (Slint UI, tray, platform code).
-Windows-specific code lives in `crates/tt-app/src/platform/`.
+Platform-specific code (Windows, Linux) lives in `crates/tt-app/src/platform/`.
 
 Translations: [translating.md](translating.md). Manual checks before a release:
 [qa-checklist.md](qa-checklist.md).
 
 ## Command-line flags
 
-- **`--minimized`** starts in the tray (used by autostart).
+- **`--minimized`** starts in the tray (used by autostart). On Linux it waits up to 10 s
+  for a tray host at login, and shows the window minimized if there is none.
 - **`--db <file>`** opens another database file instead, for trying things out.
-  - Nothing then writes the autostart entry in the registry.
-  - The "Start with Windows" switch changes only the setting in that file.
+  - Nothing then writes the autostart entry (the registry on Windows, the `.desktop` file on
+    Linux).
+  - The "Start with Windows" / "Start when you sign in" switch changes only the setting in
+    that file.
 
 ## Installer
 
@@ -41,8 +45,8 @@ cargo build --release -p tt-app
 makensis /DVERSION=0.1.0 crates\tt-app\installer\timetracker.nsi   # target\installer\
 ```
 
-**CI on a tag.** For tags `v*`, CI builds the installer and the portable zip and keeps them
-as workflow artifacts of that run.
+**CI on a tag.** For tags `v*`, CI builds the installer and the portable zip (and the Linux
+packages, see [Linux](#linux)) and keeps them as workflow artifacts of that run.
 
 **Publishing.** The GitHub Release is made by hand from those artifacts:
 
@@ -50,6 +54,64 @@ as workflow artifacts of that run.
 gh run download <run-id> -D <empty-folder>
 gh release create v0.1.0 --verify-tag --notes-file <notes.md> <files>
 ```
+
+## Linux
+
+Target: Ubuntu 22.04 and 24.04 with GNOME, x86_64. CI builds on `ubuntu-22.04`.
+
+**Build packages (Ubuntu):**
+
+```bash
+sudo apt install build-essential pkg-config libfontconfig1-dev libxkbcommon-dev
+```
+
+To run the app you also need `libxkbcommon-x11-0` (winit loads it at runtime; the `.deb`
+depends on it, and Ubuntu Desktop has it). Then the same commands as on Windows:
+`cargo run -p tt-app`, `cargo test --workspace`, and so on. The update check is not built
+on Linux.
+
+**Linux code builds only on Linux.** `rusqlite` with `bundled` compiles C code, so the
+Linux part cannot be built on Windows. On a Windows machine, use WSL2 with Ubuntu. Install
+the tools once (needs a network):
+
+```bash
+sudo apt-get update && sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libxkbcommon-dev x11-utils
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.95 --profile minimal -c rustfmt,clippy
+```
+
+Build in a directory outside `/mnt/<drive>`, so it does not mix with the Windows `target`
+and avoids the slow 9p file system:
+
+```bash
+wsl -d Ubuntu -- bash -lc 'cd /mnt/e/Work/TimeTracker && export CARGO_TARGET_DIR=$HOME/tt-target && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test --workspace'
+```
+
+WSLg can show the app window, but it has no tray host, so the tray cannot be checked there.
+Use a virtual machine for that ([qa-checklist.md](qa-checklist.md)).
+
+**Packages.** Files are in `crates/tt-app/installer/linux/`
+(`timetracker.desktop`, `build-appimage.sh`, `deb-version.sh`). They need `cargo-deb` 3.8.0
+and `appimagetool` 1.9.1 (versions and checksum: [refs.md](refs.md)).
+
+```bash
+cargo build --release -p tt-app
+cargo deb -p tt-app --no-build --deb-version <deb-version> -o target/installer/
+crates/tt-app/installer/linux/build-appimage.sh <version> target/release/tt-app
+```
+
+- The `.deb` is `target/installer/timetracker_<deb-version>_amd64.deb`. Release candidates
+  use `~rc.N` in the `.deb` version (`deb-version.sh` produces it). GitHub may show `~` as
+  `.` in asset names.
+- The AppImage is `target/installer/TimeTracker-<version>-x86_64.AppImage`.
+
+**Pre-release.** A tag `vX.Y.Z-rc.N` makes CI build all files and publish a GitHub
+Pre-release by itself:
+
+```bash
+git tag v0.2.0-rc.1 && git push origin v0.2.0-rc.1
+```
+
+A final release (tag `vX.Y.Z`) is still published by hand from the CI artifacts, as above.
 
 ## Updates
 

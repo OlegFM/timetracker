@@ -1081,6 +1081,10 @@ msgid "Start with Windows"
 msgstr ""
 
 #: ui/screens/settings.slint
+msgid "Start when you sign in"
+msgstr ""
+
+#: ui/screens/settings.slint
 msgid "Don't allow overlapping time entries"
 msgstr ""
 

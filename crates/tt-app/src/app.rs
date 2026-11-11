@@ -16,7 +16,8 @@ use tt_storage::Db;
 use crate::Theme;
 use crate::vm::lang;
 
-/// Folder name under `%APPDATA%` (data) and `%LOCALAPPDATA%` (logs).
+/// Folder name under the user data folder (`%APPDATA%` / `%LOCALAPPDATA%` on Windows,
+/// `~/.local/share` on Linux).
 const APP_DIR: &str = "TimeTracker";
 /// Command-line flag: open the database file named by the next argument instead of the
 /// default one (measurements and manual checks on a seed database, see `examples/seed.rs`).
@@ -34,6 +35,9 @@ pub struct AppContext {
     /// default database: with `--db` the "Start with Windows" toggle changes the setting
     /// alone and nothing writes the real entry.
     pub manages_autostart: bool,
+    /// Whether the tray icon was created (it needs a tray host on Linux). Without it the
+    /// close button quits and "close to tray" is unavailable.
+    pub has_tray: bool,
 }
 
 /// Callbacks of one kind of event.
@@ -93,7 +97,8 @@ impl AppEvents {
 pub type Ctx = Rc<RefCell<AppContext>>;
 
 impl AppContext {
-    /// Opens (creating if needed) `%APPDATA%\TimeTracker\timetracker.db`.
+    /// Opens (creating if needed) `timetracker.db` in the app folder of the user data
+    /// directory (`%APPDATA%\TimeTracker` on Windows, `~/.local/share/TimeTracker` on Linux).
     pub fn open_default() -> anyhow::Result<AppContext> {
         let dirs = BaseDirs::new().context("no user profile folders")?;
         let mut ctx = Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))?;
@@ -118,6 +123,7 @@ impl AppContext {
             db_path,
             events: Rc::default(),
             manages_autostart: false,
+            has_tray: false,
         })
     }
 
@@ -164,7 +170,8 @@ fn db_arg(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-/// `%LOCALAPPDATA%\TimeTracker\logs`.
+/// The log folder: `%LOCALAPPDATA%\TimeTracker\logs` on Windows,
+/// `~/.local/share/TimeTracker/logs` on Linux.
 pub fn log_dir() -> Option<PathBuf> {
     BaseDirs::new().map(|d| d.data_local_dir().join(APP_DIR).join("logs"))
 }
@@ -187,9 +194,37 @@ where
         .set_dark(theme == tt_services::Theme::Dark);
 }
 
+/// How the main window appears at start.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InitialWindow {
+    Shown,
+    /// Not shown: only the tray icon (login start).
+    Hidden,
+    /// Shown minimized: a login start without a tray must not leave the timer invisible.
+    Minimized,
+}
+
+/// The first state of the main window for a `--minimized` start and a working tray.
+pub fn initial_window(minimized: bool, tray: bool) -> InitialWindow {
+    match (minimized, tray) {
+        (false, _) => InitialWindow::Shown,
+        (true, true) => InitialWindow::Hidden,
+        (true, false) => InitialWindow::Minimized,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn initial_window_follows_minimized_and_tray() {
+        use InitialWindow::*;
+        assert_eq!(initial_window(false, true), Shown);
+        assert_eq!(initial_window(false, false), Shown);
+        assert_eq!(initial_window(true, true), Hidden);
+        assert_eq!(initial_window(true, false), Minimized);
+    }
 
     #[test]
     fn open_creates_folder_and_loads_defaults() {

@@ -42,8 +42,23 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
   - controllers;
   - the `--db` → no-autostart wiring.
 
+## Linux
+
+- **The mini timer shows in the Dock and in `Alt+Tab`.** It is a normal window to GNOME.
+- **Slight blur on fractional scaling.** The app runs on X11/XWayland even in a Wayland
+  session, and the compositor scales XWayland windows up.
+- **A Wayland session without XWayland cannot run the app.** The app removes
+  `WAYLAND_DISPLAY` at start so that the always-on-top mini timer and window positions work.
+- **No tooltip on the tray icon in GNOME.** The current task is the first (disabled) item
+  of the menu instead.
+- **No tray host, no icon.** On GNOME without the AppIndicator extension the close button
+  quits the app.
+- **Removing the app leaves the autostart file.** Removing the .deb or deleting/moving the
+  AppImage leaves `~/.config/autostart/TimeTracker.desktop` pointing at nothing until the app
+  is started again. Turn autostart off before removing, or delete the file.
+
 ## Planned after v0.1.0
 
 - **Sync between devices through a cloud folder.** See [ideas/cloud-sync.md](ideas/cloud-sync.md).
 - **Microsoft Store (MSIX) release**, so users get no SmartScreen warning. See [ideas/msix-store.md](ideas/msix-store.md).
-- **macOS and Linux builds.** See [ideas/cross-platform.md](ideas/cross-platform.md).
+- **A macOS build (0.3.0).** Linux is in 0.2.0. See [ideas/cross-platform.md](ideas/cross-platform.md).

@@ -18,3 +18,21 @@
 - [Certum code signing (SimplySign, cloud key), reseller listing](https://sslpoint.com/code-signing-certificates)
   - Individuals allowed, roughly EUR 109–169 a year.
   - Prices unverified on certum.eu.
+
+## Linux support (looked up 2026-11-11)
+
+- [tray-icon](https://docs.rs/tray-icon) and its Linux backend [ksni](https://docs.rs/ksni)
+  - The tray goes through D-Bus, with no GTK and no AppIndicator library.
+- [StatusNotifierItem specification](https://www.freedesktop.org/wiki/Specifications/StatusNotifierItem/)
+  - The protocol behind the tray icon; GNOME needs the AppIndicator / KStatusNotifierItem extension to host it.
+- [Desktop Entry Specification](https://specifications.freedesktop.org/desktop-entry-spec/latest/)
+  - The format of `timetracker.desktop`.
+- [Desktop Application Autostart Specification](https://specifications.freedesktop.org/autostart-spec/latest/)
+  - `~/.config/autostart/*.desktop`.
+- [appimagetool 1.9.1](https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage)
+- [type2-runtime 20251108, `runtime-x86_64`](https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64)
+  (embedded into the AppImage via `--runtime-file`; sha256
+  `2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d`, from the GitHub release asset digest)
+  - Pinned in the build script. sha256 `ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0` (from the GitHub API asset digest).
+- [cargo-deb 3.8.0](https://github.com/kornelski/cargo-deb)
+  - Builds the `.deb` from the deb metadata in `crates/tt-app/Cargo.toml`.

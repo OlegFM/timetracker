@@ -257,11 +257,12 @@ export component SettingsScreen inherits VerticalLayout {
 
                 CheckBox {
                     text: @tr("The close button hides the window to the tray");
-                    checked: SettingsBridge.close-to-tray;
+                    enabled: SettingsBridge.tray-available;
+                    checked: SettingsBridge.close-to-tray && SettingsBridge.tray-available;
                     toggled => { SettingsBridge.set-close-to-tray(!SettingsBridge.close-to-tray); }
                 }
                 CheckBox {
-                    text: @tr("Start with Windows");
+                    text: SettingsBridge.on-windows ? @tr("Start with Windows") : @tr("Start when you sign in");
                     checked: SettingsBridge.autostart;
                     toggled => { SettingsBridge.set-autostart(!SettingsBridge.autostart); }
                 }

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=TimeTracker
+Comment=Offline time tracker
+Exec=timetracker
+Icon=timetracker
+Terminal=false
+Categories=Office;Utility;
+StartupWMClass=timetracker
