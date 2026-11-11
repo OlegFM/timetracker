@@ -1210,3 +1210,7 @@ msgstr "记录"
 #: ui/strings.slint
 msgid "TimeTracker could not reopen its database and will close."
 msgstr "TimeTracker 无法重新打开其数据库，即将关闭。"
+
+#: ui/strings.slint
+msgid "Move TimeTracker to Applications to start it at sign-in"
+msgstr "请将 TimeTracker 移到“应用程序”文件夹，以便登录时启动"

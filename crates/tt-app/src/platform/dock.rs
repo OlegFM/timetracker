@@ -14,7 +14,7 @@
 //! another one there (`ApplicationDelegate::get`), whatever its `platform/macos.rs` says.
 
 /// Shows (`true`) or hides the Dock icon; call with `true` before showing the main window
-/// and with `false` after hiding it.
+/// and with `false` after hiding it. `true` also unhides the app (after `Cmd+H`).
 pub fn set_visible(on: bool) {
     #[cfg(target_os = "macos")]
     macos::set_visible(on);
@@ -59,8 +59,14 @@ mod macos {
         } else {
             NSApplicationActivationPolicy::Accessory
         };
-        if !NSApplication::sharedApplication(mtm).setActivationPolicy(policy) {
+        let app = NSApplication::sharedApplication(mtm);
+        if !app.setActivationPolicy(policy) {
             log::warn!("Dock icon not changed");
+        }
+        // After `Cmd+H` the app stays hidden, and winit does not activate a hidden app when
+        // it focuses a window: unhide it, or "Open window" would show nothing.
+        if on {
+            app.unhide(None);
         }
     }
 
@@ -118,8 +124,10 @@ mod handler {
         impl ReopenHandler {
             // SAFETY: the signature of an Apple Event handler method:
             // `- (void)handleEvent:(NSAppleEventDescriptor *)e withReplyEvent:(NSAppleEventDescriptor *)r`.
+            // Both arguments are taken as `Option`: objc2 treats `&AnyObject` as non-null,
+            // and the reply may be nil.
             #[unsafe(method(handleReopen:withReplyEvent:))]
-            fn handle_reopen(&self, _event: &AnyObject, _reply: &AnyObject) {
+            fn handle_reopen(&self, _event: Option<&AnyObject>, _reply: Option<&AnyObject>) {
                 (self.ivars().on_reopen)();
             }
         }

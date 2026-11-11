@@ -33,6 +33,26 @@ pub const MINIMIZED_ARG: &str = "--minimized";
 /// `installer/macos/Info.plist`.
 pub const BUNDLE_ID: &str = "io.github.olegfm.timetracker";
 
+/// macOS: the app runs from a disk image or a translocated copy, which disappears; no entry
+/// is written for it. Tell it from other errors with [`is_not_in_applications`].
+#[derive(Debug)]
+pub struct NotInApplications;
+
+impl std::fmt::Display for NotInApplications {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            "TimeTracker runs from a temporary location; move it to Applications to start it at sign-in",
+        )
+    }
+}
+
+impl std::error::Error for NotInApplications {}
+
+/// Whether autostart was refused because the app is not installed ([`NotInApplications`]).
+pub fn is_not_in_applications(e: &anyhow::Error) -> bool {
+    e.downcast_ref::<NotInApplications>().is_some()
+}
+
 /// Adds (`true`) or removes (`false`) the autostart entry (Windows Run entry / Linux XDG
 /// autostart file).
 pub fn set_autostart(enabled: bool) -> anyhow::Result<()> {
@@ -141,9 +161,7 @@ fn launch_exe() -> anyhow::Result<PathBuf> {
     // A copy run from a disk image or a translocated one disappears; do not register it.
     #[cfg(target_os = "macos")]
     if !launch_agent::permanent_location(&exe) {
-        anyhow::bail!(
-            "TimeTracker runs from a temporary location; move it to Applications to start it at sign-in"
-        );
+        return Err(NotInApplications.into());
     }
     Ok(exe)
 }
@@ -175,6 +193,17 @@ fn quoted(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn not_in_applications_is_recognised_through_anyhow() {
+        assert!(is_not_in_applications(&anyhow::Error::new(
+            NotInApplications
+        )));
+        // Also under added context, as `?` and `.context` pass it on.
+        let wrapped = anyhow::Error::new(NotInApplications).context("enable autostart");
+        assert!(is_not_in_applications(&wrapped));
+        assert!(!is_not_in_applications(&anyhow::anyhow!("access denied")));
+    }
 
     #[test]
     fn path_is_quoted() {

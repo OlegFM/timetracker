@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Spotlight while it sits in the menu bar shows the window.
   - "Start when you sign in" writes the LaunchAgent `~/Library/LaunchAgents/TimeTracker.plist`
     (with `--minimized`). It is not written when the app runs from the `.dmg` or from
-    Downloads (App Translocation); the warning goes to the log.
+    Downloads (App Translocation): the app asks to move it to Applications.
   - Single instance through a Unix socket in `~/Library/Application Support/TimeTracker/`.
   - Data in `~/Library/Application Support/TimeTracker/`.
   - The update check is off on macOS.

@@ -297,6 +297,13 @@ impl SettingsController {
         };
         match registry {
             Ok(()) => self.change(|s| s.autostart = on),
+            Err(e) if autostart::is_not_in_applications(&e) => {
+                log::warn!("autostart not changed: {e:#}");
+                self.toast_with(
+                    |tr| tr.get_autostart_not_in_applications(),
+                    ToastKind::Error,
+                );
+            }
             Err(e) => {
                 log::warn!("autostart not changed: {e:#}");
                 self.toast_with(|tr| tr.get_err_generic(), ToastKind::Error);

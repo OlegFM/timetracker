@@ -131,6 +131,8 @@ pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
     ui.window().set_minimized(false);
     if let Err(e) = ui.show() {
         log::warn!("window not shown: {e}");
+        // No window, so no Dock icon either.
+        dock::set_visible(false);
         return;
     }
     when_created(ui, |ui: &C| {

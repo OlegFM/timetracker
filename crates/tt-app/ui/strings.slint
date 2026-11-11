@@ -95,6 +95,8 @@ export global Tr {
     out property <string> update-latest: @tr("You have the latest version.");
     out property <string> update-available: @tr("A new version is available.");
     out property <string> update-failed: @tr("Couldn't check for updates.");
+    // macOS: autostart refused for a copy run from the disk image or a temporary location
+    out property <string> autostart-not-in-applications: @tr("Move TimeTracker to Applications to start it at sign-in");
     // Error box before quitting when the database could not be opened again after a restore
     out property <string> db-reopen-failed: @tr("TimeTracker could not reopen its database and will close.");
 

@@ -207,7 +207,8 @@ fn install_menu_bar(
             Some(t) => {
                 out.replace(Some(t));
                 // Only now: winit makes an unbundled binary a regular app while it launches.
-                if hidden {
+                // A reopen or an activation may have shown the window since: keep its icon.
+                if hidden && !ui.window().is_visible() {
                     dock::set_visible(false);
                 }
             }

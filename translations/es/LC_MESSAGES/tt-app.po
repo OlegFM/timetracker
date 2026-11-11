@@ -1213,3 +1213,7 @@ msgstr "Registros"
 #: ui/strings.slint
 msgid "TimeTracker could not reopen its database and will close."
 msgstr "TimeTracker no pudo volver a abrir su base de datos y se cerrará."
+
+#: ui/strings.slint
+msgid "Move TimeTracker to Applications to start it at sign-in"
+msgstr "Mueva TimeTracker a Aplicaciones para que se inicie al iniciar sesión"

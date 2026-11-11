@@ -506,6 +506,13 @@ mod tests {
         );
     }
 
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn menu_opens_on_left_click_on_macos() {
+        // A `const` block: clippy's `assertions_on_constants` rejects a plain `assert!` here.
+        const { assert!(MENU_ON_LEFT_CLICK) };
+    }
+
     fn pixel(rgba: &[u8], x: u32, y: u32) -> [u8; 4] {
         let i = ((y * ICON_SIZE + x) * 4) as usize;
         rgba[i..i + 4].try_into().unwrap()
