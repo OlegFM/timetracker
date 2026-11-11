@@ -55,13 +55,18 @@ mod tests {
 
     #[test]
     fn short_path_hides_user_profile() {
-        assert_eq!(
-            short_path(r"C:\Users\someone\.cargo\registry\src\idx\slint-1.18.1\src\lib.rs"),
-            "slint-1.18.1/src/lib.rs"
+        // Separators and absolute-path syntax differ per platform.
+        #[cfg(windows)]
+        let (abs, rel) = (
+            r"C:\Users\someone\.cargo\registry\src\idx\slint-1.18.1\src\lib.rs",
+            r"crates\tt-app\src\app.rs",
         );
-        assert_eq!(
-            short_path(r"crates\tt-app\src\app.rs"),
-            r"crates\tt-app\src\app.rs"
+        #[cfg(not(windows))]
+        let (abs, rel) = (
+            "/home/someone/.cargo/registry/src/idx/slint-1.18.1/src/lib.rs",
+            "crates/tt-app/src/app.rs",
         );
+        assert_eq!(short_path(abs), "slint-1.18.1/src/lib.rs");
+        assert_eq!(short_path(rel), rel);
     }
 }

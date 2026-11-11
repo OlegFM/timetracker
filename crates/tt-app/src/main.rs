@@ -15,6 +15,7 @@ use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
     destroy_windows_on_hide();
+    force_x11();
     logging::init();
     let result = run();
     if let Err(e) = &result {
@@ -36,6 +37,19 @@ fn destroy_windows_on_hide() {
     // SAFETY: the first statement of `main`, before any other thread exists.
     unsafe { std::env::set_var("SLINT_DESTROY_WINDOW_ON_HIDE", "1") };
 }
+
+/// Linux: always run through X11 (XWayland on Wayland sessions). winit 0.30 picks Wayland
+/// only when `WAYLAND_DISPLAY` is set, and Wayland forbids always-on-top and window
+/// positioning, which the mini window needs (spec section 5.2).
+#[cfg(target_os = "linux")]
+#[allow(unsafe_code)]
+fn force_x11() {
+    // SAFETY: called right after `destroy_windows_on_hide`, before any other thread exists.
+    unsafe { std::env::remove_var("WAYLAND_DISPLAY") };
+}
+
+#[cfg(not(target_os = "linux"))]
+fn force_x11() {}
 
 fn run() -> anyhow::Result<()> {
     // A second launch only activates the running instance and exits with code 0.
