@@ -25,6 +25,10 @@
   - The tray goes through D-Bus, with no GTK and no AppIndicator library.
 - [StatusNotifierItem specification](https://www.freedesktop.org/wiki/Specifications/StatusNotifierItem/)
   - The protocol behind the tray icon; GNOME needs the AppIndicator / KStatusNotifierItem extension to host it.
+- [Startup Notification Protocol](https://specifications.freedesktop.org/startup-notification-spec/startup-notification-latest.txt)
+  - The X11 `remove: ID=...` message (`_NET_STARTUP_INFO_BEGIN` / `_NET_STARTUP_INFO`, 20-byte chunks) that `platform/startup_notify.rs` sends to end the tray host's busy cursor.
+- [XDG activation, X11 interoperation](https://wayland.app/protocols/xdg-activation-v1)
+  - Activation tokens double as startup-notification ids, so an X11/XWayland client completes a token with the X11 `remove` message.
 - [Desktop Entry Specification](https://specifications.freedesktop.org/desktop-entry-spec/latest/)
   - The format of `timetracker.desktop`.
 - [Desktop Application Autostart Specification](https://specifications.freedesktop.org/autostart-spec/latest/)
