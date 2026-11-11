@@ -11,6 +11,10 @@ fi
 version="$1"
 arm64_bin="$2"
 x86_64_bin="$3"
+if ! printf '%s\n' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+  echo "error: version '$version' must look like X.Y.Z or X.Y.Z-suffix" >&2
+  exit 2
+fi
 # CFBundleShortVersionString accepts only X.Y.Z; the full version goes into the .dmg name.
 short="${version%%-*}"
 

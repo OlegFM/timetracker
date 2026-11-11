@@ -139,10 +139,13 @@ jobs:
       - run: cargo build --release --locked -p tt-app --target x86_64-apple-darwin
       - name: Package
         run: |
-          crates/tt-app/installer/macos/build-dmg.sh "${GITHUB_REF_NAME#v}"             target/aarch64-apple-darwin/release/tt-app             target/x86_64-apple-darwin/release/tt-app
+          if [ "$GITHUB_REF_TYPE" = tag ]; then version="${GITHUB_REF_NAME#v}"; else version=0.0.0-ci; fi
+          crates/tt-app/installer/macos/build-dmg.sh "$version" \
+            target/aarch64-apple-darwin/release/tt-app \
+            target/x86_64-apple-darwin/release/tt-app
       - uses: actions/upload-artifact@v4
         with:
-          name: TimeTracker-${{ github.ref_name }}-macos
+          name: TimeTracker-${{ github.ref_type == 'tag' && github.ref_name || 'ci' }}-macos
           path: target/installer/*.dmg
 
   # Release candidates (`vX.Y.Z-rc.N`) are published by CI as prereleases.
