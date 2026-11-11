@@ -1078,6 +1078,10 @@ msgid "Behavior"
 msgstr "Поведение"
 
 #: ui/screens/settings.slint
+msgid "The close button hides the window to the menu bar"
+msgstr "Кнопка закрытия сворачивает окно в строку меню"
+
+#: ui/screens/settings.slint
 msgid "The close button hides the window to the tray"
 msgstr "Кнопка закрытия сворачивает окно в трей"
 

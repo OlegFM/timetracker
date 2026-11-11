@@ -1072,6 +1072,10 @@ msgid "Behavior"
 msgstr "行为"
 
 #: ui/screens/settings.slint
+msgid "The close button hides the window to the menu bar"
+msgstr "关闭按钮将窗口隐藏到菜单栏"
+
+#: ui/screens/settings.slint
 msgid "The close button hides the window to the tray"
 msgstr "关闭按钮将窗口隐藏到托盘"
 

@@ -109,6 +109,7 @@ pub fn install(
     b.set_updates_enabled(update_config().is_some());
     b.set_tray_available(ctl.ctx.borrow().has_tray);
     b.set_on_windows(cfg!(windows));
+    b.set_on_macos(crate::platform::IS_MACOS);
 
     let on_index = |f: fn(&SettingsController, i32)| {
         let c = ctl.clone();

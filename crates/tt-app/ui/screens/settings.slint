@@ -256,7 +256,7 @@ export component SettingsScreen inherits VerticalLayout {
                 title: @tr("Behavior");
 
                 CheckBox {
-                    text: @tr("The close button hides the window to the tray");
+                    text: SettingsBridge.on-macos ? @tr("The close button hides the window to the menu bar") : @tr("The close button hides the window to the tray");
                     enabled: SettingsBridge.tray-available;
                     checked: SettingsBridge.close-to-tray && SettingsBridge.tray-available;
                     toggled => { SettingsBridge.set-close-to-tray(!SettingsBridge.close-to-tray); }
