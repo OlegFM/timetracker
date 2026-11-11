@@ -53,6 +53,9 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
   of the menu instead.
 - **No tray host, no icon.** On GNOME without the AppIndicator extension the close button
   quits the app.
+- **Removing the app leaves the autostart file.** Removing the .deb or deleting/moving the
+  AppImage leaves `~/.config/autostart/TimeTracker.desktop` pointing at nothing until the app
+  is started again. Turn autostart off before removing, or delete the file.
 
 ## Planned after v0.1.0
 

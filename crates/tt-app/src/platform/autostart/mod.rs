@@ -24,7 +24,8 @@ const APP_NAME: &str = "TimeTracker";
 /// Command-line flag: start in the tray without showing the main window.
 pub const MINIMIZED_ARG: &str = "--minimized";
 
-/// Adds (`true`) or removes (`false`) the Run entry.
+/// Adds (`true`) or removes (`false`) the autostart entry (Windows Run entry / Linux XDG
+/// autostart file).
 pub fn set_autostart(enabled: bool) -> anyhow::Result<()> {
     let launch = launcher()?;
     if enabled {
@@ -34,16 +35,17 @@ pub fn set_autostart(enabled: bool) -> anyhow::Result<()> {
     }
 }
 
-/// What [`sync`] does about the Run entry.
+/// What [`sync`] does about the autostart entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SyncPlan {
-    /// Registry and setting agree.
+    /// The stored entry and the setting agree.
     Keep,
     /// Write the entry (missing, or it launches another executable).
     Register,
     /// Remove the entry (only when it starts this executable).
     Unregister,
-    /// The setting is on but Task Manager disabled the entry: the setting becomes off.
+    /// The setting is on but the user disabled the entry in the system (Task Manager, GNOME
+    /// Startup Applications): the setting becomes off.
     DisabledByUser,
 }
 
@@ -56,8 +58,8 @@ pub struct StoredEntry {
     pub disabled: bool,
 }
 
-/// Decides what to do for the autostart `want`ed by the settings, given the stored Run
-/// command (`run`), whether Task Manager disabled it and the command that should be there.
+/// Decides what to do for the autostart `want`ed by the settings, given the stored
+/// command (`run`), whether the user disabled it in the system UI and the command that should be there.
 pub fn plan_sync(want: bool, run: Option<&str>, disabled: bool, expected: &str) -> SyncPlan {
     match (want, run) {
         (true, None) => SyncPlan::Register,
@@ -85,8 +87,9 @@ pub fn runs_same_exe(cmd: &str, other: &str) -> bool {
     !exe.is_empty() && exe.eq_ignore_ascii_case(command_exe(other))
 }
 
-/// Makes the registry match the setting and returns the setting to keep: `false` when
-/// the user disabled the entry in Task Manager (it is then left as it is).
+/// Makes the stored entry match the setting and returns the setting to keep: `false` when
+/// the user disabled it in the system (Task Manager, GNOME Startup Applications; it is then
+/// left as it is).
 pub fn sync(want: bool) -> anyhow::Result<bool> {
     let entry = stored_entry();
     let expected = format!("{} {MINIMIZED_ARG}", quoted(&launch_exe()?));

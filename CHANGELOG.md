@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - "Start when you sign in" writes `~/.config/autostart/TimeTracker.desktop`.
   - Single instance through a Unix socket in `$XDG_RUNTIME_DIR`.
   - Data in `~/.local/share/TimeTracker/`.
-  - The update check is not built on Linux.
+  - The update check is off on Linux.
 - The mini timer now appears before the main window at startup (Windows).
 
 ## [0.1.0] - 2026-11-10
