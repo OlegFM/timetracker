@@ -1,4 +1,4 @@
-//! Is there somewhere to show the tray icon? On Windows the taskbar always is. On Linux the
+//! Is there somewhere to show the tray icon? On Windows and macOS the taskbar / menu bar always is. On Linux the
 //! icon is a StatusNotifierItem and shows only when a StatusNotifierWatcher (a tray host,
 //! e.g. the GNOME AppIndicator extension) owns its D-Bus name; `tray-icon` creates the
 //! item without telling us either way.
@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 pub const TRAY_WAIT_AT_LOGIN: Duration = Duration::from_secs(10);
 
 /// Whether a tray can show its icon, waiting up to `wait` for a host to appear.
-#[cfg(windows)]
+#[cfg(not(target_os = "linux"))]
 pub fn available(_wait: Duration) -> bool {
     true
 }
@@ -23,7 +23,7 @@ pub fn available(wait: Duration) -> bool {
 /// Whether a tray host is there right now (one probe, no waiting). Checked when the window is
 /// closed: the host may have gone since start-up (the AppIndicator extension turned off), and
 /// hiding the window then would leave a running timer with neither window nor icon.
-#[cfg(windows)]
+#[cfg(not(target_os = "linux"))]
 pub fn host_present_now() -> bool {
     true
 }
@@ -72,9 +72,9 @@ fn watcher_present() -> bool {
 mod tests {
     use super::*;
 
-    #[cfg(windows)]
+    #[cfg(not(target_os = "linux"))]
     #[test]
-    fn host_present_now_is_true_on_windows() {
+    fn host_present_now_is_true_without_linux_tray_hosts() {
         assert!(host_present_now());
     }
 

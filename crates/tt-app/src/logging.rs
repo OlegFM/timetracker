@@ -1,5 +1,6 @@
 //! File log (`tt.log` in the log folder: `%LOCALAPPDATA%\TimeTracker\logs` on Windows,
-//! `~/.local/share/TimeTracker/logs` on Linux; level Warn) and panic hook.
+//! `~/.local/share/TimeTracker/logs` on Linux,
+//! `~/Library/Application Support/TimeTracker/logs` on macOS; level Warn) and panic hook.
 //!
 //! Log only ids and error codes: never descriptions, names or other user text.
 

@@ -17,7 +17,7 @@ use crate::Theme;
 use crate::vm::lang;
 
 /// Folder name under the user data folder (`%APPDATA%` / `%LOCALAPPDATA%` on Windows,
-/// `~/.local/share` on Linux).
+/// `~/.local/share` on Linux, `~/Library/Application Support` on macOS).
 const APP_DIR: &str = "TimeTracker";
 /// Command-line flag: open the database file named by the next argument instead of the
 /// default one (measurements and manual checks on a seed database, see `examples/seed.rs`).
@@ -98,7 +98,8 @@ pub type Ctx = Rc<RefCell<AppContext>>;
 
 impl AppContext {
     /// Opens (creating if needed) `timetracker.db` in the app folder of the user data
-    /// directory (`%APPDATA%\TimeTracker` on Windows, `~/.local/share/TimeTracker` on Linux).
+    /// directory (`%APPDATA%\TimeTracker` on Windows, `~/.local/share/TimeTracker` on Linux,
+    /// `~/Library/Application Support/TimeTracker` on macOS).
     pub fn open_default() -> anyhow::Result<AppContext> {
         let dirs = BaseDirs::new().context("no user profile folders")?;
         let mut ctx = Self::open(dirs.data_dir().join(APP_DIR).join("timetracker.db"))?;
@@ -171,7 +172,8 @@ fn db_arg(args: impl IntoIterator<Item = OsString>) -> Option<PathBuf> {
 }
 
 /// The log folder: `%LOCALAPPDATA%\TimeTracker\logs` on Windows,
-/// `~/.local/share/TimeTracker/logs` on Linux.
+/// `~/.local/share/TimeTracker/logs` on Linux, `~/Library/Application Support/TimeTracker/logs`
+/// on macOS.
 pub fn log_dir() -> Option<PathBuf> {
     BaseDirs::new().map(|d| d.data_local_dir().join(APP_DIR).join("logs"))
 }

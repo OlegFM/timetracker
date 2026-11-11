@@ -118,6 +118,13 @@ fn stored_entry() -> StoredEntry {
     xdg::stored_entry()
 }
 
+/// The stored entry of this platform.
+// Replaced by the LaunchAgent reader (plan task 3).
+#[cfg(target_os = "macos")]
+fn stored_entry() -> StoredEntry {
+    StoredEntry::default()
+}
+
 /// The executable the entry starts: this one, or on Linux the AppImage file when run from one.
 fn launch_exe() -> anyhow::Result<PathBuf> {
     let exe = std::env::current_exe().context("find executable")?;
