@@ -47,6 +47,7 @@ windows-sys = { workspace = true, features = [
 
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+tray-icon = { workspace = true, features = ["ksni"] }
 
 [build-dependencies]
 slint-build.workspace = true
