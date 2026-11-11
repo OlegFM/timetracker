@@ -1,21 +1,26 @@
-//! Start with Windows: the value `TimeTracker` under
-//! `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (crate `auto-launch`), launching
-//! this executable with `--minimized`.
+//! Start with the system (crate `auto-launch`), launching this executable with
+//! `--minimized`.
 //!
-//! Task Manager's "Startup apps" switch is stored apart, as a value of the same name under
+//! Windows: the value `TimeTracker` under
+//! `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. Task Manager's "Startup apps"
+//! switch is stored apart, as a value of the same name under
 //! `...\Explorer\StartupApproved\Run`. That switch is the user's choice: [`sync`] never
 //! turns it back on.
+//!
+//! Linux: `~/.config/autostart/TimeTracker.desktop`; GNOME's switch is a key of that file.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Context;
-use auto_launch::{AutoLaunch, AutoLaunchBuilder, WindowsEnableMode};
-use windows_registry::CURRENT_USER;
+#[cfg(windows)]
+use auto_launch::WindowsEnableMode;
+use auto_launch::{AutoLaunch, AutoLaunchBuilder};
+
+#[cfg(windows)]
+mod windows;
+mod xdg;
 
 const APP_NAME: &str = "TimeTracker";
-const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
-const APPROVED_KEY: &str =
-    r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
 /// Command-line flag: start in the tray without showing the main window.
 pub const MINIMIZED_ARG: &str = "--minimized";
 
@@ -42,10 +47,13 @@ pub enum SyncPlan {
     DisabledByUser,
 }
 
-/// Whether a `StartupApproved\Run` value says "disabled": Windows writes 0x02 / 0x06 when
-/// the entry is enabled and 0x03 (plus a timestamp) when Task Manager disabled it.
-pub fn startup_approved_disabled(bytes: &[u8]) -> bool {
-    bytes.first().is_some_and(|b| b & 1 == 1)
+/// The autostart entry as the system stores it.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct StoredEntry {
+    /// The command the entry runs (`None`: no entry).
+    pub command: Option<String>,
+    /// The user switched the entry off in the system's own UI.
+    pub disabled: bool,
 }
 
 /// Decides what to do for the autostart `want`ed by the settings, given the stored Run
@@ -80,16 +88,9 @@ pub fn runs_same_exe(cmd: &str, other: &str) -> bool {
 /// Makes the registry match the setting and returns the setting to keep: `false` when
 /// the user disabled the entry in Task Manager (it is then left as it is).
 pub fn sync(want: bool) -> anyhow::Result<bool> {
-    let run = CURRENT_USER
-        .open(RUN_KEY)
-        .and_then(|k| k.get_string(APP_NAME))
-        .ok();
-    let disabled = CURRENT_USER
-        .open(APPROVED_KEY)
-        .and_then(|k| k.get_value(APP_NAME))
-        .is_ok_and(|v| startup_approved_disabled(&v));
-    let expected = format!("{} {MINIMIZED_ARG}", quoted(&std::env::current_exe()?));
-    match plan_sync(want, run.as_deref(), disabled, &expected) {
+    let entry = stored_entry();
+    let expected = format!("{} {MINIMIZED_ARG}", quoted(&launch_exe()?));
+    match plan_sync(want, entry.command.as_deref(), entry.disabled, &expected) {
         SyncPlan::Keep => Ok(want),
         SyncPlan::Register => set_autostart(true).map(|()| want),
         SyncPlan::Unregister => set_autostart(false).map(|()| want),
@@ -102,15 +103,36 @@ pub fn start_minimized(mut args: impl Iterator<Item = String>) -> bool {
     args.any(|a| a == MINIMIZED_ARG)
 }
 
-fn launcher() -> anyhow::Result<AutoLaunch> {
+/// The stored entry of this platform.
+#[cfg(windows)]
+fn stored_entry() -> StoredEntry {
+    windows::stored_entry()
+}
+
+/// The stored entry of this platform.
+#[cfg(target_os = "linux")]
+fn stored_entry() -> StoredEntry {
+    xdg::stored_entry()
+}
+
+/// The executable the entry starts: this one, or on Linux the AppImage file when run from one.
+fn launch_exe() -> anyhow::Result<PathBuf> {
     let exe = std::env::current_exe().context("find executable")?;
-    AutoLaunchBuilder::new()
+    #[cfg(target_os = "linux")]
+    let exe = xdg::launch_target(std::env::var_os("APPIMAGE"), exe);
+    Ok(exe)
+}
+
+fn launcher() -> anyhow::Result<AutoLaunch> {
+    let exe = launch_exe()?;
+    let mut builder = AutoLaunchBuilder::new();
+    builder
         .set_app_name(APP_NAME)
         .set_app_path(&quoted(&exe))
-        .set_args(&[MINIMIZED_ARG])
-        .set_windows_enable_mode(WindowsEnableMode::CurrentUser)
-        .build()
-        .context("autostart entry")
+        .set_args(&[MINIMIZED_ARG]);
+    #[cfg(windows)]
+    builder.set_windows_enable_mode(WindowsEnableMode::CurrentUser);
+    builder.build().context("autostart entry")
 }
 
 /// The path in quotes: the crate writes `"<path> <args>"` as is, and the path may contain
@@ -145,19 +167,6 @@ mod tests {
     }
 
     const EXPECTED: &str = r#""C:\Apps\tt-app.exe" --minimized"#;
-
-    #[test]
-    fn startup_approved_values() {
-        let enabled = [0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let enabled_alt = [0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let disabled = [
-            0x03, 0, 0, 0, 0xd0, 0x5e, 0x9a, 0x11, 0x25, 0x8c, 0xdb, 0x01,
-        ];
-        assert!(!startup_approved_disabled(&enabled));
-        assert!(!startup_approved_disabled(&enabled_alt));
-        assert!(startup_approved_disabled(&disabled));
-        assert!(!startup_approved_disabled(&[]));
-    }
 
     #[test]
     fn sync_plan_follows_the_setting_and_the_stored_command() {
@@ -224,5 +233,21 @@ mod tests {
         );
         // A setting that is already off is not affected.
         assert_eq!(plan_sync(false, None, true, EXPECTED), SyncPlan::Keep);
+    }
+
+    #[test]
+    fn gnome_disabled_entry_turns_the_setting_off() {
+        let e = xdg::parse_desktop_entry(
+            "[Desktop Entry]\nExec=\"/opt/tt\" --minimized\nX-GNOME-Autostart-enabled=false\n",
+        );
+        assert_eq!(
+            plan_sync(
+                true,
+                e.command.as_deref(),
+                e.disabled,
+                "\"/opt/tt\" --minimized"
+            ),
+            SyncPlan::DisabledByUser
+        );
     }
 }
