@@ -166,6 +166,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          notes="Test build for checking before the release.
+
+          Install: https://github.com/$GH_REPO/blob/$GITHUB_REF_NAME/README.md
+
+          macOS: the app is not notarized. On first start: macOS 15 and newer — System Settings → Privacy & Security → Open Anyway; macOS 11–14 — right-click the app → Open → Open."
           gh release create "$GITHUB_REF_NAME" dist/* --prerelease \
             --title "TimeTracker $GITHUB_REF_NAME" \
-            --notes "Test build for checking before the release. Install: see README."
+            --notes "$notes"

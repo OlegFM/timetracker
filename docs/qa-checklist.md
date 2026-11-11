@@ -78,8 +78,11 @@ Run it on both versions, once in a Wayland session and once in an X11 session.
 ## macOS (11 or newer, a real Mac or a virtual machine)
 
 Install the `.dmg` from the pre-release. Run it on Apple Silicon and on Intel if you have both.
-Back up the data first, or use `open -n /Applications/TimeTracker.app --args --db /tmp/tt-qa.db`
-(with `--db` the app does not touch autostart, so check that one item without it).
+Back up the data first, or quit TimeTracker first (menu bar → Quit) and use
+`open -n /Applications/TimeTracker.app --args --db /tmp/tt-qa.db` (with `--db` the app does
+not touch autostart, so check that one item without it). Quit first because the
+single-instance socket is shared: with a copy already running, the `--db` start would only
+activate it, on the real data.
 
 - [ ] **Install:** open the `.dmg`, drag TimeTracker to Applications, first start through the
   Gatekeeper steps from the README (Open Anyway on macOS 15+, right-click → Open on 11-14).
@@ -100,10 +103,13 @@ Back up the data first, or use `open -n /Applications/TimeTracker.app --args --d
 - [ ] **Autostart** on and off; after signing in the app sits only in the menu bar, with no
   Dock icon (a brief flash is acceptable).
 - [ ] **Autostart from the `.dmg`:** run the app from the mounted `.dmg` (or from Downloads),
-  turn autostart on: no `TimeTracker.plist` appears in `~/Library/LaunchAgents`, and the log
-  has a warning.
+  turn autostart on: no `TimeTracker.plist` appears in `~/Library/LaunchAgents`, the app shows
+  "Move TimeTracker to Applications to start it at sign-in", and the log has a warning.
 - [ ] **Reopen while hidden:** with the app only in the menu bar (no Dock icon), open it
   again from Finder, from Launchpad and from Spotlight: the main window shows each time.
+- [ ] **`Cmd+H`, then menu bar → Open window** shows the window.
+- [ ] **`Cmd+W` on the main window:** expected — nothing happens (Slint's default menu has no
+  Close item); use the close button.
 - [ ] **Second launch from Terminal:** `open -n /Applications/TimeTracker.app` brings up the
   window of the first copy and does not start another.
 - [ ] **Backup and restore**, **export CSV and XLSX** (as in Data below).

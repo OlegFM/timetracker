@@ -69,7 +69,11 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
   desktops (Spaces).
 - **Autostart is not written from the `.dmg` or from Downloads.** macOS runs such an app from
   a temporary copy (App Translocation), whose path disappears. Move the app to Applications
-  first; the log has a warning.
+  first; the app says so in a message.
+- **Autostart is refused for any app under `/Volumes/…`**, including an app installed on a
+  second or external disk. Keep TimeTracker in `/Applications` or `~/Applications`.
+- **`Cmd+W` does not close the window.** Slint's default menu has no Close item; use the close
+  button.
 - **A brief Dock flash at a hidden login start** is possible.
 - **No update check.** Install new versions by hand from the release page.
 - **Removing the app leaves the LaunchAgent.** Turn autostart off before deleting the app,

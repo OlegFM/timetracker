@@ -38,8 +38,8 @@
 
 ## macOS support (looked up 2026-11-11)
 
-- [`applicationShouldHandleReopen:hasVisibleWindows:`](https://developer.apple.com/documentation/appkit/nsapplicationdelegate/applicationshouldhandlereopen(_:hasvisiblewindows:))
-  - Sent when the user opens an already running app again (Finder, Launchpad, Spotlight); we show the main window.
+- [`NSAppleEventManager.setEventHandler(_:andSelector:forEventClass:andEventID:)`](https://developer.apple.com/documentation/foundation/nsappleeventmanager/seteventhandler(_:andselector:foreventclass:andeventid:))
+  - We handle the "reopen" Apple Event (`kAEReopenApplication`, 'aevt'/'rapp') sent when the user opens the running app again (Finder, Launchpad, Spotlight) and show the main window; not through the app delegate, because winit owns it.
 - [`NSApplication.setActivationPolicy(_:)`](https://developer.apple.com/documentation/appkit/nsapplication/setactivationpolicy(_:))
   - Regular (Dock icon) while the main window is shown, Accessory (no Dock icon, not in Cmd+Tab) otherwise.
 - [App Translocation (Gatekeeper path randomization)](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
