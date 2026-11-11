@@ -5204,6 +5204,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "directories",
+ "ksni",
  "log",
  "rfd",
  "serde",
@@ -5220,6 +5221,7 @@ dependencies = [
  "windows-registry",
  "windows-sys 0.61.2",
  "winresource",
+ "x11rb",
  "zbus",
 ]
 
