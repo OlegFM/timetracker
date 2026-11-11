@@ -89,7 +89,13 @@ fn run() -> anyhow::Result<()> {
         Duration::ZERO
     });
 
-    // Shown after the main window when the settings say so.
+    // The Run entry follows the setting, unless Task Manager disabled it (the user's
+    // choice: then the setting turns off). Before the settings screen reads it.
+    if ctx.borrow().manages_autostart {
+        sync_autostart(&ctx);
+    }
+
+    // The mini timer is shown here when the settings say so, before the main window.
     let mini = mini::install(&ui, &ctx, &timer);
     let tray = if tray_host {
         tray::install(&ui, &ctx, &timer, &mini)
@@ -129,12 +135,6 @@ fn run() -> anyhow::Result<()> {
             });
         }
     }
-    // The Run entry follows the setting, unless Task Manager disabled it (the user's
-    // choice: then the setting turns off).
-    if ctx.borrow().manages_autostart {
-        sync_autostart(&ctx);
-    }
-
     let main = ui.as_weak();
     instance.on_activate(move || {
         if let Some(ui) = main.upgrade() {
