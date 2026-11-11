@@ -30,6 +30,9 @@
 - [Desktop Application Autostart Specification](https://specifications.freedesktop.org/autostart-spec/latest/)
   - `~/.config/autostart/*.desktop`.
 - [appimagetool 1.9.1](https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage)
+- [type2-runtime 20251108, `runtime-x86_64`](https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64)
+  (embedded into the AppImage via `--runtime-file`; sha256
+  `2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d`, from the GitHub release asset digest)
   - Pinned in the build script. sha256 `ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0` (from the GitHub API asset digest).
 - [cargo-deb 3.8.0](https://github.com/kornelski/cargo-deb)
   - Builds the `.deb` from the deb metadata in `crates/tt-app/Cargo.toml`.
