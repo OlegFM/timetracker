@@ -3,14 +3,15 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::Duration;
 
 use anyhow::Context;
 use slint::ComponentHandle;
-use tt_app::app::{self, AppContext, Ctx};
+use tt_app::app::{self, AppContext, Ctx, InitialWindow};
 use tt_app::controllers::{
     calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray,
 };
-use tt_app::platform::{autostart, fatal, single_instance, window_ext};
+use tt_app::platform::{autostart, fatal, single_instance, tray_host, window_ext};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
@@ -81,29 +82,58 @@ fn run() -> anyhow::Result<()> {
     let _dashboard = dashboard::install(&ui, &ctx, &timer);
     let _reports = reports::install(&ui, &ctx);
 
-    // ✕ hides the window to the tray (setting "close to tray"), else quits.
+    // A login start waits a while for the tray host (it may start after us).
+    let tray_host = tray_host::available(if minimized {
+        tray_host::TRAY_WAIT_AT_LOGIN
+    } else {
+        Duration::ZERO
+    });
+
+    // Shown after the main window when the settings say so.
+    let mini = mini::install(&ui, &ctx, &timer);
+    let tray = if tray_host {
+        tray::install(&ui, &ctx, &timer, &mini)
+    } else {
+        None
+    };
+    // The settings screen needs to know whether a tray exists.
+    ctx.borrow_mut().has_tray = tray.is_some();
+    let _settings = settings::install(&ui, &ctx, &timer, &mini);
+
+    // The close button hides the window to the tray (setting "close to tray", needs a
+    // tray), else quits.
     let close_ctx = ctx.clone();
     ui.window().on_close_requested(move || {
-        if !close_ctx.borrow().settings.close_to_tray {
+        let c = close_ctx.borrow();
+        if !(c.settings.close_to_tray && c.has_tray) {
             let _ = slint::quit_event_loop();
         }
         slint::CloseRequestResponse::HideWindow
     });
 
-    if !minimized {
-        ui.show().context("show main window")?;
-        window_ext::when_created(&ui, |ui: &MainWindow| window_ext::set_app_icon(ui.window()));
+    // Never leave the timer invisible: a `--minimized` start without a tray shows a
+    // minimized window instead.
+    match app::initial_window(minimized, tray.is_some()) {
+        InitialWindow::Shown => {
+            ui.show().context("show main window")?;
+            window_ext::when_created(&ui, |ui: &MainWindow| {
+                window_ext::set_app_icon(ui.window());
+            });
+        }
+        InitialWindow::Hidden => {}
+        InitialWindow::Minimized => {
+            ui.show().context("show main window")?;
+            window_ext::when_created(&ui, |ui: &MainWindow| {
+                window_ext::set_app_icon(ui.window());
+                ui.window().set_minimized(true);
+            });
+        }
     }
     // The Run entry follows the setting, unless Task Manager disabled it (the user's
     // choice: then the setting turns off).
     if ctx.borrow().manages_autostart {
         sync_autostart(&ctx);
     }
-
-    // Shown after the main window when the settings say so.
-    let mini = mini::install(&ui, &ctx, &timer);
-    let _settings = settings::install(&ui, &ctx, &timer, &mini);
-    let _tray = tray::install(&ui, &ctx, &timer, &mini)?;
 
     let main = ui.as_weak();
     instance.on_activate(move || {

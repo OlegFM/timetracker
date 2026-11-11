@@ -34,6 +34,9 @@ pub struct AppContext {
     /// default database: with `--db` the "Start with Windows" toggle changes the setting
     /// alone and nothing writes the real entry.
     pub manages_autostart: bool,
+    /// Whether the tray icon was created (it needs a tray host on Linux). Without it the
+    /// close button quits and "close to tray" is unavailable.
+    pub has_tray: bool,
 }
 
 /// Callbacks of one kind of event.
@@ -118,6 +121,7 @@ impl AppContext {
             db_path,
             events: Rc::default(),
             manages_autostart: false,
+            has_tray: false,
         })
     }
 
@@ -187,9 +191,37 @@ where
         .set_dark(theme == tt_services::Theme::Dark);
 }
 
+/// How the main window appears at start.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InitialWindow {
+    Shown,
+    /// Not shown: only the tray icon (login start).
+    Hidden,
+    /// Shown minimized: a login start without a tray must not leave the timer invisible.
+    Minimized,
+}
+
+/// The first state of the main window for a `--minimized` start and a working tray.
+pub fn initial_window(minimized: bool, tray: bool) -> InitialWindow {
+    match (minimized, tray) {
+        (false, _) => InitialWindow::Shown,
+        (true, true) => InitialWindow::Hidden,
+        (true, false) => InitialWindow::Minimized,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn initial_window_follows_minimized_and_tray() {
+        use InitialWindow::*;
+        assert_eq!(initial_window(false, true), Shown);
+        assert_eq!(initial_window(false, false), Shown);
+        assert_eq!(initial_window(true, true), Hidden);
+        assert_eq!(initial_window(true, false), Minimized);
+    }
 
     #[test]
     fn open_creates_folder_and_loads_defaults() {

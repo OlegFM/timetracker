@@ -3,7 +3,6 @@
 
 use std::rc::{Rc, Weak};
 
-use anyhow::Context;
 use slint::ComponentHandle;
 
 use crate::app::Ctx;
@@ -14,17 +13,21 @@ use crate::platform::window_ext;
 use crate::{MainWindow, Tr};
 
 /// Creates the tray icon (keep it for the app's lifetime). Call before the event loop runs.
+/// `None` when it cannot be created: the app then runs without a tray.
 pub fn install(
     ui: &MainWindow,
     ctx: &Ctx,
     hub: &Rc<TimerHub>,
     mini: &Rc<MiniController>,
-) -> anyhow::Result<Rc<Tray>> {
+) -> Option<Rc<Tray>> {
     let (main, h, m) = (ui.as_weak(), Rc::downgrade(hub), Rc::downgrade(mini));
-    let tray = Rc::new(
-        Tray::new(strings(&ui.global::<Tr>()), move |a| act(a, &main, &h, &m))
-            .context("create tray icon")?,
-    );
+    let tray = match Tray::new(strings(&ui.global::<Tr>()), move |a| act(a, &main, &h, &m)) {
+        Ok(t) => Rc::new(t),
+        Err(e) => {
+            log::warn!("no tray icon: {e:#}");
+            return None;
+        }
+    };
 
     let t = Rc::downgrade(&tray);
     mini.on_visibility_changed(move |on| {
@@ -50,7 +53,7 @@ pub fn install(
             t.set_state(TrayState::from_view(v.state), label, &v.clock);
         }
     });
-    Ok(tray)
+    Some(tray)
 }
 
 /// The tray texts in the current language (also for `Tray::refresh_strings`).
