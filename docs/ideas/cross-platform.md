@@ -1,6 +1,8 @@
 # Idea: macOS and Linux builds
 
-Status: idea, after v0.1.0. Not designed yet. Recorded 2026-11-10.
+Status: designed. Linux is in 0.2.0, macOS in 0.3.0. Design:
+[../superpowers/specs/2026-11-11-cross-platform-design.md](../superpowers/specs/2026-11-11-cross-platform-design.md).
+Recorded 2026-11-10; the notes below are the original analysis.
 
 ## Where we stand
 
