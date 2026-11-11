@@ -77,3 +77,66 @@ jobs:
         with:
           name: TimeTracker-${{ github.ref_name }}
           path: target/installer/*
+
+  # AppImage and .deb for tags `v*`.
+  linux-packages:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deb@3.8.0
+      - name: Package versions
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          deb_version="$(crates/tt-app/installer/linux/deb-version.sh "$version")"
+          echo "version=$version" >> "$GITHUB_ENV"
+          echo "deb_version=$deb_version" >> "$GITHUB_ENV"
+          # An rc must sort before the final release.
+          test "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-rc.1)" = "0.2.0~rc.1"
+          dpkg --compare-versions "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-rc.1)" lt 0.2.0
+      - run: cargo build --release --locked -p tt-app
+      - name: Packages
+        run: |
+          mkdir -p target/installer
+          cargo deb -p tt-app --no-build --deb-version "$deb_version" -o target/installer/
+          crates/tt-app/installer/linux/build-appimage.sh "$version" target/release/tt-app
+          for deb in target/installer/*.deb; do
+            dpkg-deb --info "$deb"
+            dpkg-deb --contents "$deb"
+          done
+          ls -l target/installer
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimeTracker-${{ github.ref_name }}-linux
+          path: target/installer/*
+
+  # Release candidates (`vX.Y.Z-rc.N`) are published by CI as prereleases.
+  # Final releases are published by hand from the CI artifacts.
+  prerelease:
+    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.')
+    needs: [installer, linux-packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --prerelease \
+            --title "TimeTracker $GITHUB_REF_NAME" \
+            --notes "Test build for checking before the release. Install: see README."
