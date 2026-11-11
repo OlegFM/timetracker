@@ -67,6 +67,9 @@ fn run() -> anyhow::Result<()> {
     };
     let ctx: Ctx = Rc::new(RefCell::new(opened));
     let ui = MainWindow::new().context("create main window")?;
+    if let Err(e) = slint::set_xdg_app_id(window_ext::APP_ID) {
+        log::warn!("app id not set: {e}");
+    }
 
     let lang = ctx
         .borrow_mut()

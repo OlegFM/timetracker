@@ -6,7 +6,10 @@ Standard library only. Both are a rounded square with a 135 degree blue -> viole
 gradient (#3b82f6 -> #8b5cf6). `app.ico` (16, 24, 32, 48, 64, 256 px, PNG entries) adds a
 white clock (ring and two hands); `logo.png` (36 px, shown at 18 px) is the plain square:
 Slint's software renderer ignores the border radius of gradient rectangles, so the
-sidebar shows this image instead. Drawn with 4x4 supersampling.
+sidebar shows this image instead. Linux also gets `app-256.png` (the 256 px `app.ico`
+image, for the .desktop entry and the package) and `app-64.rgba` (the same drawing at 64 px
+as raw RGBA, row by row, no header: the window icon embedded in the executable).
+Drawn with 4x4 supersampling.
 """
 
 import math
@@ -46,11 +49,12 @@ def clock(x, y, size):
     return ring or hour or minute
 
 
-def render(size, with_clock=True):
+def pixels(size, with_clock=True):
+    """RGBA rows (bytes, no PNG filter byte) of the icon at `size` px."""
     radius = 0.28
     rows = []
     for py in range(size):
-        row = bytearray([0])  # PNG filter: none
+        row = bytearray()
         for px in range(size):
             acc = [0.0, 0.0, 0.0, 0.0]
             for sy in range(SUB):
@@ -74,7 +78,12 @@ def render(size, with_clock=True):
             else:
                 row += b"\0\0\0\0"
         rows.append(bytes(row))
-    return png(size, b"".join(rows))
+    return rows
+
+
+def render(size, with_clock=True):
+    rows = pixels(size, with_clock)
+    return png(size, b"".join(b"\0" + row for row in rows))  # PNG filter: none
 
 
 def png(size, raw):
@@ -105,6 +114,8 @@ def main():
     outputs = {
         "app.ico": ico([(s, render(s)) for s in SIZES]),
         "logo.png": render(LOGO_SIZE, with_clock=False),
+        "app-256.png": render(256),
+        "app-64.rgba": b"".join(pixels(64)),
     }
     for name, data in outputs.items():
         path = ASSETS / name
