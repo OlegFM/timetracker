@@ -103,6 +103,8 @@ jobs:
           # An rc must sort before the final release.
           test "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-rc.1)" = "0.2.0~rc.1"
           dpkg --compare-versions "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-rc.1)" lt 0.2.0
+          test "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-beta.2)" = "0.2.0~beta.2"
+          dpkg --compare-versions "$(crates/tt-app/installer/linux/deb-version.sh 0.2.0-beta.2)" lt 0.2.0
       - run: cargo build --release --locked -p tt-app
       - name: Packages
         run: |
