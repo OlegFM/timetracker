@@ -114,7 +114,9 @@ fn run() -> anyhow::Result<()> {
     let close_ctx = ctx.clone();
     ui.window().on_close_requested(move || {
         let c = close_ctx.borrow();
-        if !(c.settings.close_to_tray && c.has_tray) {
+        // The tray host is probed again: it may have gone since start-up, and a hidden
+        // window without an icon would leave the timer unreachable.
+        if !(c.settings.close_to_tray && c.has_tray && tray_host::host_present_now()) {
             let _ = slint::quit_event_loop();
         }
         slint::CloseRequestResponse::HideWindow

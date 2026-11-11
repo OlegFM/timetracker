@@ -59,9 +59,11 @@ Run it on both versions, once in a Wayland session and once in an X11 session.
 - [ ] **Tray:** left click shows and hides the window; right click opens the menu; every
   menu item works; the first (disabled) item shows the current task.
 - [ ] **Close to tray:** the close button hides the window, the icon reopens it.
-- [ ] **No tray:** turn off the AppIndicator extension. The icon is gone, the "close to
+- [ ] **No tray:** turn off the AppIndicator extension, then start the app. The icon is gone, the "close to
   tray" switch is disabled, the close button quits, and a running timer is still running
   after the next start.
+- [ ] Turn off the extension while the app runs, then click ✕: the app quits (it does not
+  hide).
 - [ ] **Autostart:** "Start when you sign in" on and off; after signing in the app starts
   in the tray (with the extension off, it shows the window minimized after ~10 s).
 - [ ] Turning it off in GNOME "Startup Applications" / Tweaks turns the setting off in the

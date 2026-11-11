@@ -20,6 +20,22 @@ pub fn available(wait: Duration) -> bool {
     wait_until(watcher_present, wait, Duration::from_millis(500))
 }
 
+/// Whether a tray host is there right now (one probe, no waiting). Checked when the window is
+/// closed: the host may have gone since start-up (the AppIndicator extension turned off), and
+/// hiding the window then would leave a running timer with neither window nor icon.
+#[cfg(windows)]
+pub fn host_present_now() -> bool {
+    true
+}
+
+/// Whether a tray host is there right now (one probe, no waiting). Checked when the window is
+/// closed: the host may have gone since start-up (the AppIndicator extension turned off), and
+/// hiding the window then would leave a running timer with neither window nor icon.
+#[cfg(target_os = "linux")]
+pub fn host_present_now() -> bool {
+    available(Duration::ZERO)
+}
+
 /// Calls `probe` at once, then every `step` until it returns `true` or `timeout` is over.
 /// With a zero `timeout` it is called once.
 pub fn wait_until(mut probe: impl FnMut() -> bool, timeout: Duration, step: Duration) -> bool {
@@ -55,6 +71,12 @@ fn watcher_present() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn host_present_now_is_true_on_windows() {
+        assert!(host_present_now());
+    }
 
     #[test]
     fn wait_until_succeeds_once_the_probe_does() {
