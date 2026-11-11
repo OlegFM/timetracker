@@ -95,9 +95,11 @@ impl Drop for InstanceGuard {
     fn drop(&mut self) {
         if let Some(waiter) = self.waiter.take() {
             self.stop.store(true, Ordering::Release);
-            // Wakes `accept`; the thread sees `stop` and ends.
-            let _ = UnixStream::connect(&self.path);
-            let _ = waiter.join();
+            // Wakes `accept`; the thread sees `stop` and ends. If the socket file is gone
+            // the thread cannot be woken: leave it detached, the process is exiting.
+            if UnixStream::connect(&self.path).is_ok() {
+                let _ = waiter.join();
+            }
         }
         let _ = std::fs::remove_file(&self.path);
     }
