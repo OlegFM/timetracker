@@ -1,7 +1,7 @@
 //! One running copy per user session: a named mutex marks the running instance, a named
 //! auto-reset event lets a second launch ask it to show its window.
 //!
-//! The only Win32 FFI of the app besides [`super::fatal`]; every call has a SAFETY note.
+//! The only Win32 FFI of the app besides [`crate::platform::fatal`]; every call has a SAFETY note.
 #![allow(unsafe_code)]
 
 use std::sync::Arc;
