@@ -9,10 +9,11 @@ use crate::app::Ctx;
 use crate::controllers::mini::MiniController;
 use crate::controllers::timer::TimerHub;
 use crate::platform::tray::{AppAction, Tray, TrayState, TrayStrings, tray_label};
-use crate::platform::window_ext;
+use crate::platform::{dock, window_ext};
 use crate::{MainWindow, Tr};
 
-/// Creates the tray icon (keep it for the app's lifetime). Call before the event loop runs.
+/// Creates the tray icon (keep it for the app's lifetime). Call before the event loop runs
+/// (on macOS: once it runs, see `main.rs`).
 /// `None` when it cannot be created: the app then runs without a tray.
 pub fn install(
     ui: &MainWindow,
@@ -99,8 +100,9 @@ fn act(
             let Some(ui) = main.upgrade() else { return };
             let w = ui.window();
             if w.is_visible() && !w.is_minimized() {
-                if let Err(e) = ui.hide() {
-                    log::warn!("main window not hidden: {e}");
+                match ui.hide() {
+                    Ok(()) => dock::set_visible(false),
+                    Err(e) => log::warn!("main window not hidden: {e}"),
                 }
             } else {
                 window_ext::show_and_focus(&ui);

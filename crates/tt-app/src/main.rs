@@ -11,7 +11,7 @@ use tt_app::app::{self, AppContext, Ctx, InitialWindow};
 use tt_app::controllers::{
     calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray,
 };
-use tt_app::platform::{autostart, fatal, single_instance, tray_host, window_ext};
+use tt_app::platform::{autostart, dock, fatal, single_instance, tray_host, window_ext};
 use tt_app::{MainWindow, logging};
 
 fn main() -> anyhow::Result<()> {
@@ -100,23 +100,31 @@ fn run() -> anyhow::Result<()> {
 
     // The mini timer is shown here when the settings say so, before the main window.
     let mini = mini::install(&ui, &ctx, &timer);
+    #[cfg(not(target_os = "macos"))]
     let tray = if tray_host {
         tray::install(&ui, &ctx, &timer, &mini)
     } else {
         None
     };
-    // The settings screen needs to know whether a tray exists.
-    ctx.borrow_mut().has_tray = tray.is_some();
+    // The settings screen needs to know whether a tray exists. On macOS the menu bar icon
+    // comes once the event loop runs (`install_menu_bar`): until then, the expected one.
+    #[cfg(not(target_os = "macos"))]
+    let has_tray = tray.is_some();
+    #[cfg(target_os = "macos")]
+    let has_tray = tray_host;
+    ctx.borrow_mut().has_tray = has_tray;
     let _settings = settings::install(&ui, &ctx, &timer, &mini);
 
-    // The close button hides the window to the tray (setting "close to tray", needs a
-    // tray), else quits.
+    // The close button hides the window to the tray (the menu bar on macOS; setting "close
+    // to tray", needs a tray), else quits. A hidden main window takes the Dock icon along.
     let close_ctx = ctx.clone();
     ui.window().on_close_requested(move || {
         let c = close_ctx.borrow();
         // The tray host is probed again: it may have gone since start-up, and a hidden
         // window without an icon would leave the timer unreachable.
-        if !(c.settings.close_to_tray && c.has_tray && tray_host::host_present_now()) {
+        if c.settings.close_to_tray && c.has_tray && tray_host::host_present_now() {
+            dock::set_visible(false);
+        } else {
             let _ = slint::quit_event_loop();
         }
         slint::CloseRequestResponse::HideWindow
@@ -124,7 +132,8 @@ fn run() -> anyhow::Result<()> {
 
     // Never leave the timer invisible: a `--minimized` start without a tray shows a
     // minimized window instead.
-    match app::initial_window(minimized, tray.is_some()) {
+    let initial = app::initial_window(minimized, has_tray);
+    match initial {
         InitialWindow::Shown => {
             ui.show().context("show main window")?;
             window_ext::when_created(&ui, |ui: &MainWindow| {
@@ -140,6 +149,15 @@ fn run() -> anyhow::Result<()> {
             });
         }
     }
+    #[cfg(target_os = "macos")]
+    let _menu_bar = install_menu_bar(
+        &ui,
+        &ctx,
+        &timer,
+        &mini,
+        tray_host,
+        initial == InitialWindow::Hidden,
+    );
     let main = ui.as_weak();
     instance.on_activate(move || {
         if let Some(ui) = main.upgrade() {
@@ -150,6 +168,59 @@ fn run() -> anyhow::Result<()> {
     slint::run_event_loop_until_quit().context("event loop")?;
     mini.save_position();
     Ok(())
+}
+
+/// macOS: the menu bar icon and the reopen handler, once the event loop runs (`tray-icon`
+/// needs a running event loop there, and `NSApplication` sets its own reopen handler while
+/// it launches). Keep the returned slot until the loop returns: it holds the icon.
+#[cfg(target_os = "macos")]
+fn install_menu_bar(
+    ui: &MainWindow,
+    ctx: &Ctx,
+    timer: &Rc<timer::TimerHub>,
+    mini: &Rc<mini::MiniController>,
+    tray_host: bool,
+    hidden: bool,
+) -> Rc<RefCell<Option<Rc<tt_app::platform::tray::Tray>>>> {
+    let slot = Rc::new(RefCell::new(None));
+    let (main, ctx, timer, mini, out) = (
+        ui.as_weak(),
+        ctx.clone(),
+        timer.clone(),
+        mini.clone(),
+        slot.clone(),
+    );
+    slint::Timer::single_shot(Duration::ZERO, move || {
+        let reopen = main.clone();
+        dock::on_reopen(move || {
+            if let Some(ui) = reopen.upgrade() {
+                window_ext::show_and_focus(&ui);
+            }
+        });
+        let Some(ui) = main.upgrade() else { return };
+        let tray = if tray_host {
+            tray::install(&ui, &ctx, &timer, &mini)
+        } else {
+            None
+        };
+        match tray {
+            Some(t) => {
+                out.replace(Some(t));
+                // Only now: winit makes an unbundled binary a regular app while it launches.
+                if hidden {
+                    dock::set_visible(false);
+                }
+            }
+            // Never leave the timer invisible: no icon, so the main window and the Dock icon.
+            None => {
+                ctx.borrow_mut().has_tray = false;
+                ui.global::<tt_app::SettingsBridge>()
+                    .set_tray_available(false);
+                window_ext::show_and_focus(&ui);
+            }
+        }
+    });
+    slot
 }
 
 fn sync_autostart(ctx: &Ctx) {
