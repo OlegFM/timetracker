@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Single instance through a Unix socket in `$XDG_RUNTIME_DIR`.
   - Data in `~/.local/share/TimeTracker/`.
   - The update check is off on Linux.
+- macOS 11 or newer (Apple Silicon and Intel): a universal `.dmg` with `TimeTracker.app`,
+  ad-hoc signed and not notarized (see the README for the first start).
+  - A menu bar icon, coloured by the timer state; a click opens its menu. The close button
+    hides the window to the menu bar.
+  - The Dock icon shows only while the main window is open. The mini timer alone leaves no
+    Dock icon and is not in `Cmd+Tab`. Opening the app again from Finder, Launchpad or
+    Spotlight while it sits in the menu bar shows the window.
+  - "Start when you sign in" writes the LaunchAgent `~/Library/LaunchAgents/TimeTracker.plist`
+    (with `--minimized`). It is not written when the app runs from the `.dmg` or from
+    Downloads (App Translocation); the warning goes to the log.
+  - Single instance through a Unix socket in `~/Library/Application Support/TimeTracker/`.
+  - Data in `~/Library/Application Support/TimeTracker/`.
+  - The update check is off on macOS.
 - The mini timer now appears before the main window at startup (Windows).
 
 ## [0.1.0] - 2026-11-10

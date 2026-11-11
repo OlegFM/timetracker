@@ -5,7 +5,7 @@
 
 [![Release](https://img.shields.io/github/v/release/OlegFM/timetracker)](https://github.com/OlegFM/timetracker/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20soon-lightgrey)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
 [English](README.md) · Русский
 
@@ -73,7 +73,7 @@
 
 Значок в трее показывает, идёт таймер, стоит на паузе или остановлен. Через его меню
 можно поставить паузу, остановить таймер, показать мини-таймер или открыть окно.
-Закрытое окно прячется в трей. В Linux левый щелчок по значку показывает или прячет окно.
+Закрытое окно прячется в трей. В Linux левый щелчок по значку показывает или прячет окно. В macOS это значок в строке меню, щелчок по нему открывает меню.
 
 ## Установка
 
@@ -108,14 +108,30 @@ Ubuntu Desktop он уже есть.
 так мини-таймер может оставаться поверх окон. Известные особенности — в
 [docs/known-issues.md](docs/known-issues.md).
 
-**macOS** — скоро, запланирован на 0.3.0 ([план](docs/ideas/cross-platform.md)).
+**macOS 11 и новее, Apple Silicon и Intel.** Скачайте
+**`TimeTracker-<версия>-macos-universal.dmg`** из
+[последнего релиза](https://github.com/OlegFM/timetracker/releases/latest), откройте его и
+перетащите TimeTracker в **Программы**. Запускайте программу оттуда, а не с образа диска и
+не из «Загрузок»: для автозапуска нужно постоянное место.
+
+Программа не нотаризована в Apple (это USD 99 в год; исходники открыты), поэтому при первом
+запуске macOS сообщит, что не может проверить разработчика. Один раз откройте её так:
+
+- **macOS 15 и новее:** попробуйте открыть программу, затем **Системные настройки** →
+  **Конфиденциальность и безопасность** → **Всё равно открыть**.
+- **macOS 11–14:** правый клик по программе → **Открыть** → **Открыть**.
+- **Или в Терминале:** `xattr -dr com.apple.quarantine /Applications/TimeTracker.app`
+
+Дальше программа открывается как обычно. Она живёт в строке меню; значок в Dock виден,
+только пока открыто главное окно. Проверка обновлений в macOS выключена. Известные
+особенности — в [docs/known-issues.md](docs/known-issues.md).
 
 ## Ваши данные
 
-| Что | Windows | Linux |
-|---|---|---|
-| База данных | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` |
-| Логи (без описаний и названий) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` |
+| Что | Windows | Linux | macOS |
+|---|---|---|---|
+| База данных | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` | `~/Library/Application Support/TimeTracker/timetracker.db` |
+| Логи (без описаний и названий) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` | `~/Library/Application Support/TimeTracker/logs` |
 
 **Настройки › Данные** создают резервную копию и восстанавливают её. Перед
 восстановлением текущая база сохраняется как `timetracker.db.before-restore`, так что
@@ -125,7 +141,7 @@ Ubuntu Desktop он уже есть.
 
 - Синхронизация между устройствами через облачную папку (OneDrive, Dropbox, Google Drive…)
   без сервера ([идея](docs/ideas/cloud-sync.md)).
-- Сборка для macOS, запланирована на 0.3.0 ([идея](docs/ideas/cross-platform.md)).
+- Нотаризация для macOS, когда пожертвования покроют взнос Apple Developer ([идея](docs/ideas/cross-platform.md)).
 - Выпуск в Microsoft Store с подписью Microsoft ([идея](docs/ideas/msix-store.md)).
 
 ## Поддержать проект

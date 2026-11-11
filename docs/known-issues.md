@@ -57,8 +57,26 @@ Updates are off in every build until `TT_UPDATE_*` is set at build time.
   AppImage leaves `~/.config/autostart/TimeTracker.desktop` pointing at nothing until the app
   is started again. Turn autostart off before removing, or delete the file.
 
+## macOS
+
+- **Not notarized.** The app is ad-hoc signed only, so the first start needs the Gatekeeper
+  steps from the [README](../README.md). Notarization needs an Apple Developer account
+  (USD 99 a year); planned after donations ([ideas/cross-platform.md](ideas/cross-platform.md)).
+- **"Allow in the Background" is not read.** Turning TimeTracker off in System Settings →
+  General → Login Items & Extensions does not reach the app: its "Start when you sign in"
+  switch stays on. Turn it off in the app.
+- **The mini timer is not shown over full-screen apps** and does not follow you to other
+  desktops (Spaces).
+- **Autostart is not written from the `.dmg` or from Downloads.** macOS runs such an app from
+  a temporary copy (App Translocation), whose path disappears. Move the app to Applications
+  first; the log has a warning.
+- **A brief Dock flash at a hidden login start** is possible.
+- **No update check.** Install new versions by hand from the release page.
+- **Removing the app leaves the LaunchAgent.** Turn autostart off before deleting the app,
+  or delete `~/Library/LaunchAgents/TimeTracker.plist`.
+
 ## Planned after v0.1.0
 
 - **Sync between devices through a cloud folder.** See [ideas/cloud-sync.md](ideas/cloud-sync.md).
 - **Microsoft Store (MSIX) release**, so users get no SmartScreen warning. See [ideas/msix-store.md](ideas/msix-store.md).
-- **A macOS build (0.3.0).** Linux is in 0.2.0. See [ideas/cross-platform.md](ideas/cross-platform.md).
+- **macOS notarization**, after donations. The macOS build itself is in 0.3.0. See [ideas/cross-platform.md](ideas/cross-platform.md).
