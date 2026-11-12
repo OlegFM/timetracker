@@ -29,6 +29,10 @@ const ID_MINI: &str = "mini";
 const ID_OPEN: &str = "open";
 const ID_QUIT: &str = "quit";
 
+/// macOS opens the menu on a left click on a menu bar icon (as other menu bar apps do); on
+/// Windows and Linux the left click toggles the main window.
+const MENU_ON_LEFT_CLICK: bool = cfg!(target_os = "macos");
+
 /// What the user asked for from the tray (handled by the app on the UI thread).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppAction {
@@ -37,7 +41,8 @@ pub enum AppAction {
     Stop,
     ToggleMini,
     OpenMain,
-    /// Left click on the icon: show the main window, or hide it when it is shown.
+    /// Left click on the icon (not on macOS, where it opens the menu): show the main window,
+    /// or hide it when it is shown.
     ToggleMain,
     Quit,
 }
@@ -118,7 +123,8 @@ thread_local! {
 
 impl Tray {
     /// Creates the tray icon (stopped state); call on the UI thread before the event loop
-    /// runs and keep the value for the app's lifetime (dropping it removes the icon).
+    /// runs (on macOS: once it runs) and keep the value for the app's lifetime (dropping it
+    /// removes the icon).
     pub fn new(
         strings: TrayStrings,
         on_action: impl Fn(AppAction) + 'static,
@@ -153,7 +159,7 @@ impl Tray {
             .with_icon(icons[0].clone())
             .with_tooltip(&strings.no_active_task)
             .with_menu(Box::new(menu))
-            .with_menu_on_left_click(false)
+            .with_menu_on_left_click(MENU_ON_LEFT_CLICK)
             .build()
             .context("tray icon")?;
 
@@ -173,7 +179,7 @@ impl Tray {
         }));
         TrayIconEvent::set_event_handler(Some(|e: TrayIconEvent| {
             startup_notify::complete_current_token();
-            if let Some(action) = click_action(&e) {
+            if let Some(action) = click_action(&e, MENU_ON_LEFT_CLICK) {
                 post(move |_| Some(action));
             }
         }));
@@ -297,8 +303,12 @@ fn menu_action(id: &str, state: TrayState) -> Option<AppAction> {
     }
 }
 
-/// Left button released on the icon → toggle the main window.
-fn click_action(e: &TrayIconEvent) -> Option<AppAction> {
+/// Left button released on the icon → toggle the main window; nothing when the left click
+/// opens the menu (`menu_on_left_click`, macOS).
+fn click_action(e: &TrayIconEvent, menu_on_left_click: bool) -> Option<AppAction> {
+    if menu_on_left_click {
+        return None;
+    }
     match e {
         TrayIconEvent::Click {
             button: MouseButton::Left,
@@ -483,9 +493,30 @@ mod tests {
     fn left_button_up_toggles_the_main_window() {
         use MouseButton::*;
         use MouseButtonState::*;
-        assert_eq!(click_action(&click(Left, Up)), Some(AppAction::ToggleMain));
-        assert_eq!(click_action(&click(Left, Down)), None);
-        assert_eq!(click_action(&click(Right, Up)), None);
+        assert_eq!(
+            click_action(&click(Left, Up), false),
+            Some(AppAction::ToggleMain)
+        );
+        assert_eq!(click_action(&click(Left, Down), false), None);
+        assert_eq!(click_action(&click(Right, Up), false), None);
+    }
+
+    #[test]
+    fn click_on_macos_opens_the_menu_and_does_not_toggle_the_window() {
+        use MouseButton::*;
+        use MouseButtonState::*;
+        assert_eq!(click_action(&click(Left, Up), true), None);
+        assert_eq!(
+            click_action(&click(Left, Up), false),
+            Some(AppAction::ToggleMain)
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn menu_opens_on_left_click_on_macos() {
+        // A `const` block: clippy's `assertions_on_constants` rejects a plain `assert!` here.
+        const { assert!(MENU_ON_LEFT_CLICK) };
     }
 
     fn pixel(rgba: &[u8], x: u32, y: u32) -> [u8; 4] {

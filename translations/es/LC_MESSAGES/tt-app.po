@@ -1075,6 +1075,10 @@ msgid "Behavior"
 msgstr "Comportamiento"
 
 #: ui/screens/settings.slint
+msgid "The close button hides the window to the menu bar"
+msgstr "El botón de cerrar oculta la ventana en la barra de menús"
+
+#: ui/screens/settings.slint
 msgid "The close button hides the window to the tray"
 msgstr "El botón de cerrar oculta la ventana en la bandeja"
 
@@ -1209,3 +1213,7 @@ msgstr "Registros"
 #: ui/strings.slint
 msgid "TimeTracker could not reopen its database and will close."
 msgstr "TimeTracker no pudo volver a abrir su base de datos y se cerrará."
+
+#: ui/strings.slint
+msgid "Move TimeTracker to Applications to start it at sign-in"
+msgstr "Mueva TimeTracker a Aplicaciones para que se inicie al iniciar sesión"

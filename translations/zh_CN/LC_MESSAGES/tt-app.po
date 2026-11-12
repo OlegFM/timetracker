@@ -1072,6 +1072,10 @@ msgid "Behavior"
 msgstr "行为"
 
 #: ui/screens/settings.slint
+msgid "The close button hides the window to the menu bar"
+msgstr "关闭按钮将窗口隐藏到菜单栏"
+
+#: ui/screens/settings.slint
 msgid "The close button hides the window to the tray"
 msgstr "关闭按钮将窗口隐藏到托盘"
 
@@ -1206,3 +1210,7 @@ msgstr "记录"
 #: ui/strings.slint
 msgid "TimeTracker could not reopen its database and will close."
 msgstr "TimeTracker 无法重新打开其数据库，即将关闭。"
+
+#: ui/strings.slint
+msgid "Move TimeTracker to Applications to start it at sign-in"
+msgstr "请将 TimeTracker 移到“应用程序”文件夹，以便登录时启动"

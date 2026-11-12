@@ -9,6 +9,8 @@ Slint's software renderer ignores the border radius of gradient rectangles, so t
 sidebar shows this image instead. Linux also gets `app-256.png` (the 256 px `app.ico`
 image, for the .desktop entry and the package) and `app-64.rgba` (the same drawing at 64 px
 as raw RGBA, row by row, no header: the window icon embedded in the executable).
+macOS gets `app.icns` (PNG entries, 16 to 1024 px): the same drawing on the macOS icon grid,
+the rounded square filling 824/1024 of the canvas, centered, with transparent margins.
 Drawn with 4x4 supersampling.
 """
 
@@ -23,6 +25,20 @@ VIOLET = (0x8B, 0x5C, 0xF6)
 SUB = 4  # supersampling per axis
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 LOGO_SIZE = 36
+MAC_INSET = 100 / 1024  # margin per side: the square is 824/1024 of the canvas
+# icns entry type -> PNG size. several types share a size, so each size is drawn once.
+ICNS_TYPES = (
+    ("icp4", 16),
+    ("icp5", 32),
+    ("ic11", 32),
+    ("ic12", 64),
+    ("ic07", 128),
+    ("ic13", 256),
+    ("ic08", 256),
+    ("ic14", 512),
+    ("ic09", 512),
+    ("ic10", 1024),
+)
 
 
 def rounded_square(x, y, radius):
@@ -49,9 +65,14 @@ def clock(x, y, size):
     return ring or hour or minute
 
 
-def pixels(size, with_clock=True):
-    """RGBA rows (bytes, no PNG filter byte) of the icon at `size` px."""
+def pixels(size, with_clock=True, inset=0.0):
+    """RGBA rows (bytes, no PNG filter byte) of the icon at `size` px.
+
+    `inset` is the transparent margin per side, as a fraction of the canvas.
+    """
     radius = 0.28
+    scale = 1 - 2 * inset
+    art = size * scale
     rows = []
     for py in range(size):
         row = bytearray()
@@ -59,11 +80,11 @@ def pixels(size, with_clock=True):
             acc = [0.0, 0.0, 0.0, 0.0]
             for sy in range(SUB):
                 for sx in range(SUB):
-                    x = (px + (sx + 0.5) / SUB) / size
-                    y = (py + (sy + 0.5) / SUB) / size
+                    x = ((px + (sx + 0.5) / SUB) / size - inset) / scale
+                    y = ((py + (sy + 0.5) / SUB) / size - inset) / scale
                     if not rounded_square(x, y, radius):
                         continue
-                    if with_clock and clock(x, y, size):
+                    if with_clock and clock(x, y, art):
                         color = (255, 255, 255)
                     else:
                         t = (x + y) / 2  # 135 degrees: top-left -> bottom-right
@@ -81,8 +102,8 @@ def pixels(size, with_clock=True):
     return rows
 
 
-def render(size, with_clock=True):
-    rows = pixels(size, with_clock)
+def render(size, with_clock=True, inset=0.0):
+    rows = pixels(size, with_clock, inset)
     return png(size, b"".join(b"\0" + row for row in rows))  # PNG filter: none
 
 
@@ -110,12 +131,22 @@ def ico(images):
     return out + b"".join(data for _, data in images)
 
 
+def icns(images):
+    """images: (type, png bytes) pairs. Entries: type, length with header, PNG."""
+    body = b"".join(
+        kind.encode("ascii") + struct.pack(">I", 8 + len(data)) + data for kind, data in images
+    )
+    return b"icns" + struct.pack(">I", 8 + len(body)) + body
+
+
 def main():
+    mac = {size: render(size, inset=MAC_INSET) for size in sorted({s for _, s in ICNS_TYPES})}
     outputs = {
         "app.ico": ico([(s, render(s)) for s in SIZES]),
         "logo.png": render(LOGO_SIZE, with_clock=False),
         "app-256.png": render(256),
         "app-64.rgba": b"".join(pixels(64)),
+        "app.icns": icns([(kind, mac[size]) for kind, size in ICNS_TYPES]),
     }
     for name, data in outputs.items():
         path = ASSETS / name

@@ -53,6 +53,16 @@ tray-icon = { workspace = true, features = ["ksni"] }
 ksni = { version = "0.3.7", default-features = false }
 x11rb = { version = "0.13", default-features = false }
 
+# Dock icon policy and the "reopen" Apple Event (`platform/dock.rs`).
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSApplication",
+    "NSResponder",
+    "NSRunningApplication",
+] }
+
 [build-dependencies]
 slint-build.workspace = true
 winresource.workspace = true

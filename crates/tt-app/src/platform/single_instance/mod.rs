@@ -15,21 +15,30 @@ pub use unix::{InstanceGuard, acquire};
 #[cfg(windows)]
 pub use windows::{InstanceGuard, acquire};
 
-/// Where the instance socket lives: `timetracker.sock` in `XDG_RUNTIME_DIR` (per-user,
-/// mode 0700) when it is set and not empty, else a per-user file in the temp directory.
+/// Longest socket path we bind: `sun_path` is 104 bytes on macOS (108 on Linux) including
+/// the terminating NUL; take the smaller.
+const SUN_PATH_MAX: usize = 103;
+
+/// Where the instance socket lives: `timetracker.sock` in `runtime_dir` when it is given,
+/// not empty and the resulting path fits `sun_path`, else a per-user file in the temp
+/// directory. `runtime_dir` is `XDG_RUNTIME_DIR` (per-user, mode 0700) on Linux and the
+/// app data folder on macOS, which, unlike `TMPDIR`, is the same for launchd and Finder.
 #[cfg_attr(windows, allow(dead_code))]
 pub fn socket_path(
     runtime_dir: Option<PathBuf>,
     temp_dir: PathBuf,
     user: Option<String>,
 ) -> PathBuf {
-    match runtime_dir.filter(|d| !d.as_os_str().is_empty()) {
-        Some(dir) => dir.join("timetracker.sock"),
-        None => temp_dir.join(format!(
-            "timetracker-{}.sock",
-            user.as_deref().unwrap_or("user")
-        )),
-    }
+    runtime_dir
+        .filter(|d| !d.as_os_str().is_empty())
+        .map(|d| d.join("timetracker.sock"))
+        .filter(|p| p.as_os_str().len() <= SUN_PATH_MAX)
+        .unwrap_or_else(|| {
+            temp_dir.join(format!(
+                "timetracker-{}.sock",
+                user.as_deref().unwrap_or("user")
+            ))
+        })
 }
 
 #[cfg(test)]
@@ -54,6 +63,31 @@ mod tests {
         assert_eq!(
             socket_path(None, tmp, None),
             PathBuf::from("/tmp/timetracker-user.sock")
+        );
+    }
+
+    #[test]
+    fn socket_path_in_app_data_dir_on_macos_layout() {
+        let dir = PathBuf::from("/Users/ann/Library/Application Support/TimeTracker");
+        assert_eq!(
+            socket_path(
+                Some(dir.clone()),
+                "/var/folders/x/T".into(),
+                Some("ann".into())
+            ),
+            dir.join("timetracker.sock")
+        );
+    }
+
+    #[test]
+    fn socket_path_too_long_for_sun_path_falls_back_to_temp() {
+        let long = PathBuf::from(format!(
+            "/Users/{}/Library/Application Support/TimeTracker",
+            "a".repeat(60)
+        ));
+        assert_eq!(
+            socket_path(Some(long), "/tmp".into(), Some("ann".into())),
+            PathBuf::from("/tmp/timetracker-ann.sock")
         );
     }
 }

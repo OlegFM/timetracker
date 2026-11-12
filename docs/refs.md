@@ -34,9 +34,27 @@
 - [Desktop Application Autostart Specification](https://specifications.freedesktop.org/autostart-spec/latest/)
   - `~/.config/autostart/*.desktop`.
 - [appimagetool 1.9.1](https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage)
-- [type2-runtime 20251108, `runtime-x86_64`](https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64)
-  (embedded into the AppImage via `--runtime-file`; sha256
-  `2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d`, from the GitHub release asset digest)
   - Pinned in the build script. sha256 `ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0` (from the GitHub API asset digest).
+- [type2-runtime 20251108, `runtime-x86_64`](https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64)
+  - Embedded into the AppImage via `--runtime-file`; sha256 `2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d` (from the GitHub release asset digest).
 - [cargo-deb 3.8.0](https://github.com/kornelski/cargo-deb)
   - Builds the `.deb` from the deb metadata in `crates/tt-app/Cargo.toml`.
+
+## macOS support (looked up 2026-11-11)
+
+- [`NSAppleEventManager.setEventHandler(_:andSelector:forEventClass:andEventID:)`](https://developer.apple.com/documentation/foundation/nsappleeventmanager/seteventhandler(_:andselector:foreventclass:andeventid:))
+  - We handle the "reopen" Apple Event (`kAEReopenApplication`, 'aevt'/'rapp') sent when the user opens the running app again (Finder, Launchpad, Spotlight) and show the main window; not through the app delegate, because winit owns it.
+- [`NSApplication.setActivationPolicy(_:)`](https://developer.apple.com/documentation/appkit/nsapplication/setactivationpolicy(_:))
+  - Regular (Dock icon) while the main window is shown, Accessory (no Dock icon, not in Cmd+Tab) otherwise.
+- [App Translocation (Gatekeeper path randomization)](https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web)
+  - A quarantined app run from Downloads or a disk image runs from a read-only temporary copy, so an autostart path to it would break.
+- [Apple Icon Image format (ICNS)](https://en.wikipedia.org/wiki/Apple_Icon_Image_format)
+  - The layout of `app.icns`, produced by `gen_icon.py`.
+- [`hdiutil` man page](https://ss64.com/mac/hdiutil.html)
+  - `hdiutil create` packs the `.app` folder into the compressed `.dmg`.
+- [Safely open apps on your Mac](https://support.apple.com/en-us/102445)
+  - Gatekeeper first-start steps: "Open Anyway" in Privacy & Security (macOS 15), right-click → Open (macOS 11-14).
+- [Information property list keys](https://developer.apple.com/documentation/bundleresources/information-property-list)
+  - `Info.plist` keys of the bundle, such as `LSMinimumSystemVersion`.
+- [GitHub-hosted runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners)
+  - `macos-14` was retired; CI uses `macos-15`.

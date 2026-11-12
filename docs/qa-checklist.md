@@ -75,6 +75,46 @@ Run it on both versions, once in a Wayland session and once in an X11 session.
 - [ ] **Wayland and X11 sessions:** the app starts in both (it runs on X11/XWayland).
 - [ ] **Windows:** a short run of the sections "Tray and windows" and "Installer" above.
 
+## macOS (11 or newer, a real Mac or a virtual machine)
+
+Install the `.dmg` from the pre-release. Run it on Apple Silicon and on Intel if you have both.
+Back up the data first, or quit TimeTracker first (menu bar → Quit) and use
+`open -n /Applications/TimeTracker.app --args --db /tmp/tt-qa.db` (with `--db` the app does
+not touch autostart, so check that one item without it). Quit first because the
+single-instance socket is shared: with a copy already running, the `--db` start would only
+activate it, on the real data.
+
+- [ ] **Install:** open the `.dmg`, drag TimeTracker to Applications, first start through the
+  Gatekeeper steps from the README (Open Anyway on macOS 15+, right-click → Open on 11-14).
+- [ ] **Icon** in the Dock and in Applications (Launchpad) looks right.
+- [ ] **Timer:** start, pause, resume, stop; the time is right; a pause left overnight and a
+  running entry across midnight split per day.
+- [ ] **Mini timer:** on top of other windows, draggable, same position after a restart.
+- [ ] **Mini timer without the main window:** hide the main window; the mini timer stays
+  visible, and there is no Dock icon and no entry in `Cmd+Tab`.
+- [ ] **Dock icon follows the main window:** it appears when the window is opened (menu bar
+  "Open window", reopening), disappears when the window is closed with the close button, and
+  the app is in `Cmd+Tab` only while the window is open.
+- [ ] **Menu bar icon:** its colour follows the timer state (running, paused, stopped); every
+  menu item works; a left click opens the menu and the window does not flash, show or hide.
+- [ ] **Close to the menu bar** on and off (Settings): the label says "menu bar"; on, the
+  close button hides the window; off, it quits.
+- [ ] **`Cmd+Q` with the timer running:** after the next start the timer is still running.
+- [ ] **Autostart** on and off; after signing in the app sits only in the menu bar, with no
+  Dock icon (a brief flash is acceptable).
+- [ ] **Autostart from the `.dmg`:** run the app from the mounted `.dmg` (or from Downloads),
+  turn autostart on: no `TimeTracker.plist` appears in `~/Library/LaunchAgents`, the app shows
+  "Move TimeTracker to Applications to start it at sign-in", and the log has a warning.
+- [ ] **Reopen while hidden:** with the app only in the menu bar (no Dock icon), open it
+  again from Finder, from Launchpad and from Spotlight: the main window shows each time.
+- [ ] **`Cmd+H`, then menu bar → Open window** shows the window.
+- [ ] **`Cmd+W` on the main window:** expected — nothing happens (Slint's default menu has no
+  Close item); use the close button.
+- [ ] **Second launch from Terminal:** `open -n /Applications/TimeTracker.app` brings up the
+  window of the first copy and does not start another.
+- [ ] **Backup and restore**, **export CSV and XLSX** (as in Data below).
+- [ ] **Four languages** (en, ru, es, zh): texts fit, zh renders with a Chinese font.
+
 ## Data
 
 - [ ] Back up, add an entry, restore: the entry is gone, `timetracker.db.before-restore`
@@ -86,4 +126,4 @@ Run it on both versions, once in a Wayland session and once in an X11 session.
 - [ ] Push a `v*` tag: the `installer` job builds and uploads the installer and the
   portable zip as workflow artifacts.
 - [ ] Push a `vX.Y.Z-rc.N` tag: a GitHub Pre-release appears with the installer, the zip,
-  the AppImage and the `.deb`.
+  the AppImage, the `.deb` and the macOS `.dmg`.

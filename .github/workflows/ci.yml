@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feature/**"]
     tags: ["v*"]
   pull_request:
 
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-22.04]
+        os: [windows-latest, ubuntu-22.04, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --workspace
-      # deny.toml lists both targets, so one run covers Windows and Linux.
+      # deny.toml lists all targets, so one run covers every system.
       - run: cargo deny check licenses advisories
         if: runner.os == 'Windows'
 
@@ -121,11 +121,38 @@ jobs:
           name: TimeTracker-${{ github.ref_name }}-linux
           path: target/installer/*
 
+  # Universal .app in a .dmg (ad-hoc signed) for tags `v*`.
+  macos-package:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: macos-15
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.95"
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked -p tt-app --target aarch64-apple-darwin
+      - run: cargo build --release --locked -p tt-app --target x86_64-apple-darwin
+      - name: Package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          crates/tt-app/installer/macos/build-dmg.sh "$version" \
+            target/aarch64-apple-darwin/release/tt-app \
+            target/x86_64-apple-darwin/release/tt-app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimeTracker-${{ github.ref_name }}-macos
+          path: target/installer/*.dmg
+
   # Release candidates (`vX.Y.Z-rc.N`) are published by CI as prereleases.
   # Final releases are published by hand from the CI artifacts.
   prerelease:
     if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.')
-    needs: [installer, linux-packages]
+    needs: [installer, linux-packages, macos-package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -139,6 +166,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          notes="Test build for checking before the release.
+
+          Install: https://github.com/$GH_REPO/blob/$GITHUB_REF_NAME/README.md
+
+          macOS: the app is not notarized. On first start: macOS 15 and newer — System Settings → Privacy & Security → Open Anyway; macOS 11–14 — right-click the app → Open → Open."
           gh release create "$GITHUB_REF_NAME" dist/* --prerelease \
             --title "TimeTracker $GITHUB_REF_NAME" \
-            --notes "Test build for checking before the release. Install: see README."
+            --notes "$notes"

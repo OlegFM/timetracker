@@ -5,7 +5,7 @@ your computer.**
 
 [![Release](https://img.shields.io/github/v/release/OlegFM/timetracker)](https://github.com/OlegFM/timetracker/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20soon-lightgrey)
+![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
 English · [Русский](README.ru.md)
 
@@ -71,7 +71,7 @@ affiliated with solidtime, and the code is our own.
 
 The tray icon shows whether the timer is running, paused or stopped. Its menu can pause,
 stop, show the mini timer or open the window. Closing the window hides it to the tray.
-On Linux a left click on the icon shows or hides the window.
+On Linux a left click on the icon shows or hides the window. On macOS it is a menu bar icon, and a click opens its menu.
 
 ## Install
 
@@ -106,14 +106,30 @@ On Linux the app always runs through X11 or XWayland, also in a Wayland session,
 timer can stay on top of other windows. Known quirks are in
 [docs/known-issues.md](docs/known-issues.md).
 
-**macOS** is coming soon, planned for 0.3.0 ([plan](docs/ideas/cross-platform.md)).
+**macOS 11 or newer, Apple Silicon and Intel.** Download
+**`TimeTracker-<version>-macos-universal.dmg`** from the
+[latest release](https://github.com/OlegFM/timetracker/releases/latest), open it and drag
+TimeTracker to **Applications**. Run it from there, not from the disk image or from
+Downloads: autostart needs a permanent location.
+
+The app is not notarized by Apple (that costs USD 99 a year; the source code is open), so
+macOS says on the first start that it cannot verify the developer. Open it once like this:
+
+- **macOS 15 and newer:** try to open the app, then go to **System Settings** → **Privacy &
+  Security** and click **Open Anyway**.
+- **macOS 11–14:** right-click the app → **Open** → **Open**.
+- **Or in Terminal:** `xattr -dr com.apple.quarantine /Applications/TimeTracker.app`
+
+After that it opens normally. The app lives in the menu bar; the Dock icon shows only while
+the main window is open. The update check is off on macOS. Known quirks are in
+[docs/known-issues.md](docs/known-issues.md).
 
 ## Your data
 
-| What | Windows | Linux |
-|---|---|---|
-| Database | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` |
-| Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` |
+| What | Windows | Linux | macOS |
+|---|---|---|---|
+| Database | `%APPDATA%\TimeTracker\timetracker.db` | `~/.local/share/TimeTracker/timetracker.db` | `~/Library/Application Support/TimeTracker/timetracker.db` |
+| Logs (no descriptions or names) | `%LOCALAPPDATA%\TimeTracker\logs` | `~/.local/share/TimeTracker/logs` | `~/Library/Application Support/TimeTracker/logs` |
 
 **Settings › Data** makes a backup copy and restores one. Before a restore, the current
 database is kept as `timetracker.db.before-restore`, so a wrong restore can be undone.
@@ -122,7 +138,7 @@ database is kept as `timetracker.db.before-restore`, so a wrong restore can be u
 
 - Sync between devices through a cloud folder (OneDrive, Dropbox, Google Drive…), with no
   server ([idea](docs/ideas/cloud-sync.md)).
-- A macOS build, planned for 0.3.0 ([idea](docs/ideas/cross-platform.md)).
+- macOS notarization, once donations cover the Apple Developer fee ([idea](docs/ideas/cross-platform.md)).
 - Microsoft Store release, signed by Microsoft ([idea](docs/ideas/msix-store.md)).
 
 ## Support the project

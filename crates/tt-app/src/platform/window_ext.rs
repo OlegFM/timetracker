@@ -8,6 +8,7 @@ use slint::winit_030::{WinitWindowAccessor, winit};
 use slint::{ComponentHandle, PhysicalPosition};
 
 use crate::controllers::mini::{Rect, clamp_to_monitors};
+use crate::platform::dock;
 
 /// Application id: the Wayland `app_id` and X11 `WM_CLASS`. Matches `StartupWMClass` and
 /// the name of the `.desktop` file.
@@ -123,11 +124,15 @@ pub fn focus(w: &slint::Window) {
     w.with_winit_window(|win| win.focus_window());
 }
 
-/// Shows `ui` (restoring it if minimized or hidden) and brings it to the front.
+/// Shows `ui` (restoring it if minimized or hidden) and brings it to the front. For the main
+/// window only: it also shows the Dock icon on macOS, so `focus` activates a regular app.
 pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
+    dock::set_visible(true);
     ui.window().set_minimized(false);
     if let Err(e) = ui.show() {
         log::warn!("window not shown: {e}");
+        // No window, so no Dock icon either.
+        dock::set_visible(false);
         return;
     }
     when_created(ui, |ui: &C| {

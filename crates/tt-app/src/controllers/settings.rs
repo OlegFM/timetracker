@@ -109,6 +109,7 @@ pub fn install(
     b.set_updates_enabled(update_config().is_some());
     b.set_tray_available(ctl.ctx.borrow().has_tray);
     b.set_on_windows(cfg!(windows));
+    b.set_on_macos(crate::platform::IS_MACOS);
 
     let on_index = |f: fn(&SettingsController, i32)| {
         let c = ctl.clone();
@@ -296,6 +297,13 @@ impl SettingsController {
         };
         match registry {
             Ok(()) => self.change(|s| s.autostart = on),
+            Err(e) if autostart::is_not_in_applications(&e) => {
+                log::warn!("autostart not changed: {e:#}");
+                self.toast_with(
+                    |tr| tr.get_autostart_not_in_applications(),
+                    ToastKind::Error,
+                );
+            }
             Err(e) => {
                 log::warn!("autostart not changed: {e:#}");
                 self.toast_with(|tr| tr.get_err_generic(), ToastKind::Error);

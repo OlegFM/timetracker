@@ -26,11 +26,31 @@ fn file_id(path: &Path) -> Option<(u64, u64)> {
     Some((meta.dev(), meta.ino()))
 }
 
+/// Per-user directory for the socket: `XDG_RUNTIME_DIR` on Linux.
+#[cfg(target_os = "linux")]
+fn runtime_dir() -> Option<PathBuf> {
+    std::env::var_os("XDG_RUNTIME_DIR").map(Into::into)
+}
+
+/// Per-user directory for the socket: the app data folder on macOS. There is no
+/// `XDG_RUNTIME_DIR`, and `TMPDIR` differs between launchd and Finder launches.
+#[cfg(target_os = "macos")]
+fn runtime_dir() -> Option<PathBuf> {
+    let dir = directories::BaseDirs::new()?.data_dir().join("TimeTracker");
+    match std::fs::create_dir_all(&dir) {
+        Ok(()) => Some(dir),
+        Err(e) => {
+            log::warn!("create {}: {e}; socket goes to the temp dir", dir.display());
+            None
+        }
+    }
+}
+
 /// `Some` for the first instance. In a second one it asks the running instance to show its
 /// window and returns `None`; the caller exits.
 pub fn acquire() -> anyhow::Result<Option<InstanceGuard>> {
     let path = super::socket_path(
-        std::env::var_os("XDG_RUNTIME_DIR").map(Into::into),
+        runtime_dir(),
         std::env::temp_dir(),
         std::env::var("USER").ok(),
     );

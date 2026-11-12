@@ -8,14 +8,20 @@
 //! turns it back on.
 //!
 //! Linux: `~/.config/autostart/TimeTracker.desktop`; GNOME's switch is a key of that file.
+//!
+//! macOS: `~/Library/LaunchAgents/TimeTracker.plist`. The "Allow in the Background" switch of
+//! System Settings is not stored there, so it is not read.
 
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
+#[cfg(target_os = "macos")]
+use auto_launch::MacOSLaunchMode;
 #[cfg(windows)]
 use auto_launch::WindowsEnableMode;
 use auto_launch::{AutoLaunch, AutoLaunchBuilder};
 
+mod launch_agent;
 #[cfg(windows)]
 mod windows;
 mod xdg;
@@ -23,6 +29,29 @@ mod xdg;
 const APP_NAME: &str = "TimeTracker";
 /// Command-line flag: start in the tray without showing the main window.
 pub const MINIMIZED_ARG: &str = "--minimized";
+/// Bundle id of the macOS app; must match `CFBundleIdentifier` in
+/// `installer/macos/Info.plist`.
+pub const BUNDLE_ID: &str = "io.github.olegfm.timetracker";
+
+/// macOS: the app runs from a disk image or a translocated copy, which disappears; no entry
+/// is written for it. Tell it from other errors with [`is_not_in_applications`].
+#[derive(Debug)]
+pub struct NotInApplications;
+
+impl std::fmt::Display for NotInApplications {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            "TimeTracker runs from a temporary location; move it to Applications to start it at sign-in",
+        )
+    }
+}
+
+impl std::error::Error for NotInApplications {}
+
+/// Whether autostart was refused because the app is not installed ([`NotInApplications`]).
+pub fn is_not_in_applications(e: &anyhow::Error) -> bool {
+    e.downcast_ref::<NotInApplications>().is_some()
+}
 
 /// Adds (`true`) or removes (`false`) the autostart entry (Windows Run entry / Linux XDG
 /// autostart file).
@@ -118,21 +147,38 @@ fn stored_entry() -> StoredEntry {
     xdg::stored_entry()
 }
 
+/// The stored entry of this platform.
+#[cfg(target_os = "macos")]
+fn stored_entry() -> StoredEntry {
+    launch_agent::stored_entry()
+}
+
 /// The executable the entry starts: this one, or on Linux the AppImage file when run from one.
 fn launch_exe() -> anyhow::Result<PathBuf> {
     let exe = std::env::current_exe().context("find executable")?;
     #[cfg(target_os = "linux")]
     let exe = xdg::launch_target(std::env::var_os("APPIMAGE"), exe);
+    // A copy run from a disk image or a translocated one disappears; do not register it.
+    #[cfg(target_os = "macos")]
+    if !launch_agent::permanent_location(&exe) {
+        return Err(NotInApplications.into());
+    }
     Ok(exe)
 }
 
 fn launcher() -> anyhow::Result<AutoLaunch> {
     let exe = launch_exe()?;
     let mut builder = AutoLaunchBuilder::new();
+    builder.set_app_name(APP_NAME).set_args(&[MINIMIZED_ARG]);
+    // The crate writes the path into the plist as is (and checks it exists), so no quotes
+    // on macOS; elsewhere it writes a command line and the path needs them.
+    #[cfg(target_os = "macos")]
     builder
-        .set_app_name(APP_NAME)
-        .set_app_path(&quoted(&exe))
-        .set_args(&[MINIMIZED_ARG]);
+        .set_app_path(&exe.display().to_string())
+        .set_macos_launch_mode(MacOSLaunchMode::LaunchAgent)
+        .set_bundle_identifiers(&[BUNDLE_ID]);
+    #[cfg(not(target_os = "macos"))]
+    builder.set_app_path(&quoted(&exe));
     #[cfg(windows)]
     builder.set_windows_enable_mode(WindowsEnableMode::CurrentUser);
     builder.build().context("autostart entry")
@@ -147,6 +193,17 @@ fn quoted(path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn not_in_applications_is_recognised_through_anyhow() {
+        assert!(is_not_in_applications(&anyhow::Error::new(
+            NotInApplications
+        )));
+        // Also under added context, as `?` and `.context` pass it on.
+        let wrapped = anyhow::Error::new(NotInApplications).context("enable autostart");
+        assert!(is_not_in_applications(&wrapped));
+        assert!(!is_not_in_applications(&anyhow::anyhow!("access denied")));
+    }
 
     #[test]
     fn path_is_quoted() {
