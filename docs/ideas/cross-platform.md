@@ -1,6 +1,6 @@
 # Idea: macOS and Linux builds
 
-Status: Linux is in 0.2.0, macOS in 0.3.0 (ad-hoc signed, not notarized). Notarization is planned
+Status: Linux and macOS are in 0.3.0 (ad-hoc signed, not notarized). Notarization is planned
 after donations. Design:
 [../superpowers/specs/2026-11-11-cross-platform-design.md](../superpowers/specs/2026-11-11-cross-platform-design.md).
 Recorded 2026-11-10; the notes below are the original analysis.

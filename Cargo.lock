@@ -5197,7 +5197,7 @@ dependencies = [
 
 [[package]]
 name = "tt-app"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "auto-launch",
@@ -5229,7 +5229,7 @@ dependencies = [
 
 [[package]]
 name = "tt-domain"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -5240,7 +5240,7 @@ dependencies = [
 
 [[package]]
 name = "tt-services"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64",
  "chrono",
@@ -5262,7 +5262,7 @@ dependencies = [
 
 [[package]]
 name = "tt-storage"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "rusqlite",
  "serde_json",
