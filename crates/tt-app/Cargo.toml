@@ -48,6 +48,10 @@ windows-sys = { workspace = true, features = [
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
 tray-icon = { workspace = true, features = ["ksni"] }
+# The tray host's activation token (features unify with tray-icon's) and the X11
+# message that completes it (platform/startup_notify.rs).
+ksni = { version = "0.3.7", default-features = false }
+x11rb = { version = "0.13", default-features = false }
 
 # Dock icon policy and the "reopen" Apple Event (`platform/dock.rs`).
 [target.'cfg(target_os = "macos")'.dependencies]

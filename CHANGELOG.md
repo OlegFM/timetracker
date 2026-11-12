@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The update check is off on macOS.
 - The mini timer now appears before the main window at startup (Windows).
 
+### Fixed
+
+- Linux: no busy cursor for 15 s after tray actions on newer GNOME (the tray host's
+  activation token is now completed).
+
 ## [0.1.0] - 2026-11-10
 
 First version: a standalone Windows time tracker whose behaviour is modelled on the core

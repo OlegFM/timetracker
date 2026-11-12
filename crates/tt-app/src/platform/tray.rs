@@ -16,6 +16,8 @@ use anyhow::Context;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tray_icon::{Icon, MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 
+use super::startup_notify;
+
 /// Icon edge in pixels (Windows scales it to the tray size).
 pub const ICON_SIZE: u32 = 32;
 /// Longest label in the tooltip, in UTF-16 units (Windows caps tooltips at 127).
@@ -168,11 +170,15 @@ impl Tray {
                 on_action: Box::new(on_action),
             })))
         });
+        // Linux: the handlers run inside ksni's event context, the only place the tray
+        // host's activation token is visible; it is completed for every event.
         MenuEvent::set_event_handler(Some(|e: MenuEvent| {
+            startup_notify::complete_current_token();
             let id = e.id.0;
             post(move |state| menu_action(&id, state));
         }));
         TrayIconEvent::set_event_handler(Some(|e: TrayIconEvent| {
+            startup_notify::complete_current_token();
             if let Some(action) = click_action(&e, MENU_ON_LEFT_CLICK) {
                 post(move |_| Some(action));
             }
