@@ -1,4 +1,5 @@
-//! Disabled-by-default updater: manifest check and signed-installer verification.
+//! Disabled-by-default updater. The manifest file is signed with Ed25519; the installer is
+//! checked against the sha256 that the signed manifest carries.
 
 use std::io::Read;
 use std::path::Path;
@@ -162,8 +163,9 @@ fn upd(e: impl std::fmt::Display) -> ServiceError {
     ServiceError::Update(e.to_string())
 }
 
-/// Upper bound for the manifest and for its signature file.
+/// Upper bound for the manifest file.
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
+/// Upper bound for the manifest signature file.
 const MAX_SIGNATURE_BYTES: u64 = 1024;
 /// Upper bound for a downloaded installer.
 const MAX_INSTALLER_BYTES: u64 = 512 * 1024 * 1024;
@@ -205,6 +207,11 @@ pub fn verify_manifest(json: &[u8], sig_b64: &str, pubkey: &[u8; 32]) -> Result<
 /// Base64 signature of the manifest bytes (used by the release tooling).
 pub fn sign_manifest(seed: &[u8; 32], json: &[u8]) -> String {
     STANDARD.encode(SigningKey::from_bytes(seed).sign(json).to_bytes())
+}
+
+/// Parses a signing seed from 64 hex digits (surrounding whitespace is ignored).
+pub fn parse_seed(hex: &str) -> Option<[u8; 32]> {
+    hex::decode(hex.trim()).ok()?.try_into().ok()
 }
 
 /// Hex of the public key that belongs to `seed`.
@@ -372,7 +379,15 @@ mod tests {
             Err(ServiceError::Update(s)) if s == "signature"));
         // Signed but not a manifest: the signature passes, the parse fails.
         let junk = b"not json".to_vec();
-        assert!(verify_manifest(&junk, &sign_manifest(&SEED, &junk), &pk()).is_err());
+        assert!(
+            matches!(verify_manifest(&junk, &sign_manifest(&SEED, &junk), &pk()),
+            Err(ServiceError::Update(s)) if s == "manifest")
+        );
+        // Tampered into invalid JSON: the signature is checked first, so it is the one reported.
+        let mut broken = json.clone();
+        broken[0] = b'#';
+        assert!(matches!(verify_manifest(&broken, &sig, &pk()),
+            Err(ServiceError::Update(s)) if s == "signature"));
     }
 
     #[test]
@@ -404,7 +419,10 @@ mod tests {
             },
         ] {
             let json = manifest_json(&m);
-            assert!(verify_manifest(&json, &sign_manifest(&SEED, &json), &pk()).is_err());
+            assert!(
+                matches!(verify_manifest(&json, &sign_manifest(&SEED, &json), &pk()),
+                Err(ServiceError::Update(s)) if s == "manifest")
+            );
         }
     }
 
@@ -414,10 +432,26 @@ mod tests {
             url: "http://x/i.exe".into(),
             ..sample()
         };
-        let dest = tempfile::tempdir().unwrap().path().join("u.exe");
+        let dir = tempfile::tempdir().unwrap();
+        let dest = dir.path().join("u.exe");
         assert!(matches!(download_and_verify(&m, &dest),
             Err(ServiceError::Update(s)) if s == "insecure url"));
         assert!(!dest.exists());
+    }
+
+    #[test]
+    fn seed_is_64_hex_digits() {
+        assert_eq!(parse_seed(&"07".repeat(32)), Some(SEED));
+        assert_eq!(
+            parse_seed(&format!(
+                " {}
+",
+                "07".repeat(32)
+            )),
+            Some(SEED)
+        );
+        assert!(parse_seed("07").is_none());
+        assert!(parse_seed(&"zz".repeat(32)).is_none());
     }
 
     #[test]
