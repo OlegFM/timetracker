@@ -4,10 +4,7 @@
 use std::path::Path;
 use std::process::ExitCode;
 
-use sha2::{Digest, Sha256};
-use tt_services::update::{
-    Manifest, manifest_json, parse_seed, public_key_hex, sign_manifest, tag_matches_version,
-};
+use tt_services::update::{build_signed_manifest, parse_seed, public_key_hex, tag_matches_version};
 
 const USAGE: &str = "usage: tt-release check-version <tag> | pubkey | \
 manifest <version> <installer> <url> <page> <out-dir>";
@@ -26,23 +23,17 @@ fn write_manifest(
     page: &str,
     out_dir: &str,
 ) -> Result<(), String> {
-    let seed = seed()?;
     let bytes = std::fs::read(installer).map_err(|e| format!("{installer}: {e}"))?;
-    let manifest = Manifest {
-        version: version.to_owned(),
-        url: url.to_owned(),
-        sha256: hex::encode(Sha256::digest(&bytes)),
-        page: page.to_owned(),
-    };
-    let json = manifest_json(&manifest);
-    let sig = sign_manifest(&seed, &json);
+    let (json, sig) =
+        build_signed_manifest(&seed()?, &bytes, version, url, page).map_err(|e| e.to_string())?;
     let dir = Path::new(out_dir);
     let write = |name: &str, data: &[u8]| {
         let path = dir.join(name);
         std::fs::write(&path, data).map_err(|e| format!("{}: {e}", path.display()))
     };
-    write("manifest.json", &json)?;
-    write("manifest.json.sig", sig.as_bytes())
+    // The signature first: a manifest without one is never published half-way.
+    write("manifest.json.sig", sig.as_bytes())?;
+    write("manifest.json", &json)
 }
 
 fn run(args: &[String]) -> Result<(), String> {

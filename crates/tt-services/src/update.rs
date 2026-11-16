@@ -124,7 +124,9 @@ pub fn is_newer(current: &str, latest: &str) -> bool {
 
 /// The version this build reports: `TT_BUILD_VERSION` (set by CI from the tag), else the crate's.
 pub fn current_version() -> &'static str {
-    option_env!("TT_BUILD_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+    option_env!("TT_BUILD_VERSION")
+        .filter(|v| !v.is_empty())
+        .unwrap_or(env!("CARGO_PKG_VERSION"))
 }
 
 /// A release tag (`vX.Y.Z[-pre]`) must carry the crate version as its core.
@@ -223,6 +225,28 @@ pub fn manifest_json(m: &Manifest) -> Vec<u8> {
     serde_json::to_vec_pretty(m).expect("a manifest of strings always serializes")
 }
 
+/// Builds and signs the manifest of a release: returns its bytes and the base64 signature.
+/// The result is verified like a client would, so a bad `url` or `page` fails at release time.
+pub fn build_signed_manifest(
+    seed: &[u8; 32],
+    installer: &[u8],
+    version: &str,
+    url: &str,
+    page: &str,
+) -> Result<(Vec<u8>, String)> {
+    let manifest = Manifest {
+        version: version.to_owned(),
+        url: url.to_owned(),
+        sha256: hex::encode(Sha256::digest(installer)),
+        page: page.to_owned(),
+    };
+    let json = manifest_json(&manifest);
+    let sig = sign_manifest(seed, &json);
+    let pubkey = SigningKey::from_bytes(seed).verifying_key().to_bytes();
+    verify_manifest(&json, &sig, &pubkey)?;
+    Ok((json, sig))
+}
+
 pub fn check_for_update(cfg: &UpdateConfig, current: &str) -> Result<Option<Manifest>> {
     let json = fetch(&cfg.manifest_url, MAX_MANIFEST_BYTES)?;
     let sig = fetch(&format!("{}.sig", cfg.manifest_url), MAX_SIGNATURE_BYTES)?;
@@ -318,6 +342,8 @@ mod tests {
         assert!(is_newer("1.2.0", "1.10.0"));
         assert!(is_newer("1.0.0-beta.2", "1.0.0-rc.1")); // strings compare as text
         assert!(is_newer("1.0.0-rc.1", "1.0.0-rc.a")); // a number part is lower than a text part
+        assert!(is_newer("1.0.0-rc", "1.0.0-rc.1")); // a prefix is lower
+        assert!(!is_newer("1.0.0-rc.1", "1.0.0-rc"));
         for bad in ["x", "", "1.0.x", "1..0", "1.0.0-", "1.0.0-rc..1"] {
             assert!(!is_newer(bad, "9.9.9"), "{bad}");
             assert!(!is_newer("0.0.1", bad), "{bad}");
@@ -363,6 +389,35 @@ mod tests {
         let json = manifest_json(&sample());
         let sig = sign_manifest(&SEED, &json);
         assert_eq!(verify_manifest(&json, &sig, &pk()).unwrap(), sample());
+    }
+
+    #[test]
+    fn build_signed_manifest_round_trips() {
+        let (json, sig) =
+            build_signed_manifest(&SEED, b"installer", "0.4.0", &sample().url, &sample().page)
+                .unwrap();
+        assert_eq!(verify_manifest(&json, &sig, &pk()).unwrap(), sample());
+    }
+
+    #[test]
+    fn build_signed_manifest_rejects_insecure_addresses() {
+        for (url, page) in [
+            ("http://x/i.exe", "https://x/p"),
+            ("https://x/i.exe", "http://x/p"),
+        ] {
+            assert!(
+                matches!(build_signed_manifest(&SEED, b"i", "0.4.0", url, page),
+                Err(ServiceError::Update(s)) if s == "manifest")
+            );
+        }
+    }
+
+    #[test]
+    fn an_oversized_manifest_is_cut_by_the_read_cap() {
+        let big = vec![b' '; MAX_MANIFEST_BYTES as usize + 1];
+        assert!(matches!(read_capped(&big[..], MAX_MANIFEST_BYTES),
+            Err(ServiceError::Update(s)) if s == "too large"));
+        assert!(read_capped(&big[..big.len() - 1], MAX_MANIFEST_BYTES).is_ok());
     }
 
     #[test]

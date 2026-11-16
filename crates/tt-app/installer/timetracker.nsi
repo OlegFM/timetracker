@@ -145,6 +145,17 @@ Section "Uninstall"
   DeleteRegKey HKCU "${UNINST_KEY}"
 SectionEnd
 
+; A silent update that fails leaves no running app: start the old version again.
+Function .onInstFailed
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/UPDATE" $R1
+  ${IfNot} ${Errors}
+  ${AndIf} ${FileExists} "$INSTDIR\${EXE}"
+    Exec '"$INSTDIR\${EXE}"'
+  ${EndIf}
+FunctionEnd
+
 Function .onInit
   SetShellVarContext current
 FunctionEnd
