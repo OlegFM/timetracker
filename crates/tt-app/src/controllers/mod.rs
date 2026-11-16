@@ -23,6 +23,7 @@ pub mod reports;
 pub mod settings;
 pub mod timer;
 pub mod tray;
+pub mod updates;
 
 use slint::{Model, SharedString, VecModel};
 use tt_services::ServiceError;

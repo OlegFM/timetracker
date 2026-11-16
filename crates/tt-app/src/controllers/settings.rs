@@ -2,18 +2,16 @@
 //! `SettingsService::save` and announced with `AppEvents::emit_settings_changed` (outside
 //! any context borrow) so that every controller draws its data again.
 //!
-//! Also here: backup / restore of the database file and the (build-time optional) update
-//! check. Network calls run on a worker thread and report back through the event loop.
+//! Also here: backup / restore of the database file. (Updates: `controllers/updates.rs`.)
 
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
 
 use chrono::NaiveDate;
 use slint::{ComponentHandle, SharedString};
 use tt_domain::{Tz, local_date};
-use tt_services::update::{Manifest, check_for_update, download_and_verify, update_config};
+use tt_services::update::current_version;
 use tt_services::{
     Clock, ServiceError, Settings, SettingsService, Theme,
     backup::{backup_to, restore_from},
@@ -35,14 +33,6 @@ use crate::vm::settings::{
     examples, index_of, select_options, timezone_options, valid_currency_code,
 };
 use crate::{MainWindow, SettingsBridge, ToastKind, Tr};
-
-/// `SettingsBridge.update-state` values.
-const UPDATE_IDLE: i32 = 0;
-const UPDATE_CHECKING: i32 = 1;
-const UPDATE_LATEST: i32 = 2;
-const UPDATE_AVAILABLE: i32 = 3;
-const UPDATE_FAILED: i32 = 4;
-const UPDATE_DOWNLOADING: i32 = 5;
 
 /// Name of the language in that language (never translated, so a user who ended up in a
 /// language they cannot read can still find their own). `None` for an unsupported code.
@@ -78,8 +68,6 @@ pub struct SettingsController {
     ui: slint::Weak<MainWindow>,
     /// The backup file chosen for a restore, until it is confirmed or cancelled.
     pending_restore: RefCell<Option<PathBuf>>,
-    /// The newer release found by the last update check.
-    update: Arc<Mutex<Option<Manifest>>>,
 }
 
 /// Wires `SettingsBridge` of the main window. Call after the mini timer exists.
@@ -95,7 +83,6 @@ pub fn install(
         mini: mini.clone(),
         ui: ui.as_weak(),
         pending_restore: RefCell::default(),
-        update: Arc::default(),
     });
     let b = ui.global::<SettingsBridge>();
     b.set_languages(model(select_options(
@@ -105,8 +92,7 @@ pub fn install(
             .collect(),
     )));
     b.set_timezones(model(timezone_options()));
-    b.set_app_version(env!("CARGO_PKG_VERSION").into());
-    b.set_updates_enabled(update_config().is_some());
+    b.set_app_version(current_version().into());
     b.set_tray_available(ctl.ctx.borrow().has_tray);
     b.set_on_windows(cfg!(windows));
     b.set_on_macos(crate::platform::IS_MACOS);
@@ -158,17 +144,10 @@ pub fn install(
     b.on_confirm_restore(move || c.confirm_restore());
     let c = ctl.clone();
     b.on_cancel_restore(move || c.cancel_restore());
-    let c = ctl.clone();
-    b.on_check_updates(move || c.check_updates(false));
-    let c = ctl.clone();
-    b.on_install_update(move || c.install_update());
 
     ctl.push_values();
     ctl.sync_fields();
     ctl.push_examples();
-    if update_config().is_some() && ctx.borrow().settings.update_auto_check {
-        ctl.check_updates(true);
-    }
     ctl
 }
 
@@ -543,97 +522,6 @@ impl SettingsController {
             Ok(_) => {}
             Err(e) => log::warn!("autostart not updated: {e:#}"),
         }
-    }
-
-    // ---- updates ----------------------------------------------------------------------
-
-    fn set_update_state(&self, state: i32, version: &str) {
-        if let Some(ui) = self.ui.upgrade() {
-            let b = ui.global::<SettingsBridge>();
-            b.set_update_state(state);
-            b.set_update_version(version.into());
-        }
-    }
-
-    /// Looks for a newer release on a worker thread. `quiet` (the check at start): only a
-    /// found update is reported.
-    fn check_updates(&self, quiet: bool) {
-        let Some(cfg) = update_config() else { return };
-        self.set_update_state(UPDATE_CHECKING, "");
-        let (ui, slot) = (self.ui.clone(), self.update.clone());
-        std::thread::spawn(move || {
-            let found = check_for_update(&cfg, env!("CARGO_PKG_VERSION")).map_err(|e| {
-                log::warn!("update check failed: {}", error_code(&e));
-            });
-            if let Ok(m) = &found {
-                *slot.lock().unwrap_or_else(|p| p.into_inner()) = m.clone();
-            }
-            let _ = slint::invoke_from_event_loop(move || {
-                let Some(ui) = ui.upgrade() else { return };
-                let (state, version) = match &found {
-                    Ok(Some(m)) => (UPDATE_AVAILABLE, m.version.as_str()),
-                    Ok(None) => (UPDATE_LATEST, ""),
-                    Err(()) => (UPDATE_FAILED, ""),
-                };
-                let b = ui.global::<SettingsBridge>();
-                b.set_update_state(if quiet && state != UPDATE_AVAILABLE {
-                    UPDATE_IDLE
-                } else {
-                    state
-                });
-                b.set_update_version(version.into());
-                let tr = ui.global::<Tr>();
-                let text = match state {
-                    UPDATE_AVAILABLE => tr.get_update_available(),
-                    UPDATE_LATEST if !quiet => tr.get_update_latest(),
-                    UPDATE_FAILED if !quiet => tr.get_update_failed(),
-                    _ => return,
-                };
-                let kind = if state == UPDATE_FAILED {
-                    ToastKind::Error
-                } else {
-                    ToastKind::Info
-                };
-                ui.invoke_show_toast(text, kind);
-            });
-        });
-    }
-
-    /// Downloads the found installer to the temp folder (checksum and signature are verified
-    /// before the file appears), starts it and quits so that it can replace the program.
-    fn install_update(&self) {
-        let Some(_) = update_config() else { return };
-        let Some(manifest) = self
-            .update
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .clone()
-        else {
-            return;
-        };
-        self.set_update_state(UPDATE_DOWNLOADING, &manifest.version);
-        let ui = self.ui.clone();
-        // A fixed name: the manifest is remote data and must not pick a path.
-        let dest = std::env::temp_dir().join("TimeTracker-update.exe");
-        std::thread::spawn(move || {
-            let res = download_and_verify(&manifest, &dest).map_err(|e| {
-                log::warn!("update download failed: {}", error_code(&e));
-            });
-            let _ = slint::invoke_from_event_loop(move || {
-                let Some(ui) = ui.upgrade() else { return };
-                let started = res
-                    .and_then(|()| std::process::Command::new(&dest).spawn().map_err(|_| ()))
-                    .is_ok();
-                let b = ui.global::<SettingsBridge>();
-                if started {
-                    let _ = slint::quit_event_loop();
-                } else {
-                    b.set_update_state(UPDATE_AVAILABLE);
-                    let text = ui.global::<Tr>().get_err_generic();
-                    ui.invoke_show_toast(text, ToastKind::Error);
-                }
-            });
-        });
     }
 }
 
