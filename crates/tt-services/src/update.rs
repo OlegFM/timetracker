@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use ed25519_dalek::{Signature, VerifyingKey};
-use serde::Deserialize;
+use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::error::{Result, ServiceError};
@@ -18,15 +18,16 @@ pub struct UpdateConfig {
     pub public_key: [u8; 32],
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+/// The release manifest. The whole file is signed (`manifest.json.sig`), so the installer
+/// needs only its checksum.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Manifest {
     pub version: String,
     pub url: String,
     /// Lowercase hex SHA-256 of the installer.
     pub sha256: String,
-    /// Base64 (standard) ed25519 signature over the installer bytes.
-    pub signature: String,
-    pub notes: Option<String>,
+    /// Release page shown to the user.
+    pub page: String,
 }
 
 fn parse_update_config(url: Option<&str>, key_hex: Option<&str>) -> Option<UpdateConfig> {
@@ -161,25 +162,9 @@ fn upd(e: impl std::fmt::Display) -> ServiceError {
     ServiceError::Update(e.to_string())
 }
 
-pub fn check_for_update(cfg: &UpdateConfig, current: &str) -> Result<Option<Manifest>> {
-    let m: Manifest = manifest_agent()
-        .get(&cfg.manifest_url)
-        .call()
-        .map_err(upd)?
-        .body_mut()
-        .read_json()
-        .map_err(upd)?;
-    Ok(is_newer(current, &m.version).then_some(m))
-}
-
-pub fn verify_bytes(pubkey: &[u8; 32], bytes: &[u8], sig_b64: &str) -> Result<()> {
-    let bad = || ServiceError::Update("signature".into());
-    let key = VerifyingKey::from_bytes(pubkey).map_err(|_| bad())?;
-    let raw = STANDARD.decode(sig_b64.trim()).map_err(|_| bad())?;
-    let sig = Signature::from_slice(&raw).map_err(|_| bad())?;
-    key.verify_strict(bytes, &sig).map_err(|_| bad())
-}
-
+/// Upper bound for the manifest and for its signature file.
+const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
+const MAX_SIGNATURE_BYTES: u64 = 1024;
 /// Upper bound for a downloaded installer.
 const MAX_INSTALLER_BYTES: u64 = 512 * 1024 * 1024;
 
@@ -192,15 +177,62 @@ fn read_capped(reader: impl Read, max: u64) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// Checks the installer bytes against the manifest checksum, then its signature.
-pub fn verify_download(bytes: &[u8], m: &Manifest, pubkey: &[u8; 32]) -> Result<()> {
-    if hex::encode(Sha256::digest(bytes)) != m.sha256.to_ascii_lowercase() {
-        return Err(ServiceError::Update("checksum".into()));
-    }
-    verify_bytes(pubkey, bytes, &m.signature)
+fn fetch(url: &str, max: u64) -> Result<Vec<u8>> {
+    let mut resp = manifest_agent().get(url).call().map_err(upd)?;
+    read_capped(resp.body_mut().as_reader(), max)
 }
 
-fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
+/// Checks the signature over the raw bytes first, then parses and validates the manifest.
+pub fn verify_manifest(json: &[u8], sig_b64: &str, pubkey: &[u8; 32]) -> Result<Manifest> {
+    let bad_sig = || ServiceError::Update("signature".into());
+    let key = VerifyingKey::from_bytes(pubkey).map_err(|_| bad_sig())?;
+    let raw = STANDARD.decode(sig_b64.trim()).map_err(|_| bad_sig())?;
+    let sig = Signature::from_slice(&raw).map_err(|_| bad_sig())?;
+    key.verify_strict(json, &sig).map_err(|_| bad_sig())?;
+
+    let bad = || ServiceError::Update("manifest".into());
+    let m: Manifest = serde_json::from_slice(json).map_err(|_| bad())?;
+    let sha_ok = m.sha256.len() == 64
+        && m.sha256
+            .bytes()
+            .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c));
+    if !(m.url.starts_with("https://") && m.page.starts_with("https://") && sha_ok) {
+        return Err(bad());
+    }
+    Ok(m)
+}
+
+/// Base64 signature of the manifest bytes (used by the release tooling).
+pub fn sign_manifest(seed: &[u8; 32], json: &[u8]) -> String {
+    STANDARD.encode(SigningKey::from_bytes(seed).sign(json).to_bytes())
+}
+
+/// Hex of the public key that belongs to `seed`.
+pub fn public_key_hex(seed: &[u8; 32]) -> String {
+    hex::encode(SigningKey::from_bytes(seed).verifying_key().to_bytes())
+}
+
+pub fn manifest_json(m: &Manifest) -> Vec<u8> {
+    serde_json::to_vec_pretty(m).expect("a manifest of strings always serializes")
+}
+
+pub fn check_for_update(cfg: &UpdateConfig, current: &str) -> Result<Option<Manifest>> {
+    let json = fetch(&cfg.manifest_url, MAX_MANIFEST_BYTES)?;
+    let sig = fetch(&format!("{}.sig", cfg.manifest_url), MAX_SIGNATURE_BYTES)?;
+    let sig = String::from_utf8(sig).map_err(|_| ServiceError::Update("signature".into()))?;
+    let m = verify_manifest(&json, &sig, &cfg.public_key)?;
+    Ok(is_newer(current, &m.version).then_some(m))
+}
+
+fn check_sha256(bytes: &[u8], expected: &str) -> Result<()> {
+    if hex::encode(Sha256::digest(bytes)) != expected.to_ascii_lowercase() {
+        return Err(ServiceError::Update("checksum".into()));
+    }
+    Ok(())
+}
+
+/// Downloads and verifies the installer in memory; `dest` is only created once it is valid.
+pub fn download_and_verify(m: &Manifest, dest: &Path) -> Result<()> {
     if !m.url.starts_with("https://") {
         return Err(ServiceError::Update("insecure url".into()));
     }
@@ -213,7 +245,7 @@ fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
         return Err(ServiceError::Update("too large".into()));
     }
     let bytes = read_capped(resp.body_mut().as_reader(), MAX_INSTALLER_BYTES)?;
-    verify_download(&bytes, m, pubkey)?;
+    check_sha256(&bytes, &m.sha256)?;
     let mut part = dest.as_os_str().to_owned();
     part.push(".part");
     let part = std::path::PathBuf::from(part);
@@ -224,15 +256,15 @@ fn download(m: &Manifest, dest: &Path, pubkey: &[u8; 32]) -> Result<()> {
     res.map_err(ServiceError::Io)
 }
 
-/// Downloads and verifies the installer in memory; `dest` is only created once it is valid.
-pub fn download_and_verify(cfg: &UpdateConfig, m: &Manifest, dest: &Path) -> Result<()> {
-    download(m, dest, &cfg.public_key)
+/// True when the uninstaller sits beside `exe`, i.e. it runs from an installed copy.
+pub fn is_installed_copy(exe: &Path) -> bool {
+    exe.parent()
+        .is_some_and(|dir| dir.join("uninstall.exe").is_file())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{Signer, SigningKey};
 
     #[cfg(not(windows))]
     #[test]
@@ -251,6 +283,7 @@ mod tests {
         let c = parse_update_config(Some("https://x/m.json"), Some(&key)).unwrap();
         assert_eq!(c.manifest_url, "https://x/m.json");
         assert_eq!(c.public_key, [0xab; 32]);
+        assert!(parse_update_config(Some("http://x/m.json"), Some(&key)).is_none());
         assert!(parse_update_config(None, Some(&key)).is_none());
         assert!(parse_update_config(Some("u"), None).is_none());
         assert!(parse_update_config(Some(""), Some(&key)).is_none());
@@ -300,52 +333,107 @@ mod tests {
         }
     }
 
-    #[test]
-    fn verify_rejects_tampered_bytes() {
-        let sk = SigningKey::from_bytes(&[7u8; 32]);
-        let pk = sk.verifying_key().to_bytes();
-        let data = b"installer bytes".to_vec();
-        let sig = STANDARD.encode(sk.sign(&data).to_bytes());
-        verify_bytes(&pk, &data, &sig).unwrap();
-        let mut bad = data.clone();
-        bad[0] ^= 1;
-        assert!(matches!(
-            verify_bytes(&pk, &bad, &sig),
-            Err(ServiceError::Update(s)) if s == "signature"
-        ));
-        assert!(verify_bytes(&pk, &data, "!!notbase64").is_err());
+    const SEED: [u8; 32] = [7u8; 32];
+
+    fn sample() -> Manifest {
+        Manifest {
+            version: "0.4.0".into(),
+            url: "https://x/TimeTracker-0.4.0-setup.exe".into(),
+            sha256: hex::encode(Sha256::digest(b"installer")),
+            page: "https://x/releases/tag/v0.4.0".into(),
+        }
     }
 
-    fn signed_manifest(data: &[u8]) -> (Manifest, [u8; 32]) {
-        let sk = SigningKey::from_bytes(&[7u8; 32]);
-        let m = Manifest {
-            version: "2.0.0".into(),
-            url: "https://x/i.exe".into(),
-            sha256: hex::encode(Sha256::digest(data)),
-            signature: STANDARD.encode(sk.sign(data).to_bytes()),
-            notes: None,
-        };
-        (m, sk.verifying_key().to_bytes())
+    fn pk() -> [u8; 32] {
+        hex::decode(public_key_hex(&SEED))
+            .unwrap()
+            .try_into()
+            .unwrap()
     }
 
     #[test]
-    fn verify_download_cases() {
-        let data = b"installer";
-        let (m, pk) = signed_manifest(data);
-        verify_download(data, &m, &pk).unwrap();
-        let bad_sha = Manifest {
-            sha256: "0".repeat(64),
-            ..m.clone()
-        };
-        assert!(matches!(verify_download(data, &bad_sha, &pk),
-            Err(ServiceError::Update(s)) if s == "checksum"));
-        let other = SigningKey::from_bytes(&[8u8; 32]);
-        let bad_sig = Manifest {
-            signature: STANDARD.encode(other.sign(data).to_bytes()),
-            ..m
-        };
-        assert!(matches!(verify_download(data, &bad_sig, &pk),
+    fn signed_manifest_round_trips() {
+        let json = manifest_json(&sample());
+        let sig = sign_manifest(&SEED, &json);
+        assert_eq!(verify_manifest(&json, &sig, &pk()).unwrap(), sample());
+    }
+
+    #[test]
+    fn verify_manifest_checks_the_signature_before_parsing() {
+        let json = manifest_json(&sample());
+        let sig = sign_manifest(&SEED, &json);
+        let mut tampered = json.clone();
+        let i = tampered.iter().position(|&b| b == b'4').unwrap();
+        tampered[i] = b'9'; // 0.4.0 -> 0.9.0
+        assert!(matches!(verify_manifest(&tampered, &sig, &pk()),
             Err(ServiceError::Update(s)) if s == "signature"));
+        let other = sign_manifest(&[8u8; 32], &json);
+        assert!(matches!(verify_manifest(&json, &other, &pk()),
+            Err(ServiceError::Update(s)) if s == "signature"));
+        // Signed but not a manifest: the signature passes, the parse fails.
+        let junk = b"not json".to_vec();
+        assert!(verify_manifest(&junk, &sign_manifest(&SEED, &junk), &pk()).is_err());
+    }
+
+    #[test]
+    fn verify_manifest_rejects_missing_or_garbage_signature() {
+        let json = manifest_json(&sample());
+        for sig in ["", "!!notbase64", "AAAA", "<html>Not Found</html>"] {
+            assert!(
+                matches!(verify_manifest(&json, sig, &pk()),
+                Err(ServiceError::Update(s)) if s == "signature"),
+                "{sig:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn verify_manifest_rejects_insecure_addresses() {
+        for m in [
+            Manifest {
+                url: "http://x/i.exe".into(),
+                ..sample()
+            },
+            Manifest {
+                page: "file:///C:/x".into(),
+                ..sample()
+            },
+            Manifest {
+                sha256: "XYZ".into(),
+                ..sample()
+            },
+        ] {
+            let json = manifest_json(&m);
+            assert!(verify_manifest(&json, &sign_manifest(&SEED, &json), &pk()).is_err());
+        }
+    }
+
+    #[test]
+    fn download_rejects_insecure_url_without_creating_the_file() {
+        let m = Manifest {
+            url: "http://x/i.exe".into(),
+            ..sample()
+        };
+        let dest = tempfile::tempdir().unwrap().path().join("u.exe");
+        assert!(matches!(download_and_verify(&m, &dest),
+            Err(ServiceError::Update(s)) if s == "insecure url"));
+        assert!(!dest.exists());
+    }
+
+    #[test]
+    fn checksum_must_match() {
+        assert!(check_sha256(b"installer", &sample().sha256).is_ok());
+        assert!(matches!(check_sha256(b"other", &sample().sha256),
+            Err(ServiceError::Update(s)) if s == "checksum"));
+    }
+
+    #[test]
+    fn installed_copy_has_the_uninstaller_beside_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let exe = dir.path().join("tt-app.exe");
+        assert!(!is_installed_copy(&exe));
+        std::fs::write(dir.path().join("uninstall.exe"), b"").unwrap();
+        assert!(is_installed_copy(&exe));
     }
 
     #[test]
@@ -369,24 +457,5 @@ mod tests {
             assert_eq!(t.recv_response, Some(Duration::from_secs(10)));
             assert_eq!(t.recv_body, Some(body));
         }
-    }
-
-    #[test]
-    fn rejects_insecure_urls() {
-        let key = "ab".repeat(32);
-        assert!(parse_update_config(Some("http://x/m.json"), Some(&key)).is_none());
-        let (m, pk) = signed_manifest(b"d");
-        let m = Manifest {
-            url: "http://x/i.exe".into(),
-            ..m
-        };
-        let cfg = UpdateConfig {
-            manifest_url: "https://x/m.json".into(),
-            public_key: pk,
-        };
-        let dest = std::env::temp_dir().join("tt-insecure-test.exe");
-        assert!(matches!(download_and_verify(&cfg, &m, &dest),
-            Err(ServiceError::Update(s)) if s == "insecure url"));
-        assert!(!dest.exists());
     }
 }

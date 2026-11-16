@@ -602,7 +602,7 @@ impl SettingsController {
     /// Downloads the found installer to the temp folder (checksum and signature are verified
     /// before the file appears), starts it and quits so that it can replace the program.
     fn install_update(&self) {
-        let Some(cfg) = update_config() else { return };
+        let Some(_) = update_config() else { return };
         let Some(manifest) = self
             .update
             .lock()
@@ -616,7 +616,7 @@ impl SettingsController {
         // A fixed name: the manifest is remote data and must not pick a path.
         let dest = std::env::temp_dir().join("TimeTracker-update.exe");
         std::thread::spawn(move || {
-            let res = download_and_verify(&cfg, &manifest, &dest).map_err(|e| {
+            let res = download_and_verify(&manifest, &dest).map_err(|e| {
                 log::warn!("update download failed: {}", error_code(&e));
             });
             let _ = slint::invoke_from_event_loop(move || {
