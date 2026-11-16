@@ -31,6 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Single instance through a Unix socket in `~/Library/Application Support/TimeTracker/`.
   - Data in `~/Library/Application Support/TimeTracker/`.
   - The update check is off on macOS.
+- Windows: update check and one-click update (installed copy and portable zip).
+  - Checks the latest published GitHub release at start and then once a day, only while
+    "Check for updates automatically" is on (Settings → Updates, on by default). "Check now"
+    checks on demand.
+  - Nothing installs without a click. "Download and install" verifies the sha256 from the
+    signed manifest and runs the installer silently; the app restarts as the new version and
+    a running timer is kept. A leftover installer in `%TEMP%` is removed on the next start.
+  - The portable copy shows "Open download page" and never modifies itself. "What's new"
+    opens the release page.
+  - The manifest signature covers the whole manifest, so an old signed manifest cannot be
+    replayed as a downgrade. A release candidate updates to its final release.
+  - The Updates card is hidden in builds made without the update keys.
+  - Builds 0.1.0 to 0.3.x need one manual update.
 - The mini timer now appears before the main window at startup (Windows).
 
 ### Fixed

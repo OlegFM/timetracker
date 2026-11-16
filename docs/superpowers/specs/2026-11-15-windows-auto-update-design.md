@@ -1,6 +1,6 @@
 # Автообновление для Windows — дизайн
 
-Дата: 2026-11-15 · Статус: на согласовании · Основа: [known-issues.md](../../known-issues.md)
+Дата: 2026-11-15 · Статус: реализовано · Основа: [known-issues.md](../../known-issues.md)
 «Must be done before updates are enabled», §9.3 [дизайна 0.1.0](2026-11-09-timetracker-design.md)
 
 ## 1. Зачем
