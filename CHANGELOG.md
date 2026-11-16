@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-16
+
 ### Added
 
 - Linux (Ubuntu 22.04 and 24.04, GNOME, x86_64): an AppImage and a `.deb` package.
@@ -117,5 +119,6 @@ of solidtime (not affiliated; the code is our own). Licensed under AGPL-3.0-only
 - The `timetracker.db.before-restore` safety copy keeps changes that were still in the
   `-wal` file after an unclean close, and is one self-contained file.
 
-[Unreleased]: https://github.com/OlegFM/timetracker/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/OlegFM/timetracker/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/OlegFM/timetracker/compare/v0.1.0...v0.4.0
 [0.1.0]: https://github.com/OlegFM/timetracker/releases/tag/v0.1.0

@@ -76,4 +76,4 @@ Found during the v1 reviews. None block a release. Nothing here is in the shippe
 
 - **Sync between devices through a cloud folder.** See [ideas/cloud-sync.md](ideas/cloud-sync.md).
 - **Microsoft Store (MSIX) release**, so users get no SmartScreen warning. See [ideas/msix-store.md](ideas/msix-store.md).
-- **macOS notarization**, after donations. The macOS build itself is in 0.3.0. See [ideas/cross-platform.md](ideas/cross-platform.md).
+- **macOS notarization**, after donations. The macOS build itself is in 0.4.0. See [ideas/cross-platform.md](ideas/cross-platform.md).
