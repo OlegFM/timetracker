@@ -55,6 +55,12 @@ jobs:
         with:
           toolchain: "1.95"
       - uses: Swatinem/rust-cache@v2
+      - name: Version
+        shell: pwsh
+        run: |
+          $v = cargo run -q -p tt-services --bin tt-release -- check-version "${{ github.ref_name }}"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          "TT_BUILD_VERSION=$v" >> $env:GITHUB_ENV
       - run: cargo build --release --locked -p tt-app
       - name: Installer
         shell: pwsh
@@ -73,6 +79,27 @@ jobs:
           Compress-Archive -Path target/release/tt-app.exe `
             -DestinationPath "target/installer/TimeTracker-$version-portable.zip"
           Get-ChildItem target/installer | Format-Table Name, Length
+      # Only when the update check is configured; the key is set on this step only.
+      - name: Update manifest
+        if: vars.TT_UPDATE_PUBKEY != ''
+        shell: pwsh
+        env:
+          TT_UPDATE_SIGNING_KEY: ${{ secrets.TT_UPDATE_SIGNING_KEY }}
+        run: |
+          $pub = cargo run -q -p tt-services --bin tt-release -- pubkey
+          if ($LASTEXITCODE -ne 0 -or "$pub".Trim() -ne $env:TT_UPDATE_PUBKEY) {
+            Write-Host "TT_UPDATE_SIGNING_KEY does not match TT_UPDATE_PUBKEY"
+            exit 1
+          }
+          $v = $env:TT_BUILD_VERSION
+          $base = "https://github.com/$env:GITHUB_REPOSITORY"
+          $tag = $env:GITHUB_REF_NAME
+          cargo run -q -p tt-services --bin tt-release -- manifest $v `
+            "target/installer/TimeTracker-$v-setup.exe" `
+            "$base/releases/download/$tag/TimeTracker-$v-setup.exe" `
+            "$base/releases/tag/$tag" `
+            target/installer
+          if ($LASTEXITCODE -ne 0) { exit 1 }
       - uses: actions/upload-artifact@v4
         with:
           name: TimeTracker-${{ github.ref_name }}
@@ -148,10 +175,10 @@ jobs:
           name: TimeTracker-${{ github.ref_name }}-macos
           path: target/installer/*.dmg
 
-  # Release candidates (`vX.Y.Z-rc.N`) are published by CI as prereleases.
-  # Final releases are published by hand from the CI artifacts.
-  prerelease:
-    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-rc.')
+  # Release candidates are published as prereleases; final releases are created
+  # as drafts and published by hand.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [installer, linux-packages, macos-package]
     runs-on: ubuntu-latest
     permissions:
@@ -161,16 +188,25 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      - name: Create prerelease
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          notes="Test build for checking before the release.
+          macos="macOS: the app is not notarized. On first start: macOS 15 and newer — System Settings → Privacy & Security → Open Anyway; macOS 11–14 — right-click the app → Open → Open."
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            kind="--prerelease"
+            notes="Test build for checking before the release.
 
           Install: https://github.com/$GH_REPO/blob/$GITHUB_REF_NAME/README.md
 
-          macOS: the app is not notarized. On first start: macOS 15 and newer — System Settings → Privacy & Security → Open Anyway; macOS 11–14 — right-click the app → Open → Open."
-          gh release create "$GITHUB_REF_NAME" dist/* --prerelease \
+          $macos"
+          else
+            kind="--draft"
+            notes="Install: https://github.com/$GH_REPO/blob/$GITHUB_REF_NAME/README.md
+
+          $macos"
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* "$kind" \
             --title "TimeTracker $GITHUB_REF_NAME" \
             --notes "$notes"
