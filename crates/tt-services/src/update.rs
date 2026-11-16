@@ -50,22 +50,87 @@ pub fn update_config() -> Option<UpdateConfig> {
     )
 }
 
-fn components(v: &str) -> Option<Vec<u64>> {
-    v.strip_prefix('v')
-        .unwrap_or(v)
-        .split('.')
-        .map(|p| p.parse().ok())
-        .collect()
+/// `[v]X(.Y)*[-pre]`: numeric core (missing parts are 0 when comparing) and optional
+/// non-empty dot-separated pre-release identifiers.
+struct Version {
+    core: Vec<u64>,
+    pre: Option<Vec<String>>,
 }
 
+fn parse_version(v: &str) -> Option<Version> {
+    let v = v.strip_prefix('v').unwrap_or(v);
+    let (core, pre) = match v.split_once('-') {
+        Some((core, pre)) => (core, Some(pre)),
+        None => (v, None),
+    };
+    let core = core
+        .split('.')
+        .map(|p| p.parse().ok())
+        .collect::<Option<Vec<u64>>>()?;
+    let pre = match pre {
+        None => None,
+        Some(p) => Some(
+            p.split('.')
+                .map(|id| (!id.is_empty()).then(|| id.to_owned()))
+                .collect::<Option<Vec<String>>>()?,
+        ),
+    };
+    Some(Version { core, pre })
+}
+
+fn cmp_pre_id(a: &str, b: &str) -> std::cmp::Ordering {
+    match (a.parse::<u64>(), b.parse::<u64>()) {
+        (Ok(x), Ok(y)) => x.cmp(&y),
+        (Ok(_), Err(_)) => std::cmp::Ordering::Less,
+        (Err(_), Ok(_)) => std::cmp::Ordering::Greater,
+        (Err(_), Err(_)) => a.cmp(b),
+    }
+}
+
+fn cmp_versions(a: &Version, b: &Version) -> std::cmp::Ordering {
+    let n = a.core.len().max(b.core.len());
+    let at = |v: &Version, i: usize| v.core.get(i).copied().unwrap_or(0);
+    for i in 0..n {
+        let o = at(a, i).cmp(&at(b, i));
+        if o.is_ne() {
+            return o;
+        }
+    }
+    match (&a.pre, &b.pre) {
+        (None, None) => std::cmp::Ordering::Equal,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (Some(x), Some(y)) => {
+            for (p, q) in x.iter().zip(y) {
+                let o = cmp_pre_id(p, q);
+                if o.is_ne() {
+                    return o;
+                }
+            }
+            x.len().cmp(&y.len())
+        }
+    }
+}
+
+/// True when `latest` is strictly newer than `current`; unparsable input is never newer.
 pub fn is_newer(current: &str, latest: &str) -> bool {
-    let (Some(mut a), Some(mut b)) = (components(current), components(latest)) else {
+    let (Some(a), Some(b)) = (parse_version(current), parse_version(latest)) else {
         return false;
     };
-    let n = a.len().max(b.len());
-    a.resize(n, 0);
-    b.resize(n, 0);
-    b > a
+    cmp_versions(&b, &a).is_gt()
+}
+
+/// The version this build reports: `TT_BUILD_VERSION` (set by CI from the tag), else the crate's.
+pub fn current_version() -> &'static str {
+    option_env!("TT_BUILD_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+}
+
+/// A release tag (`vX.Y.Z[-pre]`) must carry the crate version as its core.
+pub fn tag_matches_version(tag: &str, cargo_version: &str) -> bool {
+    let Some(rest) = tag.strip_prefix('v') else {
+        return false;
+    };
+    parse_version(rest).is_some() && rest.split('-').next() == Some(cargo_version)
 }
 
 /// Budget for connecting and for the response headers (and the small manifest body).
@@ -194,14 +259,45 @@ mod tests {
     }
 
     #[test]
-    fn is_newer_cases() {
-        assert!(is_newer("1.0.0", "1.0.1"));
-        assert!(is_newer("1.2.0", "1.10.0"));
-        assert!(!is_newer("1.0.0", "1.0.0"));
-        assert!(!is_newer("1.1.0", "1.0.9"));
+    fn is_newer_with_pre_releases() {
+        let ordered = [
+            "0.3.0",
+            "0.4.0-rc.1",
+            "0.4.0-rc.2",
+            "0.4.0-rc.10",
+            "0.4.0",
+            "0.4.1",
+        ];
+        for w in ordered.windows(2) {
+            assert!(is_newer(w[0], w[1]), "{} < {}", w[0], w[1]);
+            assert!(!is_newer(w[1], w[0]), "{} > {}", w[1], w[0]);
+        }
+        assert!(!is_newer("0.4.0", "0.4.0"));
+        assert!(!is_newer("0.4.0-rc.1", "0.4.0-rc.1"));
         assert!(is_newer("v1.0", "1.0.1"));
-        assert!(!is_newer("1.0.0", "1.0.0-beta"));
-        assert!(!is_newer("x", "1.0.0"));
+        assert!(is_newer("1.2.0", "1.10.0"));
+        assert!(is_newer("1.0.0-beta.2", "1.0.0-rc.1")); // strings compare as text
+        assert!(is_newer("1.0.0-rc.1", "1.0.0-rc.a")); // a number part is lower than a text part
+        for bad in ["x", "", "1.0.x", "1..0", "1.0.0-", "1.0.0-rc..1"] {
+            assert!(!is_newer(bad, "9.9.9"), "{bad}");
+            assert!(!is_newer("0.0.1", bad), "{bad}");
+        }
+    }
+
+    #[test]
+    fn tag_must_match_the_cargo_version() {
+        assert!(tag_matches_version("v0.4.0", "0.4.0"));
+        assert!(tag_matches_version("v0.4.0-rc.1", "0.4.0"));
+        assert!(!tag_matches_version("v0.4.1", "0.4.0"));
+        assert!(!tag_matches_version("0.4.0", "0.4.0")); // the tag needs the leading v
+        assert!(!tag_matches_version("v0.4.0-", "0.4.0"));
+    }
+
+    #[test]
+    fn current_version_defaults_to_the_crate_version() {
+        if option_env!("TT_BUILD_VERSION").is_none() {
+            assert_eq!(current_version(), env!("CARGO_PKG_VERSION"));
+        }
     }
 
     #[test]
