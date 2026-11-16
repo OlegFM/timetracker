@@ -9,7 +9,7 @@ use anyhow::Context;
 use slint::ComponentHandle;
 use tt_app::app::{self, AppContext, Ctx, InitialWindow};
 use tt_app::controllers::{
-    calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray,
+    calendar, catalog, dashboard, entries, mini, pickers, reports, settings, timer, tray, updates,
 };
 use tt_app::platform::{autostart, dock, fatal, single_instance, tray_host, window_ext};
 use tt_app::{MainWindow, logging};
@@ -114,6 +114,7 @@ fn run() -> anyhow::Result<()> {
     let has_tray = tray_host;
     ctx.borrow_mut().has_tray = has_tray;
     let _settings = settings::install(&ui, &ctx, &timer, &mini);
+    let _updates = updates::install(&ui, &ctx);
 
     // The close button hides the window to the tray (the menu bar on macOS; setting "close
     // to tray", needs a tray), else quits. A hidden main window takes the Dock icon along.

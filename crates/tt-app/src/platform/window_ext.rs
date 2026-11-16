@@ -4,6 +4,8 @@
 //! then (or with another backend) these functions do nothing. Use [`when_created`] to run
 //! them as soon as the window exists. Positions are physical pixels.
 
+use std::rc::Rc;
+
 use slint::winit_030::{WinitWindowAccessor, winit};
 use slint::{ComponentHandle, PhysicalPosition};
 
@@ -124,6 +126,16 @@ pub fn focus(w: &slint::Window) {
     w.with_winit_window(|win| win.focus_window());
 }
 
+thread_local! {
+    static MAIN_SHOWN: std::cell::RefCell<Option<Rc<dyn Fn()>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// `f` runs after every successful [`show_and_focus`] (replaces an earlier one).
+pub fn on_main_shown(f: impl Fn() + 'static) {
+    MAIN_SHOWN.with(|h| *h.borrow_mut() = Some(Rc::new(f)));
+}
+
 /// Shows `ui` (restoring it if minimized or hidden) and brings it to the front. For the main
 /// window only: it also shows the Dock icon on macOS, so `focus` activates a regular app.
 pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
@@ -139,6 +151,10 @@ pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
         set_app_icon(ui.window());
         focus(ui.window());
     });
+    let hook = MAIN_SHOWN.with(|h| h.borrow().clone());
+    if let Some(f) = hook {
+        f();
+    }
 }
 
 /// All monitors, the primary one first.

@@ -8,6 +8,9 @@
 ; %LOCALAPPDATA%\Programs\TimeTracker, adds a Start menu shortcut and an entry in
 ; Settings > Apps. The uninstaller removes the program, the shortcut and the autostart
 ; entry; the data in %APPDATA%\TimeTracker and the logs stay.
+;
+; The in-app updater runs the installer as "setup.exe /S /UPDATE": silent, and with /UPDATE
+; the new version is started when the installation is done.
 
 Unicode true
 SetCompressor /SOLID lzma
@@ -42,6 +45,7 @@ VIAddVersionKey /LANG=0 "LegalCopyright" "AGPL-3.0-only"
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
+!include "FileFunc.nsh"
 !define MUI_ICON "..\assets\app.ico"
 !define MUI_UNICON "..\assets\app.ico"
 !define MUI_ABORTWARNING
@@ -118,6 +122,14 @@ Section "Install"
   WriteRegDWORD HKCU "${UNINST_KEY}" "NoRepair" 1
   SectionGetSize 0 $0
   WriteRegDWORD HKCU "${UNINST_KEY}" "EstimatedSize" $0
+
+  ; Started by the in-app updater: start the new version.
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/UPDATE" $R1
+  ${IfNot} ${Errors}
+    Exec '"$INSTDIR\${EXE}"'
+  ${EndIf}
 SectionEnd
 
 Section "Uninstall"
@@ -132,6 +144,17 @@ Section "Uninstall"
   DeleteRegValue HKCU "${APPROVED_KEY}" "${APP}"
   DeleteRegKey HKCU "${UNINST_KEY}"
 SectionEnd
+
+; A silent update that fails leaves no running app: start the old version again.
+Function .onInstFailed
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/UPDATE" $R1
+  ${IfNot} ${Errors}
+  ${AndIf} ${FileExists} "$INSTDIR\${EXE}"
+    Exec '"$INSTDIR\${EXE}"'
+  ${EndIf}
+FunctionEnd
 
 Function .onInit
   SetShellVarContext current

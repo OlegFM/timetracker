@@ -45,15 +45,15 @@ cargo build --release -p tt-app
 makensis /DVERSION=0.1.0 crates\tt-app\installer\timetracker.nsi   # target\installer\
 ```
 
-**CI on a tag.** For tags `v*`, CI builds the installer and the portable zip (and the Linux
-packages, see [Linux](#linux)) and keeps them as workflow artifacts of that run.
+**CI on a tag.** For tags `v*`, CI checks that the tag matches the workspace version, builds
+the installer and the portable zip (and the Linux and macOS packages, see [Linux](#linux) and
+[macOS](#macos)) and keeps them as workflow artifacts of that run. With the update keys set
+(see [Updates](#updates)) it also signs `manifest.json`.
 
-**Publishing.** The GitHub Release is made by hand from those artifacts:
-
-```powershell
-gh run download <run-id> -D <empty-folder>
-gh release create v0.1.0 --verify-tag --notes-file <notes.md> <files>
-```
+**Publishing.** A tag `vX.Y.Z-rc.N` (any tag with `-`) becomes a prerelease. A tag `vX.Y.Z`
+becomes a **draft** release with all files attached. Check the draft, then press Publish:
+publishing rolls out the update to installed apps. To roll back, publish a fixed release, or
+mark the bad release as a pre-release.
 
 ## Linux
 
@@ -144,9 +144,9 @@ crates/tt-app/installer/macos/build-dmg.sh <version> <arm64-binary> <x86_64-bina
 
 ## Updates
 
-The update check (signed manifest, verified installer) is built in but **off**. It is
-compiled in only when both build-time variables are set; otherwise the Updates section of
-the settings is hidden. Before turning it on, see [known-issues.md](known-issues.md).
+The update check (signed manifest, verified installer) is compiled in only when both
+build-time variables are set; otherwise the Updates section of the settings is hidden. See
+also [known-issues.md](known-issues.md).
 
 ```powershell
 $env:TT_UPDATE_URL = "https://example.com/timetracker/manifest.json"   # https only
@@ -154,7 +154,39 @@ $env:TT_UPDATE_PUBKEY = "<ed25519 public key, 64 hex digits>"
 cargo build --release -p tt-app
 ```
 
-In CI, set the repository variables `TT_UPDATE_URL` and `TT_UPDATE_PUBKEY`.
+**Signing key.** Make it once with PowerShell 7.2 or newer (the seed is 32 random bytes in
+hex):
+
+```powershell
+$seed = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower()
+$seed | Set-Clipboard                      # paste it into the secret and the password manager
+$env:TT_UPDATE_SIGNING_KEY = $seed; cargo run --locked -q -p tt-services --bin tt-release -- pubkey
+Remove-Item Env:TT_UPDATE_SIGNING_KEY      # do not leave the seed in the session
+```
+
+The command prints the public key. In the repository settings set:
+
+- the secret `TT_UPDATE_SIGNING_KEY` = the seed (from the clipboard);
+- the variable `TT_UPDATE_PUBKEY` = the printed public key;
+- the variable `TT_UPDATE_URL` = `https://github.com/OlegFM/timetracker/releases/latest/download/manifest.json`.
+
+Keep the seed in a password manager as well. If it is lost, shipped builds cannot update.
+When `TT_UPDATE_PUBKEY` is set, CI fails if the secret is missing or does not match it. Without
+the variables (forks) CI builds as before and makes no manifest.
+
+**Manifest.** For a tag `vX.Y.Z` CI builds with `TT_BUILD_VERSION=X.Y.Z` (the app reads it at
+compile time as its version) and `tt-release manifest` writes two files next to the installer.
+Tags `vX.Y.Z-rc.N` and `vX.Y.Z-beta.N` build with `TT_BUILD_VERSION=X.Y.Z-rc.N` and get a
+manifest too; `releases/latest` never points to a prerelease, so they are not offered.
+`tt-release` signs the manifest and then verifies it like the app does, so a bad address fails
+the release job:
+
+- `manifest.json` with `version`, `url` (the installer), `sha256` (installer hash, lowercase
+  hex) and `page` (the release page);
+- `manifest.json.sig`, the base64 ed25519 signature over the exact bytes of `manifest.json`.
+
+Both are attached to the release. `releases/latest/download/` points to the newest published
+non-prerelease, so drafts and prereleases are not offered.
 
 ## Data details
 

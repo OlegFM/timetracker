@@ -347,10 +347,24 @@ export component SettingsScreen inherits VerticalLayout {
                         vertical-alignment: center;
                         wrap: word-wrap;
                     }
-                    if SettingsBridge.update-state == 3: Button {
+                    if SettingsBridge.update-state == 3 && SettingsBridge.update-installable: Button {
                         text: @tr("Download and install");
                         variant: ButtonVariant.primary;
                         clicked => { SettingsBridge.install-update(); }
+                    }
+                    if SettingsBridge.update-state == 3 && !SettingsBridge.update-installable: Button {
+                        text: @tr("Open download page");
+                        variant: ButtonVariant.primary;
+                        clicked => { SettingsBridge.open-update-page(); }
+                    }
+                }
+                if SettingsBridge.update-state == 3: Text {
+                    text: @tr("What's new");
+                    color: Theme.accent;
+                    font-size: Theme.font-md;
+                    TouchArea {
+                        mouse-cursor: MouseCursor.pointer;
+                        clicked => { SettingsBridge.open-update-page(); }
                     }
                 }
             }

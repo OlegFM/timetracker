@@ -6,6 +6,7 @@ pub const IS_MACOS: bool = cfg!(target_os = "macos");
 pub mod autostart;
 pub mod dock;
 pub mod fatal;
+pub mod open_url;
 pub mod single_instance;
 pub mod startup_notify;
 pub mod tray;

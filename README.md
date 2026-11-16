@@ -124,6 +124,25 @@ After that it opens normally. The app lives in the menu bar; the Dock icon shows
 the main window is open. The update check is off on macOS. Known quirks are in
 [docs/known-issues.md](docs/known-issues.md).
 
+## Updates
+
+Windows only (the installer and the portable zip). Linux and macOS have no update check.
+
+- The app asks GitHub for the latest published release once at start and then once a day
+  while it runs (a check fetches `manifest.json` and `manifest.json.sig`). These are the
+  only requests it makes without a click. Turn it off in
+  **Settings → Updates → Check for updates automatically** (on by default); **Check now**
+  checks on demand.
+- Nothing is downloaded or installed without a click. The installed copy shows **Download and install**:
+  it downloads the installer, checks it against the signed manifest, closes the app, updates
+  and starts the new version. A running timer is kept. The portable copy never changes
+  itself: it shows **Open download page**. **What's new** opens the release page.
+- Versions 0.1.0 to 0.3.x have no update check: update once by hand from the
+  [latest release](https://github.com/OlegFM/timetracker/releases/latest).
+- Builds made without the update keys (forks, local builds) hide the Updates card.
+
+How it works and how to publish: [docs/development.md](docs/development.md).
+
 ## Your data
 
 | What | Windows | Linux | macOS |

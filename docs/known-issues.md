@@ -1,17 +1,10 @@
-# Known issues and follow-ups (v0.1.0)
+# Known issues and follow-ups
 
-Found during the v1 reviews. None block v0.1.0. Nothing here is in the shipped code path unless noted.
+Found during the v1 reviews. None block a release. Nothing here is in the shipped code path unless noted.
 
-## Must be done before updates are enabled
+## Code tidy-up
 
-Updates are off in every build until `TT_UPDATE_*` is set at build time.
-
-- **Sign the manifest version.** Today the signature covers only the installer bytes, so an older signed installer could be replayed under a higher manifest version (downgrade). Sign version and sha256 together.
-- **Pre-release versions.** A current version like `0.2.0-beta.1` never compares as older, so it never updates.
-- **Update path tidy-up.**
-  - The installer goes to a fixed `%TEMP%` path that is never cleaned.
-  - A second update check can start while one is still running.
-  - `controllers/settings.rs` (~670 lines) should then be split: backup/restore and updates into their own controllers.
+- **Split backup/restore out of `controllers/settings.rs`** (~670 lines) into its own controller. Updates already live in `controllers/updates.rs`.
 
 ## Worth fixing in v0.1.x
 

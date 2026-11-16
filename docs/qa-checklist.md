@@ -40,6 +40,29 @@ so check that one item without `--db`.
 - [ ] Uninstall removes the program and the shortcut and keeps the data in
   `%APPDATA%\TimeTracker`.
 
+## Updates (Windows)
+
+Build a local copy with an old version and point it at a published release candidate. The
+Cargo version stays; set the build variables (the public key is the repository variable `TT_UPDATE_PUBKEY`;
+see [development.md](development.md#updates)):
+
+```
+TT_BUILD_VERSION=0.0.1
+TT_UPDATE_URL=https://github.com/OlegFM/timetracker/releases/download/vX.Y.Z-rc.N/manifest.json
+TT_UPDATE_PUBKEY=<public key>
+```
+
+- [ ] Install that build (setup.exe) and start a timer.
+- [ ] **Settings → Updates → Check now:** it offers the release candidate version.
+- [ ] **Download and install:** the app closes, the installer runs silently, and the new
+  version starts. The version in Settings is the new one, and the timer is still running.
+- [ ] The file `%TEMP%\TimeTracker-update.exe` is gone after a later start (the relaunched app may start while the installer still holds the file).
+- [ ] **Portable copy** (no `uninstall.exe` next to `tt-app.exe`): the button reads "Open
+  download page" and opens the release page; the copy is not modified.
+- [ ] **What's new** opens the release page.
+- [ ] Turn "Check for updates automatically" off and restart: no request to GitHub at start.
+- [ ] A build without `TT_UPDATE_*`: there is no Updates card in Settings.
+
 ## Windows startup order
 
 - [ ] At startup the mini timer appears before the main window, and focus ends up in the
