@@ -129,10 +129,11 @@ the main window is open. The update check is off on macOS. Known quirks are in
 Windows only (the installer and the portable zip). Linux and macOS have no update check.
 
 - The app asks GitHub for the latest published release once at start and then once a day
-  while it runs. This is the only network request it makes. Turn it off in
+  while it runs (a check fetches `manifest.json` and `manifest.json.sig`). These are the
+  only requests it makes without a click. Turn it off in
   **Settings → Updates → Check for updates automatically** (on by default); **Check now**
   checks on demand.
-- Nothing is installed without a click. The installed copy shows **Download and install**:
+- Nothing is downloaded or installed without a click. The installed copy shows **Download and install**:
   it downloads the installer, checks it against the signed manifest, closes the app, updates
   and starts the new version. A running timer is kept. The portable copy never changes
   itself: it shows **Open download page**. **What's new** opens the release page.

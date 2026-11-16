@@ -1,6 +1,6 @@
-# Known issues and follow-ups (v0.1.0)
+# Known issues and follow-ups
 
-Found during the v1 reviews. None block v0.1.0. Nothing here is in the shipped code path unless noted.
+Found during the v1 reviews. None block a release. Nothing here is in the shipped code path unless noted.
 
 ## Code tidy-up
 

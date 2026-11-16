@@ -37,7 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     checks on demand.
   - Nothing installs without a click. "Download and install" verifies the sha256 from the
     signed manifest and runs the installer silently; the app restarts as the new version and
-    a running timer is kept. A leftover installer in `%TEMP%` is removed on the next start.
+    a running timer is kept. A leftover installer in `%TEMP%` is removed on a later start.
+    If the silent install fails, the old version is started again.
+  - An update found while the main window is hidden (tray, start with Windows) is announced
+    with the toast the next time the window is shown. A failed check at start is retried
+    once after an hour.
   - The portable copy shows "Open download page" and never modifies itself. "What's new"
     opens the release page.
   - The manifest signature covers the whole manifest, so an old signed manifest cannot be

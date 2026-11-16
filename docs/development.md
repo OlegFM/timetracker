@@ -154,16 +154,19 @@ $env:TT_UPDATE_PUBKEY = "<ed25519 public key, 64 hex digits>"
 cargo build --release -p tt-app
 ```
 
-**Signing key.** Make it once with PowerShell 7 (the seed is 32 random bytes in hex):
+**Signing key.** Make it once with PowerShell 7.2 or newer (the seed is 32 random bytes in
+hex):
 
 ```powershell
 $seed = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).ToLower()
-$env:TT_UPDATE_SIGNING_KEY = $seed; cargo run -q -p tt-services --bin tt-release -- pubkey
+$seed | Set-Clipboard                      # paste it into the secret and the password manager
+$env:TT_UPDATE_SIGNING_KEY = $seed; cargo run --locked -q -p tt-services --bin tt-release -- pubkey
+Remove-Item Env:TT_UPDATE_SIGNING_KEY      # do not leave the seed in the session
 ```
 
 The command prints the public key. In the repository settings set:
 
-- the secret `TT_UPDATE_SIGNING_KEY` = the seed;
+- the secret `TT_UPDATE_SIGNING_KEY` = the seed (from the clipboard);
 - the variable `TT_UPDATE_PUBKEY` = the printed public key;
 - the variable `TT_UPDATE_URL` = `https://github.com/OlegFM/timetracker/releases/latest/download/manifest.json`.
 
@@ -172,7 +175,11 @@ When `TT_UPDATE_PUBKEY` is set, CI fails if the secret is missing or does not ma
 the variables (forks) CI builds as before and makes no manifest.
 
 **Manifest.** For a tag `vX.Y.Z` CI builds with `TT_BUILD_VERSION=X.Y.Z` (the app reads it at
-compile time as its version) and `tt-release manifest` writes two files next to the installer:
+compile time as its version) and `tt-release manifest` writes two files next to the installer.
+Tags `vX.Y.Z-rc.N` and `vX.Y.Z-beta.N` build with `TT_BUILD_VERSION=X.Y.Z-rc.N` and get a
+manifest too; `releases/latest` never points to a prerelease, so they are not offered.
+`tt-release` signs the manifest and then verifies it like the app does, so a bad address fails
+the release job:
 
 - `manifest.json` with `version`, `url` (the installer), `sha256` (installer hash, lowercase
   hex) and `page` (the release page);

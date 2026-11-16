@@ -56,7 +56,7 @@ TT_UPDATE_PUBKEY=<public key>
 - [ ] **Settings → Updates → Check now:** it offers the release candidate version.
 - [ ] **Download and install:** the app closes, the installer runs silently, and the new
   version starts. The version in Settings is the new one, and the timer is still running.
-- [ ] The file `%TEMP%\TimeTracker-update.exe` is gone after the next start.
+- [ ] The file `%TEMP%\TimeTracker-update.exe` is gone after a later start (the relaunched app may start while the installer still holds the file).
 - [ ] **Portable copy** (no `uninstall.exe` next to `tt-app.exe`): the button reads "Open
   download page" and opens the release page; the copy is not modified.
 - [ ] **What's new** opens the release page.
