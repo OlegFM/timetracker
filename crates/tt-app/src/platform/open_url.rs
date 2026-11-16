@@ -28,7 +28,10 @@ pub fn open_url(url: &str) -> std::io::Result<()> {
     if res as usize > 32 {
         Ok(())
     } else {
-        Err(std::io::Error::last_os_error())
+        Err(std::io::Error::other(format!(
+            "ShellExecuteW returned {}",
+            res as usize
+        )))
     }
 }
 
