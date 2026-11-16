@@ -51,6 +51,10 @@ export global SettingsBridge {
     // 5 downloading.
     in property <int> update-state;
     in property <string> update-version;
+    // This copy can replace itself with the installer (an installed copy, not a portable one).
+    in property <bool> update-installable;
+    // Release page of the found version (https).
+    in property <string> update-page;
     in property <string> app-version;
     // A backup file was chosen and waits for the confirmation.
     in property <bool> restore-pending;
@@ -80,4 +84,5 @@ export global SettingsBridge {
     callback set-update-auto-check(on: bool);
     callback check-updates();
     callback install-update();
+    callback open-update-page();
 }

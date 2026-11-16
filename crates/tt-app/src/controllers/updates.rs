@@ -9,10 +9,12 @@ use std::time::Duration;
 
 use slint::ComponentHandle;
 use tt_services::update::{
-    Manifest, check_for_update, current_version, download_and_verify, update_config,
+    Manifest, check_for_update, current_version, download_and_verify, is_installed_copy,
+    update_config,
 };
 
 use crate::app::Ctx;
+use crate::platform::open_url::open_url;
 use crate::vm::error::error_code;
 use crate::{MainWindow, SettingsBridge, ToastKind, Tr};
 
@@ -30,6 +32,12 @@ pub const RECHECK: Duration = Duration::from_secs(24 * 60 * 60);
 /// A check or a download is under way: no second one may start.
 pub fn busy(state: i32) -> bool {
     state == UPDATE_CHECKING || state == UPDATE_DOWNLOADING
+}
+
+/// The quiet check is skipped while a found update waits: a failed check would hide it and
+/// the "new version" toast would repeat every day. A manual check always runs.
+pub fn quiet_check_wanted(state: i32) -> bool {
+    state != UPDATE_AVAILABLE
 }
 
 /// Fixed name: the manifest is remote data and must not pick a path.
@@ -69,10 +77,13 @@ pub fn install(ui: &MainWindow, ctx: &Ctx) -> Rc<UpdatesController> {
     }
     let b = ui.global::<SettingsBridge>();
     b.set_updates_enabled(true);
+    b.set_update_installable(std::env::current_exe().is_ok_and(|exe| is_installed_copy(&exe)));
     let c = ctl.clone();
     b.on_check_updates(move || c.check_updates(false));
     let c = ctl.clone();
     b.on_install_update(move || c.install_update());
+    let c = ctl.clone();
+    b.on_open_update_page(move || c.open_update_page());
 
     ctl.check_quietly();
     let weak = Rc::downgrade(&ctl);
@@ -103,7 +114,10 @@ impl UpdatesController {
 
     /// The check at start and every `RECHECK`, if the user wants it at that moment.
     fn check_quietly(&self) {
-        let wanted = self.ctx.borrow().settings.update_auto_check;
+        let wanted = self.ctx.borrow().settings.update_auto_check
+            && self.ui.upgrade().is_some_and(|ui| {
+                quiet_check_wanted(ui.global::<SettingsBridge>().get_update_state())
+            });
         if wanted {
             self.check_updates(true);
         }
@@ -133,6 +147,9 @@ impl UpdatesController {
                     Err(()) => (UPDATE_FAILED, ""),
                 };
                 let b = ui.global::<SettingsBridge>();
+                if let Ok(Some(m)) = &found {
+                    b.set_update_page(m.page.as_str().into());
+                }
                 b.set_update_state(if quiet && state != UPDATE_AVAILABLE {
                     UPDATE_IDLE
                 } else {
@@ -154,6 +171,23 @@ impl UpdatesController {
                 ui.invoke_show_toast(text, kind);
             });
         });
+    }
+
+    /// Opens the release page of the found version in the browser.
+    fn open_update_page(&self) {
+        let page = self
+            .update
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .as_ref()
+            .map(|m| m.page.clone());
+        let Some(page) = page else { return };
+        if open_url(&page).is_err()
+            && let Some(ui) = self.ui.upgrade()
+        {
+            let text = ui.global::<Tr>().get_err_generic();
+            ui.invoke_show_toast(text, ToastKind::Error);
+        }
     }
 
     /// Downloads the found installer to the temp folder (the file appears only when its
@@ -210,6 +244,14 @@ mod tests {
         assert!(busy(UPDATE_CHECKING) && busy(UPDATE_DOWNLOADING));
         for s in [UPDATE_IDLE, UPDATE_LATEST, UPDATE_AVAILABLE, UPDATE_FAILED] {
             assert!(!busy(s));
+        }
+    }
+
+    #[test]
+    fn quiet_check_waits_while_update_is_found() {
+        assert!(!quiet_check_wanted(UPDATE_AVAILABLE));
+        for s in [UPDATE_IDLE, UPDATE_LATEST, UPDATE_FAILED] {
+            assert!(quiet_check_wanted(s));
         }
     }
 

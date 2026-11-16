@@ -1161,6 +1161,14 @@ msgid "Download and install"
 msgstr ""
 
 #: ui/screens/settings.slint
+msgid "Open download page"
+msgstr ""
+
+#: ui/screens/settings.slint
+msgid "What's new"
+msgstr ""
+
+#: ui/screens/settings.slint
 msgid "About"
 msgstr ""
 
