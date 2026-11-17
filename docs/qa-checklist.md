@@ -24,6 +24,8 @@ so check that one item without `--db`.
 ## Tray and windows
 
 - [ ] Close button hides to the tray (when that setting is on); the tray icon reopens it.
+- [ ] **Minimize with a running timer**, wait 5 s, restore from the taskbar: the whole
+  window is drawn, nothing is see-through.
 - [ ] **Restart Explorer** (Task Manager › Windows Explorer › Restart): the tray icon comes
   back and still works.
 - [ ] Mini timer: on top of other windows, 70 % see-through until the mouse is over it,

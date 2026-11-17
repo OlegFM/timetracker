@@ -157,6 +157,36 @@ pub fn show_and_focus<C: ComponentHandle + 'static>(ui: &C) {
     }
 }
 
+/// Calls `invalidate` when the window is restored from minimized; `invalidate` must change
+/// something the whole window is drawn with (the root `background`), so the next frame
+/// repaints all of it.
+///
+/// Works around Slint 1.18's software renderer on Windows: a minimized window keeps being
+/// drawn (the timer ticks every second), which keeps its partial-rendering cache, but
+/// Windows drops the window's pixels meanwhile. After a restore only the parts changed since
+/// then would come back and the rest of the window (created transparent) would show through.
+/// One filter per window: this replaces any earlier `on_winit_window_event` callback.
+pub fn repaint_after_restore(w: &slint::Window, invalidate: impl Fn() + 'static) {
+    use slint::winit_030::{EventResult, winit::event::WindowEvent};
+
+    let minimized = std::cell::Cell::new(false);
+    w.on_winit_window_event(move |_, event| {
+        if let WindowEvent::Resized(size) = event
+            && is_restore(&minimized, size.width, size.height)
+        {
+            invalidate();
+        }
+        EventResult::Propagate
+    });
+}
+
+/// Tracks the window size: Windows reports a minimized window as zero-sized. True when the
+/// size becomes non-zero again.
+fn is_restore(minimized: &std::cell::Cell<bool>, width: u32, height: u32) -> bool {
+    let zero = width == 0 || height == 0;
+    minimized.replace(zero) && !zero
+}
+
 /// All monitors, the primary one first.
 fn monitors(win: &winit::window::Window) -> Vec<Rect> {
     let mut list: Vec<_> = win.available_monitors().collect();
@@ -182,6 +212,27 @@ fn monitors(win: &winit::window::Window) -> Vec<Rect> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn restore_is_a_non_zero_size_after_a_zero_one() {
+        let minimized = std::cell::Cell::new(false);
+        assert!(
+            !is_restore(&minimized, 1200, 760),
+            "a resize of a shown window"
+        );
+        assert!(!is_restore(&minimized, 0, 0), "minimizing");
+        assert!(!is_restore(&minimized, 0, 0), "still minimized");
+        assert!(is_restore(&minimized, 1200, 760), "restored");
+        assert!(
+            !is_restore(&minimized, 1300, 760),
+            "a resize after the restore"
+        );
+        assert!(!is_restore(&minimized, 1300, 0));
+        assert!(
+            is_restore(&minimized, 1300, 760),
+            "one zero side is minimized too"
+        );
+    }
 
     #[test]
     fn embedded_app_icon_is_64px_rgba_with_transparent_corners() {

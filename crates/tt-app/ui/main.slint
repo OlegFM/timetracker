@@ -57,7 +57,11 @@ export component MainWindow inherits Window {
     preferred-width: 1200px;
     preferred-height: 760px;
     default-font-family: Tr.font-family;
-    background: Theme.bg;
+    // Changed after a restore from minimized, so that the whole window is repainted
+    // (`window_ext::repaint_after_restore`). Both branches are the same on purpose: the
+    // background only has to depend on it.
+    in property <int> repaint-epoch;
+    background: root.repaint-epoch >= 0 ? Theme.bg : Theme.bg;
 
     HorizontalLayout {
         Sidebar {

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Windows: the main window could come back see-through after a restore from minimized
+  (only a few frames and the changed digits were drawn). It happened when the window was
+  redrawn while minimized, e.g. with a running timer. The whole window is now repainted
+  on restore.
+
 ## [0.4.0] - 2026-11-16
 
 ### Added

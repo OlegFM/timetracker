@@ -131,6 +131,13 @@ fn run() -> anyhow::Result<()> {
         slint::CloseRequestResponse::HideWindow
     });
 
+    let main = ui.as_weak();
+    window_ext::repaint_after_restore(ui.window(), move || {
+        if let Some(ui) = main.upgrade() {
+            ui.set_repaint_epoch(ui.get_repaint_epoch().wrapping_add(1));
+        }
+    });
+
     // Never leave the timer invisible: a `--minimized` start without a tray shows a
     // minimized window instead.
     let initial = app::initial_window(minimized, has_tray);

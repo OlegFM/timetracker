@@ -72,6 +72,10 @@ process (row 1: the main window was never created).
      a gradient `Rectangle` ignores `border-radius` — the sidebar logo is therefore an
      image (`assets/logo.png`, from `tools/gen_icon.py`). Every frame is drawn by the
      CPU; for this UI (no animations, 1 s tick) that is not measurable idle.
+   - Partial rendering on Windows: frames drawn while the window is minimized keep the
+     renderer's cache, but Windows drops the window's pixels, so after a restore only the
+     changed parts were drawn. `window_ext::repaint_after_restore` forces a full repaint
+     (`repaint-epoch` in `main.slint`).
    - Skia was not tried: its build downloads prebuilt Skia binaries (not allowed here)
      and it adds ~10 MB to the executable.
 2. **Slint features trimmed** to `std, compat-1-2, accessibility, backend-winit,
