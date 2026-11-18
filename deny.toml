@@ -43,6 +43,10 @@ ignore = [
     { id = "RUSTSEC-2026-0370", reason = "zvariant: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
     { id = "RUSTSEC-2026-0371", reason = "zbus_names: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
     { id = "RUSTSEC-2026-0372", reason = "zvariant_derive: unmaintained (merged into zbus 6), Linux-only, via accesskit_unix and ksni" },
+    # Unmaintained, no fix upstream; Slint's core depends on chrono too, so leaving it would
+    # not remove it. Moving the app to jiff is a separate task.
+    { id = "RUSTSEC-2026-0543", reason = "chrono: unmaintained, no replacement release; also via i-slint-core" },
+    { id = "RUSTSEC-2026-0555", reason = "chrono-tz: unmaintained, no replacement release" },
 ]
 
 [bans]
