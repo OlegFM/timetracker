@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-18
+
 ### Fixed
 
 - Windows: the main window could come back see-through after a restore from minimized
@@ -126,6 +128,7 @@ of solidtime (not affiliated; the code is our own). Licensed under AGPL-3.0-only
 - The `timetracker.db.before-restore` safety copy keeps changes that were still in the
   `-wal` file after an unclean close, and is one self-contained file.
 
-[Unreleased]: https://github.com/OlegFM/timetracker/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/OlegFM/timetracker/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/OlegFM/timetracker/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/OlegFM/timetracker/compare/v0.1.0...v0.4.0
 [0.1.0]: https://github.com/OlegFM/timetracker/releases/tag/v0.1.0
