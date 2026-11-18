@@ -51,7 +51,18 @@ codesign --force --sign - --timestamp=none "$app"
 codesign --verify --strict --verbose=2 "$app"
 
 ln -s /Applications "$dmg_dir/Applications"
-hdiutil create -volname TimeTracker -srcfolder "$dmg_dir" -fs HFS+ -format UDZO -ov "$out"
+# On GitHub's macOS runners `hdiutil create` now and then fails with "Resource busy";
+# a retry a little later succeeds. `-ov` replaces what a failed attempt left behind.
+attempt=1
+until hdiutil create -volname TimeTracker -srcfolder "$dmg_dir" -fs HFS+ -format UDZO -ov "$out"; do
+  if [ "$attempt" -ge 3 ]; then
+    echo "error: hdiutil create failed $attempt times" >&2
+    exit 1
+  fi
+  echo "hdiutil create failed (attempt $attempt of 3), retrying in 10 s" >&2
+  attempt=$((attempt + 1))
+  sleep 10
+done
 
 # Minimum macOS per slice, for the CI log only.
 for arch in arm64 x86_64; do
